@@ -82,8 +82,10 @@ function assert_is_upper ()
 function open_file ()
 {
     echo " - open_file" "$@"
-    if ! $openfile "$@"
+    if $openfile "$@"
     then
+	:
+    else
 	exit $?
     fi
 }
@@ -94,8 +96,10 @@ function open_file ()
 function open_file_as_bin ()
 {
     echo " - open_file_as_bin" "$@"
-    if ! sudo -u bin $openfile "$@"
+    if sudo -u bin $openfile "$@"
     then
+	:
+    else
 	exit $?
     fi
 }
@@ -106,8 +110,10 @@ function open_file_as_bin ()
 function fs_op ()
 {
     echo " - fs_op" "$@"
-    if ! $fsop "$@"
+    if $fsop "$@"
     then
+	:
+    else
 	exit $?
     fi
 }
@@ -118,8 +124,10 @@ function fs_op ()
 function fs_op_as_bin ()
 {
     echo " - fs_op_as_bin" "$@"
-    if ! sudo -u bin $fsop "$@"
+    if sudo -u bin $fsop "$@"
     then
+	:
+    else
 	exit $?
     fi
 }
