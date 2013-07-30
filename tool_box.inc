@@ -175,6 +175,14 @@ function fs_op ()
     if [ "$termslash" != "" ]
     then
 	add="-E ENOTDIR"
+	for i in "$@"
+	do
+	    case "$i" in
+		*/dir[0-9]*|*/direct_dir*|ENOENT)
+		    add=""
+		    ;;
+	    esac
+	done
     fi
 
     echo " - fs_op" "$@" $add
@@ -195,6 +203,14 @@ function fs_op_as_bin ()
     if [ "$termslash" != "" ]
     then
 	add="-E ENOTDIR"
+	for i in "$@"
+	do
+	    case "$i" in
+		*/dir[0-9]*)
+		    add=""
+		    ;;
+	    esac
+	done
     fi
 
     echo " - fs_op_as_bin" "$@" $add
