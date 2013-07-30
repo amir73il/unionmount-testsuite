@@ -1,0 +1,78 @@
+#!/bin/bash
+
+. ./tool_box.inc
+
+declare -i filenr
+filenr=100
+
+###############################################################################
+#
+# Open of existing file with O_CREAT and O_TRUNC
+#
+###############################################################################
+
+# Truncate and open read-only
+echo "TEST$filenr: Open O_CREAT|O_TRUNC|O_RDONLY"
+file=$testdir/foo$((filenr++))
+
+assert_is_lower $file
+open_file -c -t -r $file -R ""
+assert_is_upper $file
+open_file -c -t -r $file -R ""
+assert_is_upper $file
+
+# Truncate, open write-only and overwrite
+echo "TEST$filenr: Open O_CREAT|O_TRUNC|O_WRONLY"
+file=$testdir/foo$((filenr++))
+
+assert_is_lower $file
+open_file -c -t -w $file -W "q"
+assert_is_upper $file
+open_file -r $file -R "q"
+assert_is_upper $file
+open_file -c -t -w $file -W "p"
+assert_is_upper $file
+open_file -r $file -R "p"
+assert_is_upper $file
+
+# Truncate, open write-only and append
+echo "TEST$filenr: Open O_CREAT|O_TRUNC|O_APPEND|O_WRONLY"
+file=$testdir/foo$((filenr++))
+
+assert_is_lower $file
+open_file -c -t -a $file -W "q"
+assert_is_upper $file
+open_file -r $file -R "q"
+assert_is_upper $file
+open_file -c -t -a $file -W "p"
+assert_is_upper $file
+open_file -r $file -R "p"
+assert_is_upper $file
+
+# Truncate, open read/write and overwrite
+echo "TEST$filenr: Open O_CREAT|O_TRUNC|O_RDWR"
+file=$testdir/foo$((filenr++))
+
+assert_is_lower $file
+open_file -c -t -r -w $file -W "q"
+assert_is_upper $file
+open_file -r $file -R "q"
+assert_is_upper $file
+open_file -c -t -r -w $file -W "p"
+assert_is_upper $file
+open_file -r $file -R "p"
+assert_is_upper $file
+
+# Truncate, open read/write and append
+echo "TEST$filenr: Open O_CREAT|O_TRUNC|O_APPEND|O_RDWR"
+file=$testdir/foo$((filenr++))
+
+assert_is_lower $file
+open_file -c -t -r -a $file -W "q"
+assert_is_upper $file
+open_file -r $file -R "q"
+assert_is_upper $file
+open_file -c -t -r -a $file -W "p"
+assert_is_upper $file
+open_file -r $file -R "p"
+assert_is_upper $file

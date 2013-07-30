@@ -1,0 +1,21 @@
+#!/bin/bash
+
+. ./tool_box.inc
+
+declare -i filenr
+
+###############################################################################
+#
+# Attempted open of non-existent file; no special flags
+#
+###############################################################################
+
+echo
+echo "Try accessing files with terminal slashes on the pathname:"
+
+file=$testdir/no_foo101
+
+fs_op readlink $file
+
+open_file -r $file -E ENOENT
+open_file -r $file -E ENOENT
