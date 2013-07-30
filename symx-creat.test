@@ -13,8 +13,8 @@ filenr=100
 
 # Open/create through broken link read-only
 echo "TEST$filenr: Open(broken) O_CREAT|O_RDONLY"
-symlink=$testdir/pointless$((filenr))
-file=$testdir/no_foo$((filenr++))
+symlink=$testdir/pointless$((filenr))$termslash
+file=$testdir/no_foo$((filenr++))$termslash
 
 assert_is_lower $symlink
 assert_does_not_exist $file
@@ -25,8 +25,8 @@ open_file -r $file -R ""
 
 # Open/create through broken link write-only and overwrite
 echo "TEST$filenr: Open(broken) O_CREAT|O_WRONLY"
-symlink=$testdir/pointless$((filenr))
-file=$testdir/no_foo$((filenr++))
+symlink=$testdir/pointless$((filenr))$termslash
+file=$testdir/no_foo$((filenr++))$termslash
 
 assert_is_lower $symlink
 assert_does_not_exist $file
@@ -37,8 +37,8 @@ open_file -r $file -R "q"
 
 # Open/create through broken link write-only and append
 echo "TEST$filenr: Open(broken) O_CREAT|O_APPEND|O_WRONLY"
-symlink=$testdir/pointless$((filenr))
-file=$testdir/no_foo$((filenr++))
+symlink=$testdir/pointless$((filenr))$termslash
+file=$testdir/no_foo$((filenr++))$termslash
 
 assert_is_lower $symlink
 assert_does_not_exist $file
@@ -49,8 +49,8 @@ open_file -r $file -R "q"
 
 # Open/create through broken link read/write and overwrite
 echo "TEST$filenr: Open(broken) O_CREAT|O_RDWR"
-symlink=$testdir/pointless$((filenr))
-file=$testdir/no_foo$((filenr++))
+symlink=$testdir/pointless$((filenr))$termslash
+file=$testdir/no_foo$((filenr++))$termslash
 
 assert_is_lower $symlink
 assert_does_not_exist $file
@@ -61,8 +61,8 @@ open_file -r $file -R "q"
 
 # Open/create through broken link read/write and append
 echo "TEST$filenr: Open(broken) O_CREAT|O_APPEND|O_RDWR"
-symlink=$testdir/pointless$((filenr))
-file=$testdir/no_foo$((filenr++))
+symlink=$testdir/pointless$((filenr))$termslash
+file=$testdir/no_foo$((filenr++))$termslash
 
 assert_is_lower $symlink
 assert_does_not_exist $file

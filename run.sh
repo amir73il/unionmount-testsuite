@@ -44,26 +44,35 @@ then
     tests="$*"
 fi
 
-for t in $tests
+for termslash in "" "/"
 do
-    echo "***"
-    echo "***" $0 $t
-    echo "***"
+    export termslash
+    for t in $tests
+    do
+	echo "***"
+	if [ "$termslash" == "" ]
+	then
+	    echo "***" $0 $t
+	else
+	    echo "*** termslash=/" $0 $t
+	fi
+	echo "***"
 
-    # Construct the union
-    bash ./set_up.sh || exit $?
-    export lower_fs=`stat -c %D $testdir`
+	# Construct the union
+	bash ./set_up.sh || exit $?
+	export lower_fs=`stat -c %D $testdir`
 
-    bash ./mount_union.sh || exit $?
-    sync || exit $?
-    export upper_fs=`stat -c %D $testdir`
+	bash ./mount_union.sh || exit $?
+	sync || exit $?
+	export upper_fs=`stat -c %D $testdir`
 
-    # Run a test script
-    bash ./$t || exit $?
+	# Run a test script
+	bash ./$t || exit $?
 
-    # Make sure that all dentries and inodes are correctly released
-    umount $mntroot || exit $?
-    umount $mntroot || exit $?
+	# Make sure that all dentries and inodes are correctly released
+	umount $mntroot || exit $?
+	umount $mntroot || exit $?
+    done
 done
 
 # Leave the union mounted for further playing

@@ -13,9 +13,9 @@ filenr=100
 
 # Open(symlink->symlink) read-only
 echo "TEST$filenr: Open(symlink->symlink) O_CREAT|O_EXCL|O_RDONLY"
-indirect=$testdir/indirect_sym$((filenr))
-direct=$testdir/direct_sym$((filenr))
-file=$testdir/foo$((filenr++))
+indirect=$testdir/indirect_sym$((filenr))$termslash
+direct=$testdir/direct_sym$((filenr))$termslash
+file=$testdir/foo$((filenr++))$termslash
 
 assert_is_lower $indirect
 assert_is_lower $file
@@ -27,9 +27,9 @@ assert_is_lower $file
 
 # Open(symlink->symlink) write-only and overwrite
 echo "TEST$filenr: Open(symlink->symlink) O_CREAT|O_EXCL|O_WRONLY"
-indirect=$testdir/indirect_sym$((filenr))
-direct=$testdir/direct_sym$((filenr))
-file=$testdir/foo$((filenr++))
+indirect=$testdir/indirect_sym$((filenr))$termslash
+direct=$testdir/direct_sym$((filenr))$termslash
+file=$testdir/foo$((filenr++))$termslash
 
 assert_is_lower $indirect
 assert_is_lower $file
@@ -41,9 +41,9 @@ assert_is_lower $file
 
 # Open(symlink->symlink) write-only and append
 echo "TEST$filenr: Open(symlink->symlink) O_CREAT|O_EXCL|O_APPEND|O_WRONLY"
-indirect=$testdir/indirect_sym$((filenr))
-direct=$testdir/direct_sym$((filenr))
-file=$testdir/foo$((filenr++))
+indirect=$testdir/indirect_sym$((filenr))$termslash
+direct=$testdir/direct_sym$((filenr))$termslash
+file=$testdir/foo$((filenr++))$termslash
 
 assert_is_lower $indirect
 assert_is_lower $file
@@ -55,9 +55,9 @@ assert_is_lower $file
 
 # Open(symlink->symlink) read/write and overwrite
 echo "TEST$filenr: Open(symlink->symlink) O_CREAT|O_EXCL|O_RDWR"
-indirect=$testdir/indirect_sym$((filenr))
-direct=$testdir/direct_sym$((filenr))
-file=$testdir/foo$((filenr++))
+indirect=$testdir/indirect_sym$((filenr))$termslash
+direct=$testdir/direct_sym$((filenr))$termslash
+file=$testdir/foo$((filenr++))$termslash
 
 assert_is_lower $indirect
 assert_is_lower $file
@@ -69,9 +69,9 @@ assert_is_lower $file
 
 # Open(symlink->symlink) read/write and append
 echo "TEST$filenr: Open(symlink->symlink) O_CREAT|O_EXCL|O_APPEND|O_RDWR"
-indirect=$testdir/indirect_sym$((filenr))
-direct=$testdir/direct_sym$((filenr))
-file=$testdir/foo$((filenr++))
+indirect=$testdir/indirect_sym$((filenr))$termslash
+direct=$testdir/direct_sym$((filenr))$termslash
+file=$testdir/foo$((filenr++))$termslash
 
 assert_is_lower $indirect
 assert_is_lower $file

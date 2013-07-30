@@ -27,16 +27,19 @@ function assert_does_not_exist ()
 #
 function assert_is_lower ()
 {
-    if [ ! -f $1 -a ! -L $1 ]
+    if [ "$termslash" == "" ]
     then
-	echo $1: Test file not found >&2
-	exit 1
-    fi
+	if [ ! -f $1 -a ! -L $1 ]
+	then
+	    echo $1: Test file not found >&2
+	    exit 1
+	fi
 
-    if [ `stat -c "%D" $1` != $lower_fs ]
-    then
-	echo "$1: Test file not on lower filesystem (line ${BASH_LINENO[0]})" >&2
-	exit 1
+	if [ `stat -c "%D" $1` != $lower_fs ]
+	then
+	    echo "$1: Test file not on lower filesystem (line ${BASH_LINENO[0]})" >&2
+	    exit 1
+	fi
     fi
 }
 
@@ -45,16 +48,19 @@ function assert_is_lower ()
 #
 function assert_early_copy_up ()
 {
-    if [ ! -f $1 -a ! -L $1 ]
+    if [ "$termslash" == "" ]
     then
-	echo $1: Test file not found >&2
-	exit 1
-    fi
+	if [ ! -f $1 -a ! -L $1 ]
+	then
+	    echo $1: Test file not found >&2
+	    exit 1
+	fi
 
-    if [ `stat -c "%D" $1` != $upper_fs ]
-    then
-	echo "$1: Test file not on lower filesystem (line ${BASH_LINENO[0]})" >&2
-	exit 1
+	if [ `stat -c "%D" $1` != $upper_fs ]
+	then
+	    echo "$1: Test file not on lower filesystem (line ${BASH_LINENO[0]})" >&2
+	    exit 1
+	fi
     fi
 }
 
@@ -63,16 +69,19 @@ function assert_early_copy_up ()
 #
 function assert_is_upper ()
 {
-    if [ ! -e $1 ]
+    if [ "$termslash" == "" ]
     then
-	echo $1: Test file not found >&2
-	exit 1
-    fi
+	if [ ! -e $1 ]
+	then
+	    echo $1: Test file not found >&2
+	    exit 1
+	fi
 
-    if [ `stat -c "%D" $1` != $upper_fs ]
-    then
-	echo "$1: Test file not on upper filesystem  (line ${BASH_LINENO[0]})" >&2
-	exit 1
+	if [ `stat -c "%D" $1` != $upper_fs ]
+	then
+	    echo "$1: Test file not on upper filesystem  (line ${BASH_LINENO[0]})" >&2
+	    exit 1
+	fi
     fi
 }
 
@@ -81,8 +90,42 @@ function assert_is_upper ()
 #
 function open_file ()
 {
-    echo " - open_file" "$@"
-    if $openfile "$@"
+    add=
+    if [ "$termslash" != "" ]
+    then
+	need_add=0
+	add="-E ENOTDIR"
+	crt=0
+	for i in "$@"
+	do
+	    case "$i" in
+		-c)
+		    add="-E EISDIR"
+		    crt=1
+		    ;;
+		*/foo*|*/direct_sym*|*/indirect_sym*|*/rootfile*)
+		    need_add=1
+		    ;;
+		*/no_foo*)
+		    need_add=1
+		    if [ $crt = 0 ]
+		    then
+			add="-E ENOENT"
+		    fi
+		    ;;
+		*/pointless*)
+		    need_add=$crt
+		    ;;
+	    esac
+	done
+	if [ $need_add = 0 ]
+	then
+	    add=
+	fi
+    fi
+
+    echo " - open_file" "$@" $add
+    if $openfile "$@" $add
     then
 	:
     else
@@ -95,8 +138,27 @@ function open_file ()
 #
 function open_file_as_bin ()
 {
-    echo " - open_file_as_bin" "$@"
-    if sudo -u bin $openfile "$@"
+    add=
+    if [ "$termslash" != "" ]
+    then
+	need_add=1
+	add="-E ENOTDIR"
+	for i in "$@"
+	do
+	    case "$i" in
+		EACCES)
+		    need_add=0
+		    ;;
+	    esac
+	done
+	if [ $need_add = 0 ]
+	then
+	    add=
+	fi
+    fi
+
+    echo " - open_file_as_bin" "$@" $add
+    if sudo -u bin $openfile "$@" $add
     then
 	:
     else
@@ -109,8 +171,14 @@ function open_file_as_bin ()
 #
 function fs_op ()
 {
-    echo " - fs_op" "$@"
-    if $fsop "$@"
+    add=
+    if [ "$termslash" != "" ]
+    then
+	add="-E ENOTDIR"
+    fi
+
+    echo " - fs_op" "$@" $add
+    if $fsop "$@" $add
     then
 	:
     else
@@ -123,8 +191,14 @@ function fs_op ()
 #
 function fs_op_as_bin ()
 {
-    echo " - fs_op_as_bin" "$@"
-    if sudo -u bin $fsop "$@"
+    add=
+    if [ "$termslash" != "" ]
+    then
+	add="-E ENOTDIR"
+    fi
+
+    echo " - fs_op_as_bin" "$@" $add
+    if sudo -u bin $fsop "$@" $add
     then
 	:
     else
