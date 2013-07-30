@@ -46,6 +46,10 @@ fi
 
 for t in $tests
 do
+    echo "***"
+    echo "***" $0 $t
+    echo "***"
+
     # Construct the union
     bash ./set_up.sh || exit $?
     export lower_fs=`stat -c %D $testdir`
