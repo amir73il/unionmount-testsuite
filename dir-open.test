@@ -24,12 +24,12 @@ assert_is_upper $file
 echo "TEST$filenr: Open O_WRONLY"
 file=$testdir/dir$((filenr++))
 
-open_file -w $file
-assert_is_upper $file -E EISDIR
+open_file -w $file -E EISDIR
+assert_is_upper $file
 open_file -r $file
 assert_is_upper $file
-open_file -w $file
-assert_is_upper $file -E EISDIR
+open_file -w $file -E EISDIR
+assert_is_upper $file
 open_file -r $file
 assert_is_upper $file
 
@@ -37,10 +37,10 @@ assert_is_upper $file
 echo "TEST$filenr: Open O_WRONLY * 2"
 file=$testdir/dir$((filenr++))
 
-open_file -w $file
-assert_is_upper $file -E EISDIR
-open_file -w $file
-assert_is_upper $file -E EISDIR
+open_file -w $file -E EISDIR
+assert_is_upper $file
+open_file -w $file -E EISDIR
+assert_is_upper $file
 open_file -r $file
 assert_is_upper $file
 
