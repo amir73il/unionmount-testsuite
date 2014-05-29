@@ -10,7 +10,7 @@ umount $mntroot
 umount $mntroot
 
 # Create a lower layer to union over
-mount -t tmpfs foo $mntroot || exit $?
+mount -t tmpfs lower_layer $mntroot || exit $?
 
 # Systemd has weird ideas about things
 mount --make-private $mntroot || exit $?

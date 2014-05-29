@@ -2,7 +2,7 @@
 
 . ./settings.inc
 
-/root/util-linux-union/mount/mount -i -t tmpfs none $mntroot -o union || exit $?
+/root/util-linux-union/mount/mount -i -t tmpfs upper_layer $mntroot -o union || exit $?
 sync || exit $?
 
 upper_fs=`stat -c %D $testdir`
