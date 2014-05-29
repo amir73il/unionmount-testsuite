@@ -72,10 +72,19 @@ function assert_early_copy_up ()
 	    exit 1
 	fi
 
-	if [ `stat -c "%D" $1` != $upper_fs ]
+	if [ -d $1 ]
 	then
-	    echo "$1: Test file not on lower filesystem (line ${BASH_LINENO[0]})" >&2
-	    exit 1
+	    if [ `stat -c "%D" $1` != $upper_dir_fs ]
+	    then
+		echo "$1: Test dir not on upper filesystem (line ${BASH_LINENO[0]})" >&2
+		exit 1
+	    fi
+	else
+	    if [ `stat -c "%D" $1` != $upper_fs ]
+	    then
+		echo "$1: Test file not on upper filesystem (line ${BASH_LINENO[0]})" >&2
+		exit 1
+	    fi
 	fi
     fi
 }
@@ -93,10 +102,19 @@ function assert_is_upper ()
 	    exit 1
 	fi
 
-	if [ `stat -c "%D" $1` != $upper_fs ]
+	if [ -d $1 ]
 	then
-	    echo "$1: Test file not on upper filesystem  (line ${BASH_LINENO[0]})" >&2
-	    exit 1
+	    if [ `stat -c "%D" $1` != $upper_dir_fs ]
+	    then
+		echo "$1: Test dir not on upper filesystem (line ${BASH_LINENO[0]})" >&2
+		exit 1
+	    fi
+	else
+	    if [ `stat -c "%D" $1` != $upper_fs ]
+	    then
+		echo "$1: Test file not on upper filesystem  (line ${BASH_LINENO[0]})" >&2
+		exit 1
+	    fi
 	fi
     fi
 }

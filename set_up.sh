@@ -40,7 +40,7 @@ do
 
     # And add direct and indirect symlinks to those
     ln -s ../a/dir$i $lowerdir/direct_dir_sym$i
-    ln -s $lowerdir/direct_dir_sym$i $lowerdir/indirect_dir_sym$i
+    ln -s $testdir/direct_dir_sym$i $lowerdir/indirect_dir_sym$i
 
     # And a bunch of empty directories
     mkdir $lowerdir/empty$i

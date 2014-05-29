@@ -69,7 +69,14 @@ do
 
 	bash ./mount_union.sh || exit $?
 	sync || exit $?
-	export upper_fs=`stat -c %D $testdir`
+	if [ "$TEST_OVERLAYFS" != 1 ]
+	then
+	    export upper_fs=`stat -c %D $testdir`
+	    export upper_dir_fs=$upper_fs
+	else
+	    export upper_fs=`stat -c %D $upper_mntroot`
+	    export upper_dir_fs=`stat -c %D $testdir`
+	fi
 
 	# Run a test script
 	bash ./$t || exit $?
