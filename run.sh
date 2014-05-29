@@ -1,6 +1,10 @@
 #!/bin/bash
 
 . ./settings.inc
+. ./tool_box.inc
+
+CURRENT_TAINT=`cat /proc/sys/kernel/tainted`
+export CURRENT_TAINT
 
 tests="
 	open-plain.test
@@ -70,9 +74,14 @@ do
 	# Run a test script
 	bash ./$t || exit $?
 
+	# Stop if the kernel is now tainted
+	check_not_tainted
+
 	# Make sure that all dentries and inodes are correctly released
 	umount $mntroot || exit $?
+	check_not_tainted
 	umount $mntroot || exit $?
+	check_not_tainted
     done
 done
 

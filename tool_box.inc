@@ -3,6 +3,22 @@
 . ./settings.inc
 
 #
+# Check for taint (kernel warnings and oopses)
+#
+function check_not_tainted ()
+{
+    if [ "$CURRENT_TAINT" == "" ]
+    then
+	CURRENT_TAINT=0
+    fi
+    if [ `cat /proc/sys/kernel/tainted` != $CURRENT_TAINT ]
+    then
+	echo "*** TAINTED ***" >&2
+	exit 99
+    fi
+}
+
+#
 # Utility to read the ID of a file (device number + inode number)
 #
 function get_id ()
@@ -131,6 +147,7 @@ function open_file ()
     else
 	exit $?
     fi
+    check_not_tainted
 }
 
 #
@@ -164,6 +181,7 @@ function open_file_as_bin ()
     else
 	exit $?
     fi
+    check_not_tainted
 }
 
 #
@@ -192,6 +210,7 @@ function fs_op ()
     else
 	exit $?
     fi
+    check_not_tainted
 }
 
 #
@@ -220,4 +239,5 @@ function fs_op_as_bin ()
     else
 	exit $?
     fi
+    check_not_tainted
 }
