@@ -65,7 +65,7 @@ do
 
 	# Construct the union
 	bash ./set_up.sh || exit $?
-	export lower_fs=`stat -c %D $testdir`
+	export lower_fs=`stat -c %D $lowerdir`
 
 	bash ./mount_union.sh || exit $?
 	sync || exit $?
@@ -78,14 +78,11 @@ do
 	check_not_tainted
 
 	# Make sure that all dentries and inodes are correctly released
-	umount $mntroot || exit $?
-	check_not_tainted
-	umount $mntroot || exit $?
-	check_not_tainted
+	bash ./unmount_union.sh || exit $?
     done
 done
 
 # Leave the union mounted for further playing
 bash ./set_up.sh || exit $?
-export lower_fs=`stat -c %D $testdir`
+export lower_fs=`stat -c %D $lowerdir`
 bash ./mount_union.sh || exit $?
