@@ -51,16 +51,10 @@ fi
 
 for t in $tests
 do
-    for termslash in "" "/"
+    for ts in ${TERMSLASH:-0 1}
     do
-	export termslash
 	echo "***"
-	if [ "$termslash" == "" ]
-	then
-	    echo "***" $0 $t
-	else
-	    echo "*** termslash=/" $0 $t
-	fi
+	echo "***" ${TEST_OVERLAYFS:+TEST_OVERLAYFS=$TEST_OVERLAYFS} TERMSLASH=$ts $0 $t
 	echo "***"
 
 	# Construct the union
@@ -79,7 +73,7 @@ do
 	fi
 
 	# Run a test script
-	bash ./$t || exit $?
+	TERMSLASH=$ts bash ./$t || exit $?
 
 	# Stop if the kernel is now tainted
 	check_not_tainted

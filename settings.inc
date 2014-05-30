@@ -16,3 +16,10 @@ fsop=/usr/local/bin/fs-op
 #
 lowerdir=$lower_mntroot/a
 testdir=$union_mntroot/a
+
+if [ "$TERMSLASH" == "1" ]
+then
+    termslash=/
+else
+    termslash=
+fi
