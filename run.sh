@@ -49,11 +49,11 @@ then
     tests="$*"
 fi
 
-for termslash in "" "/"
+for t in $tests
 do
-    export termslash
-    for t in $tests
+    for termslash in "" "/"
     do
+	export termslash
 	echo "***"
 	if [ "$termslash" == "" ]
 	then
