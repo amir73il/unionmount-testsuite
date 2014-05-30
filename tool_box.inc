@@ -181,8 +181,22 @@ function open_file_as_bin ()
 	for i in "$@"
 	do
 	    case "$i" in
-		EACCES)
-		    need_add=0
+		-c)
+		    add="-E EISDIR"
+		    crt=1
+		    ;;
+		*/foo*|*/direct_sym*|*/indirect_sym*|*/rootfile*)
+		    need_add=1
+		    ;;
+		*/no_foo*)
+		    need_add=1
+		    if [ $crt = 0 ]
+		    then
+			add="-E ENOENT"
+		    fi
+		    ;;
+		*/pointless*)
+		    need_add=$crt
 		    ;;
 	    esac
 	done
