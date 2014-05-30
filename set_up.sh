@@ -4,9 +4,14 @@
 #
 . ./settings.inc
 
-# Discard anything already mounted to avoid contamination
 sync
-bash ./unmount_union.sh
+
+# Discard anything already mounted on the mountpoint to avoid contamination as
+# unionmount tries to collect all the mounts located there into the union.
+if [ "$TEST_OVERLAYFS" != 1 ]
+then
+    while umount $union_mntroot; do :; done
+fi
 
 # Create a lower layer to union over
 mount -t tmpfs lower_layer $lower_mntroot || exit $?
