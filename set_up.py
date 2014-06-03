@@ -5,7 +5,12 @@ from settings import *
 from tool_box import *
 import os, shutil
 
-def set_up():
+def create_file(name, content):
+    fd = open(name, "w")
+    fd.write(content)
+    fd.close()
+
+def set_up(ctx):
     os.sync()
 
     # Discard anything already mounted on the mountpoint to avoid contamination
@@ -26,42 +31,78 @@ def set_up():
     #
     os.mkdir(lowerdir)
 
+    pieces = testdir.split("/")
+    del pieces[0]
+    path = ""
+    for i in pieces:
+        path += "/" + i
+        ctx.record_file(path, "d")
+    ctx.set_cwd(testdir)
+
     for i in range(100, 130):
+        si = str(i)
+        
         # Under the test directory, we create a bunch of regular files
         # containing data called foo100 to foo129:
-        fd = open(lowerdir + "/foo" + str(i), "w")
-        fd.write(":xxx:yyy:zzz")
-        del fd
+        create_file(lowerdir + "/foo" + si, ":xxx:yyy:zzz")
+        rec = ctx.record_file("foo" + si, "r")
 
         # Then we create a bunch of direct symlinks to those files
-        os.symlink("../a/foo" + str(i), lowerdir + "/direct_sym" + str(i))
+        to = "../a/foo" + si
+        os.symlink(to, lowerdir + "/direct_sym" + si)
+        rec = ctx.record_file("direct_sym" + si, "s", to, rec)
 
         # Then we create a bunch of indirect symlinks to those files
-        os.symlink("direct_sym" + str(i), lowerdir + "/indirect_sym" + str(i))
+        to = "direct_sym" + si
+        os.symlink(to, lowerdir + "/indirect_sym" + si)
+        ctx.record_file("indirect_sym" + si, "s", to, rec)
 
         # Then we create a bunch symlinks that don't point to extant files
-        os.symlink("no_foo" + str(i), lowerdir + "/pointless" + str(i))
+        to = "no_foo" + si
+        os.symlink(to, lowerdir + "/pointless" + si)
+        rec = ctx.record_file("no_foo" + si, None)
+        ctx.record_file("pointless" + si, "s", to, rec)
 
         # We create a bunch of directories, each with an empty file
-        os.mkdir(lowerdir + "/dir" + str(i))
-        fd = open(lowerdir + "/dir" + str(i) + "/a", "w")
-        del fd
+        # and a populated subdir
+        os.mkdir(lowerdir + "/dir" + si)
+        rec = ctx.record_file("dir" + si, "d")
+        create_file(lowerdir + "/dir" + si + "/a", "")
+        ctx.record_file("dir" + si + "/a", "f")
+
+        os.mkdir(lowerdir + "/dir" + si + "/pop")
+        ctx.record_file("dir" + si + "/pop", "d")
+        create_file(lowerdir + "/dir" + si + "/pop/b", ":aaa:bbb:ccc")
+        ctx.record_file("dir" + si + "/pop/b", "f")
+        os.mkdir(lowerdir + "/dir" + si + "/pop/c")
+        ctx.record_file("dir" + si + "/pop/c", "d")
 
         # And add direct and indirect symlinks to those
-        os.symlink("../a/dir" + str(i), lowerdir + "/direct_dir_sym" + str(i))
-        os.symlink("direct_dir_sym" + str(i), lowerdir + "/indirect_dir_sym" + str(i))
+        to = "../a/dir" + si
+        os.symlink(to, lowerdir + "/direct_dir_sym" + si)
+        rec = ctx.record_file("direct_dir_sym" + si, "s", to, rec)
+        #ctx.record_file("direct_dir_sym" + si + "/a", "f")
+
+        to = "direct_dir_sym" + si
+        os.symlink(to, lowerdir + "/indirect_dir_sym" + si)
+        ctx.record_file("indirect_dir_sym" + si, "s", to, rec)
+        #ctx.record_file("indirect_dir_sym" + si + "/a", "f")
 
         # And a bunch of empty directories
-        os.mkdir(lowerdir + "/empty" + str(i))
+        os.mkdir(lowerdir + "/empty" + si)
+        ctx.record_file("empty" + si, "d")
 
         # Everything above is then owned by the bin user
         for f in [ "foo", "direct_sym", "indirect_sym", "pointless" ]:
-            os.lchown(lowerdir + "/" + f + str(i), 1, 1)
+            os.lchown(lowerdir + "/" + f + si, 1, 1)
 
         # Create some root-owned regular files also
-        fd = open(lowerdir + "/roofile" + str(i), "w")
-        fd.write(":xxx:yyy:zzz")
-        del fd
+        create_file(lowerdir + "/rootfile" + si, ":xxx:yyy:zzz")
+        ctx.record_file("rootfile" + si, "r")
+
+        # Non-existent dir
+        ctx.record_file("no_dir" + si, None)
 
     # The mount has to be read-only for us to make use of it
     system("mount -o remount,ro " + lower_mntroot)
+    ctx.note_lower_fs(lowerdir)

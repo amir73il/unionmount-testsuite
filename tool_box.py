@@ -3,9 +3,11 @@
 #
 import os, sys
 
-def get_dev_id(path):
-    st = os.lstat(path)
-    return st.st_dev
+class TestError(Exception):
+    def __init__(self, msg):
+        self.__msg = msg
+    def __str__(self):
+        return self.__msg
 
 def system(command):
     ret = os.system(command)
@@ -21,6 +23,7 @@ def read_file(path):
 #
 # Check for taint (kernel warnings and oopses)
 #
+current_taint = read_file("/proc/sys/kernel/tainted")
 def check_not_tainted():
     taint = read_file("/proc/sys/kernel/tainted")
     if taint != current_taint:

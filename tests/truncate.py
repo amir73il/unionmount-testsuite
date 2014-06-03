@@ -1,6 +1,7 @@
 from errno import *
 from settings import *
 from tool_box import *
+import os
 
 ###############################################################################
 #
@@ -8,32 +9,34 @@ from tool_box import *
 #
 ###############################################################################
 
-echo "TEST129: Prepare comparison"
-cmpfile = testdir + "/foo129"
-dd if=/dev/zero count=$((28-12)) bs=1 seek=12 conv=notrunc of=$cmpfile status=noxfer
-
-# Truncate extant file
-for loop in range(0, 29):
 def subtest_1(ctx):
-    ctx.begin_test(1, "Truncate to $loop")
-    f = ctx.reg_file() + ctx.termslash()
+    # Truncate extant file
+    ctx.begin_test(0, "Truncate file")
+    
+    key = b":xxx:yyy:zzz"
+    while len(key) != 29:
+        key += b"\0"
+    
+    for loop in range(0, 29):
+        f = ctx.reg_file() + ctx.termslash()
 
-    if not ctx.termslash():
-        pre = ctx.get_file_size(f)
-        if pre != 12:
-            raise TestError(f + ": Initial size (" + pre + ") is not 12")
+        if not ctx.termslash():
+            pre = ctx.get_file_size(f)
+            if pre != 12:
+                raise TestError(f + ": Initial size (" + str(pre) + ") is not 12")
 
-        ctx.truncate(f, loop)
+            ctx.truncate(f, loop)
 
-        post = ctx.get_file_size(f)
-        if post != loop:
-            raise TestError(f + ": Truncated size (" + pre + ") is not " + loop)
+            post = ctx.get_file_size(f)
+            if post != loop:
+                raise TestError(f + ": Truncated size (" + str(pre) + ") is not " + str(loop))
 
-        if post != 0:
-            cmp -n $post $cmpfile $file
-    else:
-        ctx.truncate(f, loop, err=ENOTDIR)
+            if post != 0:
+                ctx.open_file(f, ro=1, read=key[0:loop])
+        else:
+            ctx.truncate(f, loop, err=ENOTDIR)
+        ctx.incr_filenr()
 
 subtests = [
-    subtest_1,
+        subtest_1
 ]

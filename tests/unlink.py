@@ -48,9 +48,9 @@ def subtest_3(ctx):
     ctx.open_file(indirect, ro=1, err=ENOENT)
     ctx.open_file(symlink, ro=1, read=b":xxx:yyy:zzz")
 
-    #
-    #
-    #
+#
+#
+#
 def subtest_4(ctx):
     ctx.begin_test(4, "Unlink dir")
     f = ctx.non_empty_dir() + ctx.termslash()
@@ -103,9 +103,9 @@ def subtest_6(ctx):
         ctx.open_dir(indirect, ro=1)
     ctx.open_dir(symlink, ro=1)
 
-    #
-    #
-    #
+#
+#
+#
 def subtest_7(ctx):
     ctx.begin_test(7, "Unlink absent file")
     f = ctx.no_file() + ctx.termslash()

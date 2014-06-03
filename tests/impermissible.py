@@ -84,15 +84,15 @@ def subtest_5(ctx):
     ctx.utimes(f, err=EACCES, as_bin=1)
     ctx.utimes(f, err=EACCES, as_bin=1)
     if not ctx.termslash():
-        if ctx.get_file_atime(file) != atime:
+        if ctx.get_file_atime(f) != atime:
             raise TestError(f + ": Access time unexpectedly changed")
-        if ctx.get_file_mtime(file) != mtime:
+        if ctx.get_file_mtime(f) != mtime:
             raise TestError(f + ": Modification time unexpectedly changed")
     ctx.utimes(f)
     if not ctx.termslash():
-        if ctx.get_file_atime(file) == atime:
+        if ctx.get_file_atime(f) == atime:
             raise TestError(f + ": Access time didn't change")
-        if ctx.get_file_mtime(file) == mtime:
+        if ctx.get_file_mtime(f) == mtime:
             raise TestError(f + ": Modification time didn't change")
     ctx.open_file(f, ro=1, read=b":xxx:yyy:zzz")
 

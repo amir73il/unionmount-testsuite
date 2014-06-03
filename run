@@ -2,6 +2,7 @@
 
 import sys, os
 from settings import *
+from context import test_context
 from tool_box import *
 from set_up import set_up
 from mount_union import mount_union
@@ -24,8 +25,6 @@ try:
         system("umount " + union_mntroot)
 except:
     pass
-
-current_taint = read_file("/proc/sys/kernel/tainted")
 
 tests = [
     "open-plain",
@@ -65,15 +64,12 @@ tests = [
     "readlink",
     "mkdir",
     "rmdir",
+    "unlink",
     "impermissible"
     ]
 
 if len(sys.argv) > 1:
     tests = sys.argv[1:]
-
-lower_fs = None
-upper_fs = None
-upper_dir_fs = None
 
 if testing_overlayfs:
     test_what = "TEST_OVERLAYFS=1"
@@ -91,35 +87,30 @@ for test in tests:
         print("***", test_what, "TERMSLASH=" + ts, sys.argv[0], test);
         print("***");
 
-        termslash = ""
-        if ts == "1":
-            termslash = "/"
+        ctx = test_context(ts == "1")
 
         # Construct the union
-        set_up()
-        lower_fs = get_dev_id(lowerdir)
-
-        mount_union()
+        set_up(ctx)
+        mount_union(ctx)
         os.sync()
 
-        if not testing_overlayfs:
-            upper_fs = get_dev_id(testdir)
-            upper_dir_fs = get_dev_id(upper_fs)
-        else:
-            upper_fs = get_dev_id(upper_mntroot)
-            upper_dir_fs = get_dev_id(testdir)
-
         # Run a test script
-        script = __import__("tests." + test, globals(), locals(), ['run'])
-        script.run()
+        script = __import__("tests." + test, globals(), locals(), ['subtests'])
+        try:
+            for subtest in script.subtests:
+                subtest(ctx)
+        except TestError as te:
+            print(te)
+            sys.exit(1)
 
         # Stop if the kernel is now tainted
         check_not_tainted()
 
         # Make sure that all dentries and inodes are correctly released
         unmount_union()
+        del ctx
 
 # Leave the union mounted for further playing
-set_up()
-lower_fs = get_dev_id(lowerdir)
-mount_union.sh
+ctx = test_context(ts == "1")
+set_up(ctx)
+mount_union(ctx)
