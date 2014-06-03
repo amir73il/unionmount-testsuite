@@ -238,7 +238,7 @@ function open_file_nt ()
 function fs_op ()
 {
     add=
-    if [ "$termslash" != "" -a "$1" != "mkdir" ]
+    if [ "$termslash" != "" -a "$1" != "mkdir"  -a "$1" != "rmdir" ]
     then
 	add="-E ENOTDIR"
 	for i in "$@"
@@ -253,6 +253,22 @@ function fs_op ()
 
     echo " - fs_op" "$@" $add
     if $fsop "$@" $add
+    then
+	:
+    else
+	exit $?
+    fi
+    check_not_tainted
+}
+
+#
+# Attempt to do something to a file using the fs_op program with the
+# expectation that no termslash will be applied.
+#
+function fs_op_nt ()
+{
+    echo " - fs_op" "$@"
+    if $fsop "$@"
     then
 	:
     else

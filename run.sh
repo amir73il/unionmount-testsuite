@@ -42,6 +42,8 @@ tests="
 	dir-sym2-open.test
 	dir-sym2-weird-open.test
 	readlink.test
+	mkdir.test
+	rmdir.test
 	impermissible.test"
 
 if [ $# -gt 0 ]
