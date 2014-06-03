@@ -1,0 +1,125 @@
+#!/usr/bin/python3
+
+import sys, os
+from settings import *
+from tool_box import *
+from set_up import set_up
+from mount_union import mount_union
+from unmount_union import unmount_union
+
+try:
+    while True:
+        system("umount " + lower_mntroot)
+except:
+    pass
+
+try:
+    while True:
+        system("umount " + upper_mntroot)
+except:
+    pass
+
+try:
+    while True:
+        system("umount " + union_mntroot)
+except:
+    pass
+
+current_taint = read_file("/proc/sys/kernel/tainted")
+
+tests = [
+    "open-plain",
+    "open-trunc",
+    "open-creat",
+    "open-creat-trunc",
+    "open-creat-excl",
+    "open-creat-excl-trunc",
+    "noent-plain",
+    "noent-trunc",
+    "noent-creat",
+    "noent-creat-trunc",
+    "noent-creat-excl",
+    "noent-creat-excl-trunc",
+    "sym1-plain",
+    "sym1-trunc",
+    "sym1-creat",
+    "sym1-creat-excl",
+    "sym2-plain",
+    "sym2-trunc",
+    "sym2-creat",
+    "sym2-creat-excl",
+    "symx-plain",
+    "symx-trunc",
+    "symx-creat",
+    "symx-creat-excl",
+    "symx-creat-trunc",
+    "truncate",
+    "dir-open",
+    "dir-weird-open",
+    "dir-open-dir",
+    "dir-weird-open-dir",
+    "dir-sym1-open",
+    "dir-sym1-weird-open",
+    "dir-sym2-open",
+    "dir-sym2-weird-open",
+    "readlink",
+    "mkdir",
+    "rmdir",
+    "impermissible"
+    ]
+
+if len(sys.argv) > 1:
+    tests = sys.argv[1:]
+
+lower_fs = None
+upper_fs = None
+upper_dir_fs = None
+
+if testing_overlayfs:
+    test_what = "TEST_OVERLAYFS=1"
+else:
+    test_what = ""
+
+if "TERMSLASH" in os.environ:
+    termslash_list = os.environ["TERMSLASH"]
+else:
+    termslash_list = [ "0", "1" ]
+
+for test in tests:
+    for ts in termslash_list:
+        print("***");
+        print("***", test_what, "TERMSLASH=" + ts, sys.argv[0], test);
+        print("***");
+
+        termslash = ""
+        if ts == "1":
+            termslash = "/"
+
+        # Construct the union
+        set_up()
+        lower_fs = get_dev_id(lowerdir)
+
+        mount_union()
+        os.sync()
+
+        if not testing_overlayfs:
+            upper_fs = get_dev_id(testdir)
+            upper_dir_fs = get_dev_id(upper_fs)
+        else:
+            upper_fs = get_dev_id(upper_mntroot)
+            upper_dir_fs = get_dev_id(testdir)
+
+        # Run a test script
+        script = __import__("tests." + test, globals(), locals(), ['run'])
+        script.run()
+
+        # Stop if the kernel is now tainted
+        check_not_tainted()
+
+        # Make sure that all dentries and inodes are correctly released
+        unmount_union()
+
+# Leave the union mounted for further playing
+set_up()
+lower_fs = get_dev_id(lowerdir)
+mount_union.sh
