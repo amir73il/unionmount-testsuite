@@ -217,12 +217,28 @@ function open_file_as_bin ()
 }
 
 #
+# Attempt to open a file using the open_file program with the expectation that
+# no termslash will be applied.
+#
+function open_file_nt ()
+{
+    echo " - open_file_nt" "$@"
+    if $openfile "$@"
+    then
+	:
+    else
+	exit $?
+    fi
+    check_not_tainted
+}
+
+#
 # Attempt to do something to a file using the fs_op program
 #
 function fs_op ()
 {
     add=
-    if [ "$termslash" != "" ]
+    if [ "$termslash" != "" -a "$1" != "mkdir" ]
     then
 	add="-E ENOTDIR"
 	for i in "$@"
