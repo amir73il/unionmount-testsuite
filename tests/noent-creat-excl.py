@@ -1,9 +1,6 @@
-
+from errno import *
 from settings import *
 from tool_box import *
-
-declare -i filenr
-filenr=100
 
 ###############################################################################
 #
@@ -12,45 +9,58 @@ filenr=100
 ###############################################################################
 
 # Open read-only
-echo "TEST$filenr: Create O_CREAT|O_EXCL|O_RDONLY"
-file=$testdir/no_foo$((filenr++))$termslash
+def subtest_1(ctx):
+    ctx.begin_test(1, "Create O_CREAT|O_EXCL|O_RDONLY")
+    f = ctx.no_file() + ctx.termslash()
 
-open_file -c -e -r $file -R ""
-open_file -c -e -r $file -E EEXIST
-open_file -r $file -R ""
+    ctx.open_file(f, ro=1, crt=1, ex=1, read=b"")
+    ctx.open_file(f, ro=1, crt=1, ex=1, err=EEXIST)
+    ctx.open_file(f, ro=1, read=b"")
 
 # Open write-only and overwrite
-echo "TEST$filenr: Create O_CREAT|O_EXCL|O_WRONLY"
-file=$testdir/no_foo$((filenr++))$termslash
+def subtest_2(ctx):
+    ctx.begin_test(2, "Create O_CREAT|O_EXCL|O_WRONLY")
+    f = ctx.no_file() + ctx.termslash()
 
-open_file -c -e -w $file -W "q"
-open_file -r $file -R "q"
-open_file -c -e -w $file -E EEXIST
-open_file -r $file -R "q"
+    ctx.open_file(f, wo=1, crt=1, ex=1, write=b"q")
+    ctx.open_file(f, ro=1, read=b"q")
+    ctx.open_file(f, wo=1, crt=1, ex=1, err=EEXIST)
+    ctx.open_file(f, ro=1, read=b"q")
 
 # Open write-only and append
-echo "TEST$filenr: Create O_CREAT|O_EXCL|O_APPEND|O_WRONLY"
-file=$testdir/no_foo$((filenr++))$termslash
+def subtest_3(ctx):
+    ctx.begin_test(3, "Create O_CREAT|O_EXCL|O_APPEND|O_WRONLY")
+    f = ctx.no_file() + ctx.termslash()
 
-open_file -c -e -a $file -W "q"
-open_file -r $file -R "q"
-open_file -c -e -a $file -E EEXIST
-open_file -r $file -R "q"
+    ctx.open_file(f, app=1, crt=1, ex=1, write=b"q")
+    ctx.open_file(f, ro=1, read=b"q")
+    ctx.open_file(f, app=1, crt=1, ex=1, err=EEXIST)
+    ctx.open_file(f, ro=1, read=b"q")
 
 # Open read/write and overwrite
-echo "TEST$filenr: Create O_CREAT|O_EXCL|O_RDWR"
-file=$testdir/no_foo$((filenr++))$termslash
+def subtest_4(ctx):
+    ctx.begin_test(4, "Create O_CREAT|O_EXCL|O_RDWR")
+    f = ctx.no_file() + ctx.termslash()
 
-open_file -c -e -r -w $file -W "q"
-open_file -r $file -R "q"
-open_file -c -e -r -w $file -E EEXIST
-open_file -r $file -R "q"
+    ctx.open_file(f, rw=1, crt=1, ex=1, write=b"q")
+    ctx.open_file(f, ro=1, read=b"q")
+    ctx.open_file(f, rw=1, crt=1, ex=1, err=EEXIST)
+    ctx.open_file(f, ro=1, read=b"q")
 
 # Open read/write and append
-echo "TEST$filenr: Create O_CREAT|O_EXCL|O_APPEND|O_RDWR"
-file=$testdir/no_foo$((filenr++))$termslash
+def subtest_5(ctx):
+    ctx.begin_test(5, "Create O_CREAT|O_EXCL|O_APPEND|O_RDWR")
+    f = ctx.no_file() + ctx.termslash()
 
-open_file -c -e -r -a $file -W "q"
-open_file -r $file -R "q"
-open_file -c -e -r -a $file -E EEXIST
-open_file -r $file -R "q"
+    ctx.open_file(f, ro=1, app=1, crt=1, ex=1, write=b"q")
+    ctx.open_file(f, ro=1, read=b"q")
+    ctx.open_file(f, ro=1, app=1, crt=1, ex=1, err=EEXIST)
+    ctx.open_file(f, ro=1, read=b"q")
+
+subtests = [
+    subtest_1,
+    subtest_2,
+    subtest_3,
+    subtest_4,
+    subtest_5,
+]

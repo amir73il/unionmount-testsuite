@@ -1,9 +1,6 @@
-
+from errno import *
 from settings import *
 from tool_box import *
-
-declare -i filenr
-filenr=100
 
 ###############################################################################
 #
@@ -12,54 +9,67 @@ filenr=100
 ###############################################################################
 
 # Open(dir symlink) read-only
-echo "TEST$filenr: Open(dir symlink) O_RDONLY"
-indirect=$testdir/indirect_dir_sym$((filenr))$termslash
-direct=$testdir/direct_dir_sym$((filenr))$termslash
-file=$testdir/dir$((filenr++))$termslash
+def subtest_1(ctx):
+    ctx.begin_test(1, "Open(dir symlink) O_RDONLY")
+    indirect = ctx.indirect_dir_sym() + ctx.termslash()
+    direct = ctx.direct_dir_sym() + ctx.termslash()
+    f = ctx.non_empty_dir() + ctx.termslash()
 
-open_file -r $indirect
-open_file -r $indirect
+    ctx.open_file(indirect, ro=1)
+    ctx.open_file(indirect, ro=1)
 
 # Open(dir symlink) write-only and overwrite
-echo "TEST$filenr: Open(dir symlink) O_WRONLY"
-indirect=$testdir/indirect_dir_sym$((filenr))$termslash
-direct=$testdir/direct_dir_sym$((filenr))$termslash
-file=$testdir/dir$((filenr++))$termslash
+def subtest_2(ctx):
+    ctx.begin_test(2, "Open(dir symlink) O_WRONLY")
+    indirect = ctx.indirect_dir_sym() + ctx.termslash()
+    direct = ctx.direct_dir_sym() + ctx.termslash()
+    f = ctx.non_empty_dir() + ctx.termslash()
 
-open_file -w $indirect -E EISDIR
-open_file -r $indirect
-open_file -w $indirect -E EISDIR
-open_file -r $indirect
+    ctx.open_file(indirect, wo=1, err=EISDIR)
+    ctx.open_file(indirect, ro=1)
+    ctx.open_file(indirect, wo=1, err=EISDIR)
+    ctx.open_file(indirect, ro=1)
 
 # Open(dir symlink) write-only and append
-echo "TEST$filenr: Open(dir symlink) O_APPEND|O_WRONLY"
-indirect=$testdir/indirect_dir_sym$((filenr))$termslash
-direct=$testdir/direct_dir_sym$((filenr))$termslash
-file=$testdir/dir$((filenr++))$termslash
+def subtest_3(ctx):
+    ctx.begin_test(3, "Open(dir symlink) O_APPEND|O_WRONLY")
+    indirect = ctx.indirect_dir_sym() + ctx.termslash()
+    direct = ctx.direct_dir_sym() + ctx.termslash()
+    f = ctx.non_empty_dir() + ctx.termslash()
 
-open_file -a $indirect -E EISDIR
-open_file -r $indirect
-open_file -a $indirect -E EISDIR
-open_file -r $indirect
+    ctx.open_file(indirect, app=1, err=EISDIR)
+    ctx.open_file(indirect, ro=1)
+    ctx.open_file(indirect, app=1, err=EISDIR)
+    ctx.open_file(indirect, ro=1)
 
 # Open(dir symlink) read/write and overwrite
-echo "TEST$filenr: Open(dir symlink) O_RDWR"
-indirect=$testdir/indirect_dir_sym$((filenr))$termslash
-direct=$testdir/direct_dir_sym$((filenr))$termslash
-file=$testdir/dir$((filenr++))$termslash
+def subtest_4(ctx):
+    ctx.begin_test(4, "Open(dir symlink) O_RDWR")
+    indirect = ctx.indirect_dir_sym() + ctx.termslash()
+    direct = ctx.direct_dir_sym() + ctx.termslash()
+    f = ctx.non_empty_dir() + ctx.termslash()
 
-open_file -r -w $indirect -E EISDIR
-open_file -r $indirect
-open_file -r -w $indirect -E EISDIR
-open_file -r $indirect
+    ctx.open_file(indirect, rw=1, err=EISDIR)
+    ctx.open_file(indirect, ro=1)
+    ctx.open_file(indirect, rw=1, err=EISDIR)
+    ctx.open_file(indirect, ro=1)
 
 # Open(dir symlink) read/write and append
-echo "TEST$filenr: Open(dir symlink) O_APPEND|O_RDWR"
-indirect=$testdir/indirect_dir_sym$((filenr))$termslash
-direct=$testdir/direct_dir_sym$((filenr))$termslash
-file=$testdir/dir$((filenr++))$termslash
+def subtest_5(ctx):
+    ctx.begin_test(5, "Open(dir symlink) O_APPEND|O_RDWR")
+    indirect = ctx.indirect_dir_sym() + ctx.termslash()
+    direct = ctx.direct_dir_sym() + ctx.termslash()
+    f = ctx.non_empty_dir() + ctx.termslash()
 
-open_file -r -a $indirect -E EISDIR
-open_file -r $indirect
-open_file -r -a $indirect -E EISDIR
-open_file -r $indirect
+    ctx.open_file(indirect, ro=1, app=1, err=EISDIR)
+    ctx.open_file(indirect, ro=1)
+    ctx.open_file(indirect, ro=1, app=1, err=EISDIR)
+    ctx.open_file(indirect, ro=1)
+
+subtests = [
+    subtest_1,
+    subtest_2,
+    subtest_3,
+    subtest_4,
+    subtest_5,
+]

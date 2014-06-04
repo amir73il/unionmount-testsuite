@@ -1,9 +1,6 @@
-
+from errno import *
 from settings import *
 from tool_box import *
-
-declare -i filenr
-filenr=100
 
 ###############################################################################
 #
@@ -11,126 +8,141 @@ filenr=100
 #
 ###############################################################################
 
-echo "TEST$filenr: Unlink file"
-file=$testdir/foo$((filenr++))$termslash
+def subtest_1(ctx):
+    ctx.begin_test(1, "Unlink file")
+    f = ctx.reg_file() + ctx.termslash()
 
-fs_op unlink $file
-open_file -r $file -E ENOENT
+    ctx.unlink(f)
+    ctx.open_file(f, ro=1, err=ENOENT)
 
-fs_op unlink $file -E ENOENT ${termslash:+-E ENOTDIR}
-open_file -r $file -E ENOENT
+    ctx.unlink(f, err=ENOENT)
+    ctx.open_file(f, ro=1, err=ENOENT)
 
-echo "TEST$filenr: Unlink direct symlink to file"
-symlink=$testdir/direct_sym$((filenr))$termslash
-file=$testdir/foo$((filenr++))$termslash
+def subtest_2(ctx):
+    ctx.begin_test(2, "Unlink direct symlink to file")
+    symlink = ctx.direct_sym() + ctx.termslash()
+    f = ctx.reg_file() + ctx.termslash()
 
-open_file -r $symlink -R ":xxx:yyy:zzz"
-fs_op unlink $symlink
-open_file -r $symlink -E ENOENT
-open_file -r $file -R ":xxx:yyy:zzz"
+    ctx.open_file(symlink, ro=1, read=b":xxx:yyy:zzz")
+    ctx.unlink(symlink)
+    ctx.open_file(symlink, ro=1, err=ENOENT)
+    ctx.open_file(f, ro=1, read=b":xxx:yyy:zzz")
 
-fs_op unlink $symlink -E ENOENT ${termslash:+-E ENOTDIR}
-open_file -r $symlink -E ENOENT
-open_file -r $file -R ":xxx:yyy:zzz"
+    ctx.unlink(symlink, err=ENOENT)
+    ctx.open_file(symlink, ro=1, err=ENOENT)
+    ctx.open_file(f, ro=1, read=b":xxx:yyy:zzz")
 
-echo "TEST$filenr: Unlink indirect symlink to file"
-indirect=$testdir/indirect_sym$((filenr))$termslash
-symlink=$testdir/direct_sym$((filenr))$termslash
-file=$testdir/foo$((filenr++))$termslash
+def subtest_3(ctx):
+    ctx.begin_test(3, "Unlink indirect symlink to file")
+    indirect = ctx.indirect_sym() + ctx.termslash()
+    symlink = ctx.direct_sym() + ctx.termslash()
+    f = ctx.reg_file() + ctx.termslash()
 
-open_file -r $indirect -R ":xxx:yyy:zzz"
-fs_op unlink $indirect
-open_file -r $indirect -E ENOENT
-open_file -r $symlink -R ":xxx:yyy:zzz"
-open_file -r $file -R ":xxx:yyy:zzz"
+    ctx.open_file(indirect, ro=1, read=b":xxx:yyy:zzz")
+    ctx.unlink(indirect)
+    ctx.open_file(indirect, ro=1, err=ENOENT)
+    ctx.open_file(symlink, ro=1, read=b":xxx:yyy:zzz")
+    ctx.open_file(f, ro=1, read=b":xxx:yyy:zzz")
 
-fs_op unlink $indirect -E ENOENT ${termslash:+-E ENOTDIR}
-open_file -r $indirect -E ENOENT
-open_file -r $symlink -R ":xxx:yyy:zzz"
+    ctx.unlink(indirect, err=ENOENT)
+    ctx.open_file(indirect, ro=1, err=ENOENT)
+    ctx.open_file(symlink, ro=1, read=b":xxx:yyy:zzz")
 
-#
-#
-#
-echo "TEST$filenr: Unlink dir"
-file=$testdir/dir$((filenr++))$termslash
+    #
+    #
+    #
+def subtest_4(ctx):
+    ctx.begin_test(4, "Unlink dir")
+    f = ctx.non_empty_dir() + ctx.termslash()
 
-fs_op unlink $file -E EISDIR
-open_file -d -r $file
+    ctx.unlink(f, err=EISDIR)
+    ctx.open_dir(f, ro=1)
 
-fs_op unlink $file -E EISDIR
-open_file -d -r $file
+    ctx.unlink(f, err=EISDIR)
+    ctx.open_dir(f, ro=1)
 
-echo "TEST$filenr: Unlink direct symlink to dir"
-symlink=$testdir/direct_dir_sym$((filenr))$termslash
-file=$testdir/dir$((filenr++))$termslash
+def subtest_5(ctx):
+    ctx.begin_test(5, "Unlink direct symlink to dir")
+    symlink = ctx.direct_dir_sym() + ctx.termslash()
+    f = ctx.non_empty_dir() + ctx.termslash()
 
-open_file -d -r $symlink
-fs_op unlink $symlink ${termslash:+-E ENOTDIR}
-if [ "$termslash" = "" ]
-then
-    open_file -d -r $symlink -E ENOENT
-else
-    open_file -d -r $symlink
-fi
-open_file -d -r $file
+    ctx.open_dir(symlink, ro=1)
+    ctx.unlink(symlink)
+    if not ctx.termslash():
+        ctx.open_dir(symlink, ro=1, err=ENOENT)
+    else:
+        ctx.open_dir(symlink, ro=1)
+    ctx.open_dir(f, ro=1)
 
-fs_op unlink $symlink -E ENOENT ${termslash:+-E ENOTDIR}
-if [ "$termslash" = "" ]
-then
-    open_file -d -r $symlink -E ENOENT
-else
-    open_file -d -r $symlink
-fi
-open_file -d -r $file
+    ctx.unlink(symlink, err=ENOENT)
+    if not ctx.termslash():
+        ctx.open_dir(symlink, ro=1, err=ENOENT)
+    else:
+        ctx.open_dir(symlink, ro=1)
+    ctx.open_dir(f, ro=1)
 
-echo "TEST$filenr: Unlink indirect symlink to dir"
-indirect=$testdir/indirect_dir_sym100$termslash
-symlink=$testdir/direct_dir_sym$((filenr))$termslash
-file=$testdir/dir$((filenr++))$termslash
+def subtest_6(ctx):
+    ctx.begin_test(6, "Unlink indirect symlink to dir")
+    indirect = ctx.indirect_dir_sym() + ctx.termslash()
+    symlink = ctx.direct_dir_sym() + ctx.termslash()
+    f = ctx.non_empty_dir() + ctx.termslash()
 
-open_file -d -r $indirect
-fs_op unlink $indirect ${termslash:+-E ENOTDIR}
-if [ "$termslash" = "" ]
-then
-    open_file -d -r $indirect -E ENOENT
-else
-    open_file -d -r $indirect
-fi
-open_file -d -r $symlink
-open_file -d -r $file
+    ctx.open_dir(indirect, ro=1)
+    ctx.unlink(indirect)
+    if not ctx.termslash():
+        ctx.open_dir(indirect, ro=1, err=ENOENT)
+    else:
+        ctx.open_dir(indirect, ro=1)
+    ctx.open_dir(symlink, ro=1)
+    ctx.open_dir(f, ro=1)
 
-fs_op unlink $indirect -E ENOENT ${termslash:+-E ENOTDIR}
-if [ "$termslash" = "" ]
-then
-    open_file -d -r $indirect -E ENOENT
-else
-    open_file -d -r $indirect
-fi
-open_file -d -r $symlink
+    ctx.unlink(indirect, err=ENOENT)
+    if not ctx.termslash():
+        ctx.open_dir(indirect, ro=1, err=ENOENT)
+    else:
+        ctx.open_dir(indirect, ro=1)
+    ctx.open_dir(symlink, ro=1)
 
-#
-#
-#
-echo "TEST$filenr: Unlink absent file"
-file=$testdir/no_foo$((filenr))$termslash
+    #
+    #
+    #
+def subtest_7(ctx):
+    ctx.begin_test(7, "Unlink absent file")
+    f = ctx.no_file() + ctx.termslash()
 
-fs_op unlink $file -E ENOENT
-fs_op unlink $file -E ENOENT
+    ctx.unlink(f, err=ENOENT)
+    ctx.unlink(f, err=ENOENT)
 
-echo "TEST$filenr: Unlink broken symlink to absent file"
-file=$testdir/pointless$((filenr++))$termslash
+def subtest_8(ctx):
+    ctx.begin_test(8, "Unlink broken symlink to absent file")
+    f = ctx.pointless() + ctx.termslash()
 
-fs_op unlink $file
-fs_op unlink $file -E ENOENT ${termslash:+-E ENOTDIR}
+    ctx.unlink(f)
+    ctx.unlink(f, err=ENOENT)
 
-echo "TEST$filenr: Unlink broken symlink"
-file=$testdir/pointless$((filenr))$termslash
+def subtest_9(ctx):
+    ctx.begin_test(9, "Unlink broken symlink")
+    f = ctx.pointless() + ctx.termslash()
 
-fs_op unlink $file
-fs_op unlink $file -E ENOENT ${termslash:+-E ENOTDIR}
+    ctx.unlink(f)
+    ctx.unlink(f, err=ENOENT)
 
-echo "TEST$filenr: Unlink absent file pointed to by broken symlink"
-file=$testdir/no_foo$((filenr++))$termslash
+def subtest_10(ctx):
+    ctx.begin_test(10, "Unlink absent file pointed to by broken symlink")
+    f = ctx.no_file() + ctx.termslash()
 
-fs_op unlink $file -E ENOENT
-fs_op unlink $file -E ENOENT
+    ctx.unlink(f, err=ENOENT)
+    ctx.unlink(f, err=ENOENT)
+
+subtests = [
+    subtest_1,
+    subtest_2,
+    subtest_3,
+    subtest_4,
+    subtest_5,
+    subtest_6,
+    subtest_7,
+    subtest_8,
+    subtest_9,
+    subtest_10,
+]

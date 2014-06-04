@@ -1,132 +1,105 @@
-
+from errno import *
 from settings import *
 from tool_box import *
-
-declare -i filenr
-filenr=100
 
 ###############################################################################
 #
 # Try to violate permissions
 #
 ###############################################################################
-filenr=100
 
-echo "TEST$filenr: Impermissible open O_TRUNC|O_WRONLY"
-file=$testdir/rootfile$((filenr++))$termslash
+def subtest_1(ctx):
+    ctx.begin_test(1, "Impermissible open O_TRUNC|O_WRONLY")
+    f = ctx.rootfile() + ctx.termslash()
 
-open_file_as_bin -t -w $file -E EACCES
-open_file_as_bin -w $file -E EACCES
-open_file_as_bin -r $file -R ":xxx:yyy:zzz"
-open_file -r $file -R ":xxx:yyy:zzz"
-open_file -w $file -W "shark"
-open_file -r $file -R "sharkyyy:zzz"
-open_file_as_bin -r $file -R "sharkyyy:zzz"
+    ctx.open_file(f, wo=1, tr=1, err=EACCES, as_bin=1)
+    ctx.open_file(f, wo=1, err=EACCES, as_bin=1)
+    ctx.open_file(f, ro=1, read=b":xxx:yyy:zzz", as_bin=1)
+    ctx.open_file(f, ro=1, read=b":xxx:yyy:zzz")
+    ctx.open_file(f, wo=1, write=b"shark")
+    ctx.open_file(f, ro=1, read=b"sharkyyy:zzz")
+    ctx.open_file(f, ro=1, read=b"sharkyyy:zzz", as_bin=1)
 
-echo "TEST$filenr: Impermissible open O_WRONLY"
-file=$testdir/rootfile$((filenr++))$termslash
+def subtest_2(ctx):
+    ctx.begin_test(2, "Impermissible open O_WRONLY")
+    f = ctx.rootfile() + ctx.termslash()
 
-open_file_as_bin -w $file -E EACCES
-open_file_as_bin -w $file -E EACCES
-open_file_as_bin -r $file -R ":xxx:yyy:zzz"
-open_file -r $file -R ":xxx:yyy:zzz"
-open_file -w $file -W "shark"
-open_file -r $file -R "sharkyyy:zzz"
-open_file_as_bin -r $file -R "sharkyyy:zzz"
+    ctx.open_file(f, wo=1, err=EACCES, as_bin=1)
+    ctx.open_file(f, wo=1, err=EACCES, as_bin=1)
+    ctx.open_file(f, ro=1, read=b":xxx:yyy:zzz", as_bin=1)
+    ctx.open_file(f, ro=1, read=b":xxx:yyy:zzz")
+    ctx.open_file(f, wo=1, write=b"shark")
+    ctx.open_file(f, ro=1, read=b"sharkyyy:zzz")
+    ctx.open_file(f, ro=1, read=b"sharkyyy:zzz", as_bin=1)
 
-echo "TEST$filenr: Impermissible open O_APPEND"
-file=$testdir/rootfile$((filenr++))$termslash
+def subtest_3(ctx):
+    ctx.begin_test(3, "Impermissible open O_APPEND")
+    f = ctx.rootfile() + ctx.termslash()
 
-open_file_as_bin -a $file -E EACCES
-open_file_as_bin -a $file -E EACCES
-open_file_as_bin -r $file -R ":xxx:yyy:zzz"
-open_file -r $file -R ":xxx:yyy:zzz"
-open_file -a $file -W "shark"
-open_file -r $file -R ":xxx:yyy:zzzshark"
-open_file_as_bin -r $file -R ":xxx:yyy:zzzshark"
+    ctx.open_file(f, app=1, err=EACCES, as_bin=1)
+    ctx.open_file(f, app=1, err=EACCES, as_bin=1)
+    ctx.open_file(f, ro=1, read=b":xxx:yyy:zzz", as_bin=1)
+    ctx.open_file(f, ro=1, read=b":xxx:yyy:zzz")
+    ctx.open_file(f, app=1, write=b"shark")
+    ctx.open_file(f, ro=1, read=b":xxx:yyy:zzzshark")
+    ctx.open_file(f, ro=1, read=b":xxx:yyy:zzzshark", as_bin=1)
 
-#
-#
-#
-echo "TEST$filenr: Impermissible truncate"
-file=$testdir/rootfile$((filenr++))$termslash
+    #
+    #
+    #
+def subtest_4(ctx):
+    ctx.begin_test(4, "Impermissible truncate")
+    f = ctx.rootfile() + ctx.termslash()
 
-if [ "$termslash" = "" ]
-then
-    assert_is_lower $file
-    size=`stat --printf %s $file`
-    if [ x$size != x12 ]
-    then 
-	echo "$file: Initial size ($size) is not 12" >&2
-	exit 1
-    fi
-fi
-fs_op_as_bin truncate $file 4 -E EACCES
-fs_op_as_bin truncate $file 4 -E EACCES
-if [ "$termslash" = "" ]
-then
-    size=`stat --printf %s $file`
-    if [ x$size != x12 ]
-    then 
-	echo "$file: Size ($size) is not still 12" >&2
-	exit 1
-    fi
-fi
-open_file_as_bin -r $file -R ":xxx:yyy:zzz"
-open_file -r $file -R ":xxx:yyy:zzz"
-fs_op truncate $file 4
-if [ "$termslash" = "" ]
-then
-    size=`stat --printf %s $file`
-    if [ x$size != x4 ]
-    then 
-	echo "$file: Size ($size) is not 4" >&2
-	exit 1
-    fi
-fi
-open_file -r $file -R ":xxx"
-open_file_as_bin -r $file -R ":xxx"
+    if not ctx.termslash():
+        size = ctx.get_file_size(f)
+        if size != 12:
+            raise TestError(f + ": Initial size (" + str(size) + ") is not 12")
+    ctx.truncate(f, 4, err=EACCES, as_bin=1)
+    ctx.truncate(f, 4, err=EACCES, as_bin=1)
+    if not ctx.termslash():
+        size = ctx.get_file_size(f)
+        if size != 12:
+            raise TestError(f + ": Size (" + str(size) + ") is not still 12")
+    ctx.open_file(f, ro=1, read=b":xxx:yyy:zzz", as_bin=1)
+    ctx.open_file(f, ro=1, read=b":xxx:yyy:zzz")
+    ctx.truncate(f, 4)
+    if not ctx.termslash():
+        size = ctx.get_file_size(f)
+        if size != 4:
+            raise TestError(f + ": Size (" + str(size) + ") is not 4")
+    ctx.open_file(f, ro=1, read=b":xxx")
+    ctx.open_file(f, ro=1, read=b":xxx", as_bin=1)
 
-#
-#
-#
-echo "TEST$filenr: Impermissible utimes"
-file=$testdir/rootfile$((filenr++))$termslash
+    #
+    #
+    #
+def subtest_5(ctx):
+    ctx.begin_test(5, "Impermissible utimes")
+    f = ctx.rootfile() + ctx.termslash()
 
-if [ "$termslash" = "" ]
-then
-    assert_is_lower $file
-    atime=`stat -c %X $file`
-    mtime=`stat -c %Y $file`
-fi
-fs_op_as_bin utimes $file -E EACCES
-fs_op_as_bin utimes $file -E EACCES
-if [ "$termslash" = "" ]
-then
-    if [ `stat -c %X $file` != $atime ]
-    then
-	echo "$file: Access time unexpectedly changed" >&2
-	exit 1
-    fi
-    if [ `stat -c %Y $file` != $mtime ]
-    then
-	echo "$file: Modification time unexpectedly changed" >&2
-	exit 1
-    fi
-fi
-fs_op utimes $file
-if [ "$termslash" = "" ]
-then
-    if [ `stat -c %X $file` == $atime ]
-    then
-	echo "$file: Access time didn't change" >&2
-	exit 1
-    fi
-    if [ `stat -c %Y $file` == $mtime ]
-    then
-	echo "$file: Modification time didn't change" >&2
-	exit 1
-    fi
-    assert_is_upper $file
-fi
-open_file -r $file -R ":xxx:yyy:zzz"
+    if not ctx.termslash():
+        atime = ctx.get_file_atime(f)
+        mtime = ctx.get_file_mtime(f)
+    ctx.utimes(f, err=EACCES, as_bin=1)
+    ctx.utimes(f, err=EACCES, as_bin=1)
+    if not ctx.termslash():
+        if ctx.get_file_atime(file) != atime:
+            raise TestError(f + ": Access time unexpectedly changed")
+        if ctx.get_file_mtime(file) != mtime:
+            raise TestError(f + ": Modification time unexpectedly changed")
+    ctx.utimes(f)
+    if not ctx.termslash():
+        if ctx.get_file_atime(file) == atime:
+            raise TestError(f + ": Access time didn't change")
+        if ctx.get_file_mtime(file) == mtime:
+            raise TestError(f + ": Modification time didn't change")
+    ctx.open_file(f, ro=1, read=b":xxx:yyy:zzz")
+
+subtests = [
+    subtest_1,
+    subtest_2,
+    subtest_3,
+    subtest_4,
+    subtest_5,
+]

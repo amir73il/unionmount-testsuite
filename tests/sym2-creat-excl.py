@@ -1,9 +1,6 @@
-
+from errno import *
 from settings import *
 from tool_box import *
-
-declare -i filenr
-filenr=100
 
 ###############################################################################
 #
@@ -12,46 +9,59 @@ filenr=100
 ###############################################################################
 
 # Open(symlink->symlink) read-only
-echo "TEST$filenr: Open(symlink->symlink) O_CREAT|O_EXCL|O_RDONLY"
-indirect=$testdir/indirect_sym$((filenr))$termslash
-direct=$testdir/direct_sym$((filenr))$termslash
-file=$testdir/foo$((filenr++))$termslash
+def subtest_1(ctx):
+    ctx.begin_test(1, "Open(symlink->symlink) O_CREAT|O_EXCL|O_RDONLY")
+    indirect = ctx.indirect_sym() + ctx.termslash()
+    direct = ctx.direct_sym() + ctx.termslash()
+    f = ctx.reg_file() + ctx.termslash()
 
-open_file -c -e -r $indirect -E EEXIST
-open_file -r $indirect -R ":xxx:yyy:zzz"
+    ctx.open_file(indirect, ro=1, crt=1, ex=1, err=EEXIST)
+    ctx.open_file(indirect, ro=1, read=b":xxx:yyy:zzz")
 
 # Open(symlink->symlink) write-only and overwrite
-echo "TEST$filenr: Open(symlink->symlink) O_CREAT|O_EXCL|O_WRONLY"
-indirect=$testdir/indirect_sym$((filenr))$termslash
-direct=$testdir/direct_sym$((filenr))$termslash
-file=$testdir/foo$((filenr++))$termslash
+def subtest_2(ctx):
+    ctx.begin_test(2, "Open(symlink->symlink) O_CREAT|O_EXCL|O_WRONLY")
+    indirect = ctx.indirect_sym() + ctx.termslash()
+    direct = ctx.direct_sym() + ctx.termslash()
+    f = ctx.reg_file() + ctx.termslash()
 
-open_file -c -e -w $indirect -E EEXIST
-open_file -r $indirect -R ":xxx:yyy:zzz"
+    ctx.open_file(indirect, wo=1, crt=1, ex=1, err=EEXIST)
+    ctx.open_file(indirect, ro=1, read=b":xxx:yyy:zzz")
 
 # Open(symlink->symlink) write-only and append
-echo "TEST$filenr: Open(symlink->symlink) O_CREAT|O_EXCL|O_APPEND|O_WRONLY"
-indirect=$testdir/indirect_sym$((filenr))$termslash
-direct=$testdir/direct_sym$((filenr))$termslash
-file=$testdir/foo$((filenr++))$termslash
+def subtest_3(ctx):
+    ctx.begin_test(3, "Open(symlink->symlink) O_CREAT|O_EXCL|O_APPEND|O_WRONLY")
+    indirect = ctx.indirect_sym() + ctx.termslash()
+    direct = ctx.direct_sym() + ctx.termslash()
+    f = ctx.reg_file() + ctx.termslash()
 
-open_file -c -e -a $indirect -E EEXIST
-open_file -r $indirect -R ":xxx:yyy:zzz"
+    ctx.open_file(indirect, app=1, crt=1, ex=1, err=EEXIST)
+    ctx.open_file(indirect, ro=1, read=b":xxx:yyy:zzz")
 
 # Open(symlink->symlink) read/write and overwrite
-echo "TEST$filenr: Open(symlink->symlink) O_CREAT|O_EXCL|O_RDWR"
-indirect=$testdir/indirect_sym$((filenr))$termslash
-direct=$testdir/direct_sym$((filenr))$termslash
-file=$testdir/foo$((filenr++))$termslash
+def subtest_4(ctx):
+    ctx.begin_test(4, "Open(symlink->symlink) O_CREAT|O_EXCL|O_RDWR")
+    indirect = ctx.indirect_sym() + ctx.termslash()
+    direct = ctx.direct_sym() + ctx.termslash()
+    f = ctx.reg_file() + ctx.termslash()
 
-open_file -c -e -r -w $indirect -E EEXIST
-open_file -r $indirect -R ":xxx:yyy:zzz"
+    ctx.open_file(indirect, rw=1, crt=1, ex=1, err=EEXIST)
+    ctx.open_file(indirect, ro=1, read=b":xxx:yyy:zzz")
 
 # Open(symlink->symlink) read/write and append
-echo "TEST$filenr: Open(symlink->symlink) O_CREAT|O_EXCL|O_APPEND|O_RDWR"
-indirect=$testdir/indirect_sym$((filenr))$termslash
-direct=$testdir/direct_sym$((filenr))$termslash
-file=$testdir/foo$((filenr++))$termslash
+def subtest_5(ctx):
+    ctx.begin_test(5, "Open(symlink->symlink) O_CREAT|O_EXCL|O_APPEND|O_RDWR")
+    indirect = ctx.indirect_sym() + ctx.termslash()
+    direct = ctx.direct_sym() + ctx.termslash()
+    f = ctx.reg_file() + ctx.termslash()
 
-open_file -c -e -r -a $indirect -E EEXIST
-open_file -r $indirect -R ":xxx:yyy:zzz"
+    ctx.open_file(indirect, ro=1, app=1, crt=1, ex=1, err=EEXIST)
+    ctx.open_file(indirect, ro=1, read=b":xxx:yyy:zzz")
+
+subtests = [
+    subtest_1,
+    subtest_2,
+    subtest_3,
+    subtest_4,
+    subtest_5,
+]

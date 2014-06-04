@@ -1,9 +1,6 @@
-
+from errno import *
 from settings import *
 from tool_box import *
-
-declare -i filenr
-filenr=100
 
 ###############################################################################
 #
@@ -12,192 +9,219 @@ filenr=100
 ###############################################################################
 
 # Remove a directory that does not exist in the lower layer
-echo "TEST$filenr: Remove nonexistent directory"
-dir=$testdir/no_dir$((filenr++))$termslash
+def subtest_1(ctx):
+    ctx.begin_test(1, "Remove nonexistent directory")
+    d = ctx.no_dir() + ctx.termslash()
 
-fs_op rmdir $dir -E ENOENT
-fs_op rmdir $dir -E ENOENT
+    ctx.rmdir(d, err=ENOENT)
+    ctx.rmdir(d, err=ENOENT)
 
 # Remove a subdirectory from a dir that does not exist
-echo "TEST$filenr: Remove subdir from nonexistent directory"
-dir=$testdir/no_dir$((filenr++))/sub$termslash
+def subtest_2(ctx):
+    ctx.begin_test(2, "Remove subdir from nonexistent directory")
+    d = ctx.no_dir() + "/sub" + ctx.termslash()
 
-fs_op rmdir $dir -E ENOENT
-fs_op rmdir $dir -E ENOENT
+    ctx.rmdir(d, err=ENOENT)
+    ctx.rmdir(d, err=ENOENT)
 
 # Rmdir a file
-echo "TEST$filenr: Remove-dir a file"
-file=$testdir/foo$((filenr))
-dir=$testdir/foo$((filenr++))$termslash
+def subtest_3(ctx):
+    ctx.begin_test(3, "Remove-dir a file")
+    f = ctx.reg_file()
+    d = ctx.reg_file() + ctx.termslash()
 
-fs_op rmdir $dir -E ENOTDIR
-fs_op rmdir $dir -E ENOTDIR
-open_file_nt -r $file -R ":xxx:yyy:zzz"
+    ctx.rmdir(d, err=ENOTDIR)
+    ctx.rmdir(d, err=ENOTDIR)
+    ctx.open_file(f, ro=1, read=b":xxx:yyy:zzz")
 
 # Remove a subdir from a file
-echo "TEST$filenr: Remove subdir from file"
-file=$testdir/foo$((filenr))
-dir=$testdir/foo$((filenr++))/sub$termslash
+def subtest_4(ctx):
+    ctx.begin_test(4, "Remove subdir from file")
+    f = ctx.reg_file()
+    d = ctx.reg_file() + "/sub" + ctx.termslash()
 
-fs_op rmdir $dir -E ENOTDIR
-fs_op rmdir $dir -E ENOTDIR
-open_file_nt -r $file -R ":xxx:yyy:zzz"
+    ctx.rmdir(d, err=ENOTDIR)
+    ctx.rmdir(d, err=ENOTDIR)
+    ctx.open_file(f, ro=1, read=b":xxx:yyy:zzz")
 
 # Remove an empty lower directory
-echo "TEST$filenr: Remove empty dir"
-dir=$testdir/empty$((filenr++))$termslash
-subdir=$dir/sub$termslash
+def subtest_5(ctx):
+    ctx.begin_test(5, "Remove empty dir")
+    d = ctx.empty_dir() + ctx.termslash()
+    subdir = d + "/sub" + ctx.termslash()
 
-fs_op rmdir $dir
-fs_op rmdir $dir -E ENOENT
-fs_op rmdir $subdir -E ENOENT
+    ctx.rmdir(d)
+    ctx.rmdir(d, err=ENOENT)
+    ctx.rmdir(subdir, err=ENOENT)
 
 # Remove a non-existent directory from an empty lower directory
-echo "TEST$filenr: Remove directory from empty dir"
-dir=$testdir/empty$((filenr++))/sub$termslash
+def subtest_6(ctx):
+    ctx.begin_test(6, "Remove directory from empty dir")
+    d = ctx.empty_dir() + "/sub" + ctx.termslash()
 
-fs_op rmdir $dir -E ENOENT
-fs_op rmdir $dir -E ENOENT
+    ctx.rmdir(d, err=ENOENT)
+    ctx.rmdir(d, err=ENOENT)
 
 # Remove a populated lower directory
-echo "TEST$filenr: Remove populated directory"
-dir=$testdir/dir$((filenr++))$termslash
-file=$dir/a
+def subtest_7(ctx):
+    ctx.begin_test(7, "Remove populated directory")
+    d = ctx.non_empty_dir() + ctx.termslash()
+    f = d + "/a"
 
-fs_op rmdir $dir -E ENOTEMPTY
-open_file_nt -r $file -R ""
-fs_op unlink $file
-open_file_nt -r $file -E ENOENT
-fs_op unlink $file -E ENOENT
-fs_op rmdir $dir
-fs_op rmdir $dir -E ENOENT
-open_file_nt -r $file -R "" -E ENOENT
+    ctx.rmdir(d, err=ENOTEMPTY)
+    ctx.open_file(f, ro=1, read=b"")
+    ctx.unlink(f)
+    ctx.open_file(f, ro=1, err=ENOENT)
+    ctx.unlink(f, err=ENOENT)
+    ctx.rmdir(d)
+    ctx.rmdir(d, err=ENOENT)
+    ctx.open_file(f, ro=1, read=b"", err=ENOENT)
 
 # Remove a populated lower directory after creating a file in it
-echo "TEST$filenr: Remove populated directory with created file"
-dir=$testdir/empty$((filenr++))$termslash
-file=$dir/b
+def subtest_8(ctx):
+    ctx.begin_test(8, "Remove populated directory with created file")
+    d = ctx.empty_dir() + ctx.termslash()
+    f = d + "/b"
 
-open_file_nt -c -e -w $file -W "abcq"
-fs_op rmdir $dir -E ENOTEMPTY
-fs_op_nt unlink $file
-open_file_nt -r $file -E ENOENT
-fs_op_nt unlink $file -E ENOENT
-fs_op rmdir $dir
-fs_op rmdir $dir -E ENOENT
-open_file_nt -r $file -R "" -E ENOENT
+    ctx.open_file(f, wo=1, crt=1, ex=1, write=b"abcq")
+    ctx.rmdir(d, err=ENOTEMPTY)
+    ctx.unlink(f)
+    ctx.open_file(f, ro=1, err=ENOENT)
+    ctx.unlink(f, err=ENOENT)
+    ctx.rmdir(d)
+    ctx.rmdir(d, err=ENOENT)
+    ctx.open_file(f, ro=1, read=b"", err=ENOENT)
 
 # Remove a populated lower directory with copied-up file
-echo "TEST$filenr: Remove populated directory with copied up file"
-dir=$testdir/dir$((filenr++))$termslash
-file=$dir/a
+def subtest_9(ctx):
+    ctx.begin_test(9, "Remove populated directory with copied up file")
+    d = ctx.non_empty_dir() + ctx.termslash()
+    f = d + "/a"
 
-fs_op rmdir $dir -E ENOTEMPTY
-open_file_nt -r $file -R ""
-open_file_nt -w $file -W "abcd"
-open_file_nt -r $file -R "abcd"
-fs_op_nt unlink $file
-open_file_nt -r $file -E ENOENT
-fs_op_nt unlink $file -E ENOENT
-fs_op rmdir $dir
-fs_op rmdir $dir -E ENOENT
-open_file_nt -r $file -R "" -E ENOENT
+    ctx.rmdir(d, err=ENOTEMPTY)
+    ctx.open_file(f, ro=1, read=b"")
+    ctx.open_file(f, wo=1, write=b"abcd")
+    ctx.open_file(f, ro=1, read=b"abcd")
+    ctx.unlink(f)
+    ctx.open_file(f, ro=1, err=ENOENT)
+    ctx.unlink(f, err=ENOENT)
+    ctx.rmdir(d)
+    ctx.rmdir(d, err=ENOENT)
+    ctx.open_file(f, ro=1, read=b"", err=ENOENT)
 
 # Remove a populated lower directory after unlinking a file and creating a dir over it
-echo "TEST$filenr: Remove populated directory with mkdir after unlink"
-dir=$testdir/dir$((filenr++))$termslash
-file=$dir/a
+def subtest_10(ctx):
+    ctx.begin_test(10, "Remove populated directory with mkdir after unlink")
+    d = ctx.non_empty_dir() + ctx.termslash()
+    f = d + "/a"
 
-fs_op rmdir $dir -E ENOTEMPTY
+    ctx.rmdir(d, err=ENOTEMPTY)
 
-open_file_nt -r $file -R ""
-fs_op rmdir $dir -E ENOTEMPTY
-fs_op_nt unlink $file
-open_file_nt -r $file -E ENOENT
-fs_op_nt unlink $file -E ENOENT
+    ctx.open_file(f, ro=1, read=b"")
+    ctx.rmdir(d, err=ENOTEMPTY)
+    ctx.unlink(f)
+    ctx.open_file(f, ro=1, err=ENOENT)
+    ctx.unlink(f, err=ENOENT)
 
-fs_op mkdir $file 0755
-fs_op mkdir $file 0755 -E EEXIST
-fs_op rmdir $dir -E ENOTEMPTY
-fs_op rmdir $file
-fs_op rmdir $file -E ENOENT
+    ctx.mkdir(f, 0o755)
+    ctx.mkdir(f, 0o755, err=EEXIST)
+    ctx.rmdir(d, err=ENOTEMPTY)
+    ctx.rmdir(f)
+    ctx.rmdir(f, err=ENOENT)
 
-fs_op rmdir $dir
-fs_op rmdir $dir -E ENOENT
-open_file_nt -r $file -R "" -E ENOENT
+    ctx.rmdir(d)
+    ctx.rmdir(d, err=ENOENT)
+    ctx.open_file(f, ro=1, read=b"", err=ENOENT)
 
-exit 0
-
-
-
-
-
-
-
-
+    exit 0
 
 # Remove a directory in a populated lower directory
-echo "TEST$filenr: Remove directory in dir"
-dir=$testdir/dir$((filenr))$termslash
-subdir=$testdir/dir$((filenr++))/sub$termslash
+def subtest_11(ctx):
+    ctx.begin_test(11, "Remove directory in dir")
+    d = ctx.non_empty_dir() + ctx.termslash()
+    subdir = ctx.non_empty_dir() + "/sub" + ctx.termslash()
 
-fs_op rmdir $subdir
-fs_op rmdir $subdir -E EEXIST
-open_file_nt -r $dir/a -R ""
+    ctx.rmdir(subdir)
+    ctx.rmdir(subdir, err=EEXIST)
+    ctx.open_file(d + "/a", ro=1, read=b"")
 
 # Remove a directory over a symlink to a file
-echo "TEST$filenr: Remove directory over sym to file"
-file=$testdir/foo$((filenr))
-dir=$testdir/foo$((filenr))$termslash
-sym=$testdir/direct_sym$((filenr++))$termslash
+def subtest_12(ctx):
+    ctx.begin_test(12, "Remove directory over sym to file")
+    f = ctx.reg_file()
+    d = ctx.reg_file() + ctx.termslash()
+    sym = ctx.direct_sym() + ctx.termslash()
 
-fs_op rmdir $sym -E EEXIST
-fs_op rmdir $sym -E EEXIST
-fs_op rmdir $dir -E EEXIST
-open_file_nt -r $file -R ":xxx:yyy:zzz"
+    ctx.rmdir(sym, err=EEXIST)
+    ctx.rmdir(sym, err=EEXIST)
+    ctx.rmdir(d, err=EEXIST)
+    ctx.open_file(f, ro=1, read=b":xxx:yyy:zzz")
 
 # Remove a directory over a symlink to a symlink to a file
-echo "TEST$filenr: Remove directory over sym to sym to file"
-file=$testdir/foo$((filenr))
-dir=$testdir/foo$((filenr))$termslash
-sym=$testdir/direct_sym$((filenr))$termslash
-isym=$testdir/indirect_sym$((filenr++))$termslash
+def subtest_13(ctx):
+    ctx.begin_test(13, "Remove directory over sym to sym to file")
+    f = ctx.reg_file()
+    d = ctx.reg_file() + ctx.termslash()
+    sym = ctx.direct_sym() + ctx.termslash()
+    isym = ctx.indirect_sym() + ctx.termslash()
 
-fs_op rmdir $isym -E EEXIST
-fs_op rmdir $isym -E EEXIST
-fs_op rmdir $sym -E EEXIST
-fs_op rmdir $dir -E EEXIST
-open_file_nt -r $file -R ":xxx:yyy:zzz"
+    ctx.rmdir(isym, err=EEXIST)
+    ctx.rmdir(isym, err=EEXIST)
+    ctx.rmdir(sym, err=EEXIST)
+    ctx.rmdir(d, err=EEXIST)
+    ctx.open_file(f, ro=1, read=b":xxx:yyy:zzz")
 
 # Remove a directory over a symlink to a dir
-echo "TEST$filenr: Remove directory over sym to dir"
-dir=$testdir/dir$((filenr))$termslash
-sym=$testdir/direct_dir_sym$((filenr++))$termslash
+def subtest_14(ctx):
+    ctx.begin_test(14, "Remove directory over sym to dir")
+    d = ctx.non_empty_dir() + ctx.termslash()
+    sym = ctx.direct_dir_sym() + ctx.termslash()
 
-fs_op rmdir $sym -E EEXIST
-fs_op rmdir $sym -E EEXIST
-fs_op rmdir $dir -E EEXIST
-open_file_nt -r $sym/a -R ""
-open_file_nt -r $dir/a -R ""
+    ctx.rmdir(sym, err=EEXIST)
+    ctx.rmdir(sym, err=EEXIST)
+    ctx.rmdir(d, err=EEXIST)
+    ctx.open_file(sym + "/a", ro=1, read=b"")
+    ctx.open_file(d + "/a", ro=1, read=b"")
 
 # Remove a directory over a symlink to a symlink to a dir
-echo "TEST$filenr: Remove directory over sym to sym to dir"
-dir=$testdir/dir$((filenr))$termslash
-sym=$testdir/direct_dir_sym$((filenr))$termslash
-isym=$testdir/indirect_dir_sym$((filenr++))$termslash
+def subtest_15(ctx):
+    ctx.begin_test(15, "Remove directory over sym to sym to dir")
+    d = ctx.non_empty_dir() + ctx.termslash()
+    sym = ctx.direct_dir_sym() + ctx.termslash()
+    isym = ctx.indirect_dir_sym() + ctx.termslash()
 
-fs_op rmdir $isym -E EEXIST
-fs_op rmdir $isym -E EEXIST
-fs_op rmdir $sym -E EEXIST
-fs_op rmdir $dir -E EEXIST
-open_file_nt -r $isym/a -R ""
-open_file_nt -r $sym/a -R ""
-open_file_nt -r $dir/a -R ""
+    ctx.rmdir(isym, err=EEXIST)
+    ctx.rmdir(isym, err=EEXIST)
+    ctx.rmdir(sym, err=EEXIST)
+    ctx.rmdir(d, err=EEXIST)
+    ctx.open_file(isym + "/a", ro=1, read=b"")
+    ctx.open_file(sym + "/a", ro=1, read=b"")
+    ctx.open_file(d + "/a", ro=1, read=b"")
 
 # Remove a directory over a dangling symlink
-echo "TEST$filenr: Remove directory over dangling sym"
-dir=$testdir/no_foo$((filenr))$termslash
-sym=$testdir/pointless$((filenr++))$termslash
+def subtest_16(ctx):
+    ctx.begin_test(16, "Remove directory over dangling sym")
+    d = ctx.no_file() + ctx.termslash()
+    sym = ctx.pointless() + ctx.termslash()
 
-fs_op rmdir $sym -E EEXIST
-fs_op rmdir $sym -E EEXIST
+    ctx.rmdir(sym, err=EEXIST)
+    ctx.rmdir(sym, err=EEXIST)
+
+subtests = [
+    subtest_1,
+    subtest_2,
+    subtest_3,
+    subtest_4,
+    subtest_5,
+    subtest_6,
+    subtest_7,
+    subtest_8,
+    subtest_9,
+    subtest_10,
+    subtest_11,
+    subtest_12,
+    subtest_13,
+    subtest_14,
+    subtest_15,
+    subtest_16,
+]

@@ -1,9 +1,6 @@
-
+from errno import *
 from settings import *
 from tool_box import *
-
-declare -i filenr
-filenr=100
 
 ###############################################################################
 #
@@ -12,44 +9,57 @@ filenr=100
 ###############################################################################
 
 # Open read-only
-echo "TEST$filenr: Open O_CREAT|O_RDONLY"
-file=$testdir/foo$((filenr++))$termslash
+def subtest_1(ctx):
+    ctx.begin_test(1, "Open O_CREAT|O_RDONLY")
+    f = ctx.reg_file() + ctx.termslash()
 
-open_file -c -r $file -R ":xxx:yyy:zzz"
-open_file -c -r $file -R ":xxx:yyy:zzz"
+    ctx.open_file(f, ro=1, crt=1, read=b":xxx:yyy:zzz")
+    ctx.open_file(f, ro=1, crt=1, read=b":xxx:yyy:zzz")
 
 # Open write-only and overwrite
-echo "TEST$filenr: Open O_CREAT|O_WRONLY"
-file=$testdir/foo$((filenr++))$termslash
+def subtest_2(ctx):
+    ctx.begin_test(2, "Open O_CREAT|O_WRONLY")
+    f = ctx.reg_file() + ctx.termslash()
 
-open_file -c -w $file -W "q"
-open_file -c -r $file -R "qxxx:yyy:zzz"
-open_file -c -w $file -W "p"
-open_file -c -r $file -R "pxxx:yyy:zzz"
+    ctx.open_file(f, wo=1, crt=1, write=b"q")
+    ctx.open_file(f, ro=1, crt=1, read=b"qxxx:yyy:zzz")
+    ctx.open_file(f, wo=1, crt=1, write=b"p")
+    ctx.open_file(f, ro=1, crt=1, read=b"pxxx:yyy:zzz")
 
 # Open write-only and append
-echo "TEST$filenr: Open O_CREAT|O_APPEND|O_WRONLY"
-file=$testdir/foo$((filenr++))$termslash
+def subtest_3(ctx):
+    ctx.begin_test(3, "Open O_CREAT|O_APPEND|O_WRONLY")
+    f = ctx.reg_file() + ctx.termslash()
 
-open_file -c -a $file -W "q"
-open_file -c -r $file -R ":xxx:yyy:zzzq"
-open_file -c -a $file -W "p"
-open_file -c -r $file -R ":xxx:yyy:zzzqp"
+    ctx.open_file(f, app=1, crt=1, write=b"q")
+    ctx.open_file(f, ro=1, crt=1, read=b":xxx:yyy:zzzq")
+    ctx.open_file(f, app=1, crt=1, write=b"p")
+    ctx.open_file(f, ro=1, crt=1, read=b":xxx:yyy:zzzqp")
 
 # Open read/write and overwrite
-echo "TEST$filenr: Open O_CREAT|O_RDWR"
-file=$testdir/foo$((filenr++))$termslash
+def subtest_4(ctx):
+    ctx.begin_test(4, "Open O_CREAT|O_RDWR")
+    f = ctx.reg_file() + ctx.termslash()
 
-open_file -c -r -w $file -W "q"
-open_file -c -r $file -R "qxxx:yyy:zzz"
-open_file -c -r -w $file -W "p"
-open_file -c -r $file -R "pxxx:yyy:zzz"
+    ctx.open_file(f, rw=1, crt=1, write=b"q")
+    ctx.open_file(f, ro=1, crt=1, read=b"qxxx:yyy:zzz")
+    ctx.open_file(f, rw=1, crt=1, write=b"p")
+    ctx.open_file(f, ro=1, crt=1, read=b"pxxx:yyy:zzz")
 
 # Open read/write and append
-echo "TEST$filenr: Open O_CREAT|O_APPEND|O_RDWR"
-file=$testdir/foo$((filenr++))$termslash
+def subtest_5(ctx):
+    ctx.begin_test(5, "Open O_CREAT|O_APPEND|O_RDWR")
+    f = ctx.reg_file() + ctx.termslash()
 
-open_file -c -r -a $file -W "q"
-open_file -c -r $file -R ":xxx:yyy:zzzq"
-open_file -c -r -a $file -W "p"
-open_file -c -r $file -R ":xxx:yyy:zzzqp"
+    ctx.open_file(f, ro=1, app=1, crt=1, write=b"q")
+    ctx.open_file(f, ro=1, crt=1, read=b":xxx:yyy:zzzq")
+    ctx.open_file(f, ro=1, app=1, crt=1, write=b"p")
+    ctx.open_file(f, ro=1, crt=1, read=b":xxx:yyy:zzzqp")
+
+subtests = [
+    subtest_1,
+    subtest_2,
+    subtest_3,
+    subtest_4,
+    subtest_5,
+]

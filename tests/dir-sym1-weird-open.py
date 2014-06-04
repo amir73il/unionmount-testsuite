@@ -1,9 +1,6 @@
-
+from errno import *
 from settings import *
 from tool_box import *
-
-declare -i filenr
-filenr=100
 
 ###############################################################################
 #
@@ -13,81 +10,104 @@ filenr=100
 ###############################################################################
 
 # Open(dir symlink) read-only and create
-echo "TEST$filenr: Open(dir symlink) O_RDONLY | O_CREAT"
-symlink=$testdir/direct_dir_sym$((filenr))$termslash
-file=$testdir/dir$((filenr++))$termslash
+def subtest_1(ctx):
+    ctx.begin_test(1, "Open(dir symlink) O_RDONLY | O_CREAT")
+    symlink = ctx.direct_dir_sym() + ctx.termslash()
+    f = ctx.non_empty_dir() + ctx.termslash()
 
-open_file -r -c $symlink -E EISDIR
-open_file -r $symlink
+    ctx.open_file(symlink, ro=1, crt=1, err=EISDIR)
+    ctx.open_file(symlink, ro=1)
 
 # Open(dir symlink) read-only and create exclusive
-echo "TEST$filenr: Open(dir symlink) O_RDONLY | O_CREAT | O_EXCL"
-symlink=$testdir/direct_dir_sym$((filenr))$termslash
-file=$testdir/dir$((filenr++))$termslash
+def subtest_2(ctx):
+    ctx.begin_test(2, "Open(dir symlink) O_RDONLY | O_CREAT | O_EXCL")
+    symlink = ctx.direct_dir_sym() + ctx.termslash()
+    f = ctx.non_empty_dir() + ctx.termslash()
 
-open_file -r -c -e $symlink -E EEXIST ${termslash:+-E EISDIR}
-open_file -r $symlink
+    ctx.open_file(symlink, ro=1, crt=1, ex=1, err=EEXIST)
+    ctx.open_file(symlink, ro=1)
 
 # Open(dir symlink) read-only and truncate
-echo "TEST$filenr: Open(dir symlink) O_RDONLY | O_TRUNC"
-symlink=$testdir/direct_dir_sym$((filenr))$termslash
-file=$testdir/dir$((filenr++))$termslash
+def subtest_3(ctx):
+    ctx.begin_test(3, "Open(dir symlink) O_RDONLY | O_TRUNC")
+    symlink = ctx.direct_dir_sym() + ctx.termslash()
+    f = ctx.non_empty_dir() + ctx.termslash()
 
-open_file -r -t $symlink -E EISDIR
-open_file -r $symlink
+    ctx.open_file(symlink, ro=1, tr=1, err=EISDIR)
+    ctx.open_file(symlink, ro=1)
 
 # Open(dir symlink) read-only and truncate create
-echo "TEST$filenr: Open(dir symlink) O_RDONLY | O_TRUNC | O_CREAT"
-symlink=$testdir/direct_dir_sym$((filenr))$termslash
-file=$testdir/dir$((filenr++))$termslash
+def subtest_4(ctx):
+    ctx.begin_test(4, "Open(dir symlink) O_RDONLY | O_TRUNC | O_CREAT")
+    symlink = ctx.direct_dir_sym() + ctx.termslash()
+    f = ctx.non_empty_dir() + ctx.termslash()
 
-open_file -r -t -c $symlink -E EISDIR
-open_file -r $symlink
+    ctx.open_file(symlink, ro=1, tr=1, crt=1, err=EISDIR)
+    ctx.open_file(symlink, ro=1)
 
 # Open(dir symlink) read-only and truncate create exclusive
-echo "TEST$filenr: Open(dir symlink) O_RDONLY | O_TRUNC | O_CREAT | O_EXCL"
-symlink=$testdir/direct_dir_sym$((filenr))$termslash
-file=$testdir/dir$((filenr++))$termslash
+def subtest_5(ctx):
+    ctx.begin_test(5, "Open(dir symlink) O_RDONLY | O_TRUNC | O_CREAT | O_EXCL")
+    symlink = ctx.direct_dir_sym() + ctx.termslash()
+    f = ctx.non_empty_dir() + ctx.termslash()
 
-open_file -r -t -c -e $symlink -E EEXIST ${termslash:+-E EISDIR}
-open_file -r $symlink
+    ctx.open_file(symlink, ro=1, tr=1, crt=1, ex=1, err=EEXIST)
+    ctx.open_file(symlink, ro=1)
 
 # Open(dir symlink) write-only and create
-echo "TEST$filenr: Open(dir symlink) O_WRONLY | O_CREAT"
-symlink=$testdir/direct_dir_sym$((filenr))$termslash
-file=$testdir/dir$((filenr++))$termslash
+def subtest_6(ctx):
+    ctx.begin_test(6, "Open(dir symlink) O_WRONLY | O_CREAT")
+    symlink = ctx.direct_dir_sym() + ctx.termslash()
+    f = ctx.non_empty_dir() + ctx.termslash()
 
-open_file -w -c $symlink -E EISDIR
-open_file -r $symlink
+    ctx.open_file(symlink, wo=1, crt=1, err=EISDIR)
+    ctx.open_file(symlink, ro=1)
 
 # Open(dir symlink) write-only and create exclusive
-echo "TEST$filenr: Open(dir symlink) O_WRONLY | O_CREAT | O_EXCL"
-symlink=$testdir/direct_dir_sym$((filenr))$termslash
-file=$testdir/dir$((filenr++))$termslash
+def subtest_7(ctx):
+    ctx.begin_test(7, "Open(dir symlink) O_WRONLY | O_CREAT | O_EXCL")
+    symlink = ctx.direct_dir_sym() + ctx.termslash()
+    f = ctx.non_empty_dir() + ctx.termslash()
 
-open_file -w -c -e $symlink -E EEXIST ${termslash:+-E EISDIR}
-open_file -r $symlink
+    ctx.open_file(symlink, wo=1, crt=1, ex=1, err=EEXIST)
+    ctx.open_file(symlink, ro=1)
 
 # Open(dir symlink) write-only and truncate
-echo "TEST$filenr: Open(dir symlink) O_WRONLY | O_TRUNC"
-symlink=$testdir/direct_dir_sym$((filenr))$termslash
-file=$testdir/dir$((filenr++))$termslash
+def subtest_8(ctx):
+    ctx.begin_test(8, "Open(dir symlink) O_WRONLY | O_TRUNC")
+    symlink = ctx.direct_dir_sym() + ctx.termslash()
+    f = ctx.non_empty_dir() + ctx.termslash()
 
-open_file -w -t $symlink -E EISDIR
-open_file -r $symlink
+    ctx.open_file(symlink, wo=1, tr=1, err=EISDIR)
+    ctx.open_file(symlink, ro=1)
 
 # Open(dir symlink) write-only and truncate create
-echo "TEST$filenr: Open(dir symlink) O_WRONLY | O_TRUNC | O_CREAT"
-symlink=$testdir/direct_dir_sym$((filenr))$termslash
-file=$testdir/dir$((filenr++))$termslash
+def subtest_9(ctx):
+    ctx.begin_test(9, "Open(dir symlink) O_WRONLY | O_TRUNC | O_CREAT")
+    symlink = ctx.direct_dir_sym() + ctx.termslash()
+    f = ctx.non_empty_dir() + ctx.termslash()
 
-open_file -w -t -c $symlink -E EISDIR
-open_file -r $symlink
+    ctx.open_file(symlink, wo=1, tr=1, crt=1, err=EISDIR)
+    ctx.open_file(symlink, ro=1)
 
 # Open(dir symlink) write-only and truncate create exclusive
-echo "TEST$filenr: Open(dir symlink) O_WRONLY | O_TRUNC | O_CREAT | O_EXCL"
-symlink=$testdir/direct_dir_sym$((filenr))$termslash
-file=$testdir/dir$((filenr++))$termslash
+def subtest_10(ctx):
+    ctx.begin_test(10, "Open(dir symlink) O_WRONLY | O_TRUNC | O_CREAT | O_EXCL")
+    symlink = ctx.direct_dir_sym() + ctx.termslash()
+    f = ctx.non_empty_dir() + ctx.termslash()
 
-open_file -w -t -c -e $symlink -E EEXIST ${termslash:+-E EISDIR}
-open_file -r $symlink
+    ctx.open_file(symlink, wo=1, tr=1, crt=1, ex=1, err=EEXIST)
+    ctx.open_file(symlink, ro=1)
+
+subtests = [
+    subtest_1,
+    subtest_2,
+    subtest_3,
+    subtest_4,
+    subtest_5,
+    subtest_6,
+    subtest_7,
+    subtest_8,
+    subtest_9,
+    subtest_10,
+]

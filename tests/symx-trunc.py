@@ -1,9 +1,6 @@
-
+from errno import *
 from settings import *
 from tool_box import *
-
-declare -i filenr
-filenr=100
 
 ###############################################################################
 #
@@ -12,36 +9,49 @@ filenr=100
 ###############################################################################
 
 # Open and truncate broken link read-only
-echo "TEST$filenr: Open(broken) O_TRUNC|O_RDONLY"
-symlink=$testdir/pointless$((filenr))$termslash
-file=$testdir/no_foo$((filenr++))$termslash
+def subtest_1(ctx):
+    ctx.begin_test(1, "Open(broken) O_TRUNC|O_RDONLY")
+    symlink = ctx.pointless() + ctx.termslash()
+    f = ctx.no_file() + ctx.termslash()
 
-open_file -t -r $symlink -E ENOENT
+    ctx.open_file(symlink, ro=1, tr=1, err=ENOENT)
 
 # Open and truncate broken link write-only and overwrite
-echo "TEST$filenr: Open(broken) O_TRUNC|O_WRONLY"
-symlink=$testdir/pointless$((filenr))$termslash
-file=$testdir/no_foo$((filenr++))$termslash
+def subtest_2(ctx):
+    ctx.begin_test(2, "Open(broken) O_TRUNC|O_WRONLY")
+    symlink = ctx.pointless() + ctx.termslash()
+    f = ctx.no_file() + ctx.termslash()
 
-open_file -t -w $symlink -E ENOENT
+    ctx.open_file(symlink, wo=1, tr=1, err=ENOENT)
 
 # Open and truncate broken link write-only and append
-echo "TEST$filenr: Open(broken) O_TRUNC|O_APPEND|O_WRONLY"
-symlink=$testdir/pointless$((filenr))$termslash
-file=$testdir/no_foo$((filenr++))$termslash
+def subtest_3(ctx):
+    ctx.begin_test(3, "Open(broken) O_TRUNC|O_APPEND|O_WRONLY")
+    symlink = ctx.pointless() + ctx.termslash()
+    f = ctx.no_file() + ctx.termslash()
 
-open_file -t -a $symlink -E ENOENT
+    ctx.open_file(symlink, app=1, tr=1, err=ENOENT)
 
 # Open and truncate broken link read/write and overwrite
-echo "TEST$filenr: Open(broken) O_TRUNC|O_RDWR"
-symlink=$testdir/pointless$((filenr))$termslash
-file=$testdir/no_foo$((filenr++))$termslash
+def subtest_4(ctx):
+    ctx.begin_test(4, "Open(broken) O_TRUNC|O_RDWR")
+    symlink = ctx.pointless() + ctx.termslash()
+    f = ctx.no_file() + ctx.termslash()
 
-open_file -t -r -w $symlink -E ENOENT
+    ctx.open_file(symlink, rw=1, tr=1, err=ENOENT)
 
 # Open and truncate broken link read/write and append
-echo "TEST$filenr: Open(broken) O_TRUNC|O_APPEND|O_RDWR"
-symlink=$testdir/pointless$((filenr))$termslash
-file=$testdir/no_foo$((filenr++))$termslash
+def subtest_5(ctx):
+    ctx.begin_test(5, "Open(broken) O_TRUNC|O_APPEND|O_RDWR")
+    symlink = ctx.pointless() + ctx.termslash()
+    f = ctx.no_file() + ctx.termslash()
 
-open_file -t -r -a $symlink -E ENOENT
+    ctx.open_file(symlink, ro=1, app=1, tr=1, err=ENOENT)
+
+subtests = [
+    subtest_1,
+    subtest_2,
+    subtest_3,
+    subtest_4,
+    subtest_5,
+]
