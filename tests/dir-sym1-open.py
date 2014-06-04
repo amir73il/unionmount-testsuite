@@ -1,6 +1,6 @@
-#!/bin/bash
 
-. ./tool_box.inc
+from settings import *
+from tool_box import *
 
 declare -i filenr
 filenr=100
@@ -16,81 +16,45 @@ echo "TEST$filenr: Open(dir symlink) O_RDONLY"
 symlink=$testdir/direct_dir_sym$((filenr))$termslash
 file=$testdir/dir$((filenr++))$termslash
 
-assert_is_lower $symlink
 open_file -r $symlink
-assert_is_lower $symlink
 open_file -r $symlink
-assert_is_lower $symlink
-assert_is_upper $file
 
 # Open(dir symlink) write-only and overwrite
 echo "TEST$filenr: Open(dir symlink) O_WRONLY"
 symlink=$testdir/direct_dir_sym$((filenr))$termslash
 file=$testdir/dir$((filenr++))$termslash
 
-assert_is_lower $symlink
 open_file -w $symlink -E EISDIR
-assert_is_lower $symlink
-assert_is_upper $file
 open_file -r $symlink
-assert_is_lower $symlink
 open_file -w $symlink -E EISDIR
-assert_is_lower $symlink
-assert_is_upper $file
 open_file -r $symlink
-assert_is_lower $symlink
-assert_is_upper $file
 
 # Open(dir symlink) write-only and append
 echo "TEST$filenr: Open(dir symlink) O_APPEND|O_WRONLY"
 symlink=$testdir/direct_dir_sym$((filenr))$termslash
 file=$testdir/dir$((filenr++))$termslash
 
-assert_is_lower $symlink
 open_file -a $symlink -E EISDIR
-assert_is_lower $symlink
-assert_is_upper $file
 open_file -r $symlink
-assert_is_lower $symlink
 open_file -a $symlink -E EISDIR
-assert_is_lower $symlink
-assert_is_upper $file
 open_file -r $symlink
-assert_is_lower $symlink
-assert_is_upper $file
 
 # Open(dir symlink) read/write and overwrite
 echo "TEST$filenr: Open(dir symlink) O_RDWR"
 symlink=$testdir/direct_dir_sym$((filenr))$termslash
 file=$testdir/dir$((filenr++))$termslash
 
-assert_is_lower $symlink
 open_file -r -w $symlink -E EISDIR
-assert_is_lower $symlink
-assert_is_upper $file
 open_file -r $symlink
-assert_is_lower $symlink
 open_file -r -w $symlink -E EISDIR
-assert_is_lower $symlink
-assert_is_upper $file
 open_file -r $symlink
-assert_is_lower $symlink
-assert_is_upper $file
 
 # Open(dir symlink) read/write and append
 echo "TEST$filenr: Open(dir symlink) O_APPEND|O_RDWR"
 symlink=$testdir/direct_dir_sym$((filenr))$termslash
 file=$testdir/dir$((filenr++))$termslash
 
-assert_is_lower $symlink
 open_file -r -a $symlink -E EISDIR
-assert_is_lower $symlink
-assert_is_upper $file
 open_file -r $symlink
-assert_is_lower $symlink
 open_file -r -a $symlink -E EISDIR
-assert_is_lower $symlink
-assert_is_upper $file
 open_file -r $symlink
-assert_is_lower $symlink
-assert_is_upper $file

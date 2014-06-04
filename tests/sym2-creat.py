@@ -1,6 +1,6 @@
-#!/bin/bash
 
-. ./tool_box.inc
+from settings import *
+from tool_box import *
 
 declare -i filenr
 filenr=100
@@ -17,14 +17,8 @@ indirect=$testdir/indirect_sym$((filenr))$termslash
 direct=$testdir/direct_sym$((filenr))$termslash
 file=$testdir/foo$((filenr++))$termslash
 
-assert_is_lower $indirect
-assert_is_lower $file
 open_file -c -r $indirect -R ":xxx:yyy:zzz"
-assert_is_lower $indirect
 open_file -c -r $indirect -R ":xxx:yyy:zzz"
-assert_is_lower $indirect
-assert_is_lower $direct
-assert_is_lower $file
 
 # Open(symlink->symlink) write-only and overwrite
 echo "TEST$filenr: Open(symlink->symlink) O_CREAT|O_WRONLY"
@@ -32,20 +26,10 @@ indirect=$testdir/indirect_sym$((filenr))$termslash
 direct=$testdir/direct_sym$((filenr))$termslash
 file=$testdir/foo$((filenr++))$termslash
 
-assert_is_lower $indirect
-assert_is_lower $file
 open_file -c -w $indirect -W "q"
-assert_is_lower $indirect
 open_file -c -r $indirect -R "qxxx:yyy:zzz"
-assert_is_lower $indirect
-assert_is_upper $file
 open_file -c -w $indirect -W "p"
-assert_is_lower $indirect
-assert_is_upper $file
 open_file -c -r $indirect -R "pxxx:yyy:zzz"
-assert_is_lower $indirect
-assert_is_lower $direct
-assert_is_upper $file
 
 # Open(symlink->symlink) write-only and append
 echo "TEST$filenr: Open(symlink->symlink) O_CREAT|O_APPEND|O_WRONLY"
@@ -53,20 +37,10 @@ indirect=$testdir/indirect_sym$((filenr))$termslash
 direct=$testdir/direct_sym$((filenr))$termslash
 file=$testdir/foo$((filenr++))$termslash
 
-assert_is_lower $indirect
-assert_is_lower $file
 open_file -c -a $indirect -W "q"
-assert_is_lower $indirect
-assert_is_upper $file
 open_file -c -r $indirect -R ":xxx:yyy:zzzq"
-assert_is_lower $indirect
 open_file -c -a $indirect -W "p"
-assert_is_lower $indirect
-assert_is_upper $file
 open_file -c -r $indirect -R ":xxx:yyy:zzzqp"
-assert_is_lower $indirect
-assert_is_lower $direct
-assert_is_upper $file
 
 # Open(symlink->symlink) read/write and overwrite
 echo "TEST$filenr: Open(symlink->symlink) O_CREAT|O_RDWR"
@@ -74,20 +48,10 @@ indirect=$testdir/indirect_sym$((filenr))$termslash
 direct=$testdir/direct_sym$((filenr))$termslash
 file=$testdir/foo$((filenr++))$termslash
 
-assert_is_lower $indirect
-assert_is_lower $file
 open_file -c -r -w $indirect -W "q"
-assert_is_lower $indirect
-assert_is_upper $file
 open_file -c -r $indirect -R "qxxx:yyy:zzz"
-assert_is_lower $indirect
 open_file -c -r -w $indirect -W "p"
-assert_is_lower $indirect
-assert_is_upper $file
 open_file -c -r $indirect -R "pxxx:yyy:zzz"
-assert_is_lower $indirect
-assert_is_lower $direct
-assert_is_upper $file
 
 # Open(symlink->symlink) read/write and append
 echo "TEST$filenr: Open(symlink->symlink) O_CREAT|O_APPEND|O_RDWR"
@@ -95,17 +59,7 @@ indirect=$testdir/indirect_sym$((filenr))$termslash
 direct=$testdir/direct_sym$((filenr))$termslash
 file=$testdir/foo$((filenr++))$termslash
 
-assert_is_lower $indirect
-assert_is_lower $file
 open_file -c -r -a $indirect -W "q"
-assert_is_lower $indirect
-assert_is_upper $file
 open_file -c -r $indirect -R ":xxx:yyy:zzzq"
-assert_is_lower $indirect
 open_file -c -r -a $indirect -W "p"
-assert_is_lower $indirect
-assert_is_upper $file
 open_file -c -r $indirect -R ":xxx:yyy:zzzqp"
-assert_is_lower $indirect
-assert_is_lower $direct
-assert_is_upper $file

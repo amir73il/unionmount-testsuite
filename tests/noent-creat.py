@@ -1,6 +1,6 @@
-#!/bin/bash
 
-. ./tool_box.inc
+from settings import *
+from tool_box import *
 
 declare -i filenr
 filenr=100
@@ -16,58 +16,40 @@ echo "TEST$filenr: Create O_CREAT|O_RDONLY"
 file=$testdir/no_foo$((filenr++))$termslash
 
 open_file -c -r $file -R ""
-assert_is_upper $file
 open_file -c -r $file -R ""
-assert_is_upper $file
 
 # Open write-only and overwrite
 echo "TEST$filenr: Create O_CREAT|O_WRONLY"
 file=$testdir/no_foo$((filenr++))$termslash
 
 open_file -c -w $file -W "q"
-assert_is_upper $file
 open_file -r $file -R "q"
-assert_is_upper $file
 open_file -c -w $file -W "p"
-assert_is_upper $file
 open_file -r $file -R "p"
-assert_is_upper $file
 
 # Open write-only and append
 echo "TEST$filenr: Create O_CREAT|O_APPEND|O_WRONLY"
 file=$testdir/no_foo$((filenr++))$termslash
 
 open_file -c -a $file -W "q"
-assert_is_upper $file
 open_file -r $file -R "q"
-assert_is_upper $file
 open_file -c -a $file -W "p"
-assert_is_upper $file
 open_file -r $file -R "qp"
-assert_is_upper $file
 
 # Open read/write and overwrite
 echo "TEST$filenr: Create O_CREAT|O_RDWR"
 file=$testdir/no_foo$((filenr++))$termslash
 
 open_file -c -r -w $file -W "q"
-assert_is_upper $file
 open_file -r $file -R "q"
-assert_is_upper $file
 open_file -c -r -w $file -W "p"
-assert_is_upper $file
 open_file -r $file -R "p"
-assert_is_upper $file
 
 # Open read/write and append
 echo "TEST$filenr: Create O_CREAT|O_APPEND|O_RDWR"
 file=$testdir/no_foo$((filenr++))$termslash
 
 open_file -c -r -a $file -W "q"
-assert_is_upper $file
 open_file -r $file -R "q"
-assert_is_upper $file
 open_file -c -r -a $file -W "p"
-assert_is_upper $file
 open_file -r $file -R "qp"
-assert_is_upper $file

@@ -1,6 +1,6 @@
-#!/bin/bash
 
-. ./tool_box.inc
+from settings import *
+from tool_box import *
 
 declare -i filenr
 filenr=100
@@ -13,9 +13,7 @@ filenr=100
 
 echo "TEST129: Prepare comparison"
 cmpfile=$testdir/foo129
-assert_is_lower $cmpfile
 dd if=/dev/zero count=$((28-12)) bs=1 seek=12 conv=notrunc of=$cmpfile status=noxfer
-assert_is_upper $cmpfile
 
 # Truncate extant file
 for ((loop=0; loop<29; loop++)) {

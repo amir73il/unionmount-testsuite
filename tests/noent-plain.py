@@ -1,6 +1,6 @@
-#!/bin/bash
 
-. ./tool_box.inc
+from settings import *
+from tool_box import *
 
 declare -i filenr
 filenr=100
@@ -10,9 +10,6 @@ filenr=100
 # Attempted open of non-existent file; no special flags
 #
 ###############################################################################
-
-echo
-echo "Try non-existent files:"
 
 # Open read-only
 echo "TEST$filenr: Open O_RDONLY"

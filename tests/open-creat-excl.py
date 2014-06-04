@@ -1,6 +1,6 @@
-#!/bin/bash
 
-. ./tool_box.inc
+from settings import *
+from tool_box import *
 
 declare -i filenr
 filenr=100
@@ -15,43 +15,33 @@ filenr=100
 echo "TEST$filenr: Open O_CREAT|O_EXCL|O_RDONLY"
 file=$testdir/foo$((filenr++))$termslash
 
-assert_is_lower $file
 open_file -c -e -r $file -E EEXIST
-assert_is_lower $file
 open_file -r $file -R ":xxx:yyy:zzz"
 
 # Open write-only and overwrite
 echo "TEST$filenr: Open O_CREAT|O_EXCL|O_WRONLY"
 file=$testdir/foo$((filenr++))$termslash
 
-assert_is_lower $file
 open_file -c -e -w $file -E EEXIST
-assert_is_lower $file
 open_file -r $file -R ":xxx:yyy:zzz"
 
 # Open write-only and append
 echo "TEST$filenr: Open O_CREAT|O_EXCL|O_APPEND|O_WRONLY"
 file=$testdir/foo$((filenr++))$termslash
 
-assert_is_lower $file
 open_file -c -e -a $file -E EEXIST
-assert_is_lower $file
 open_file -r $file -R ":xxx:yyy:zzz"
 
 # Open read/write and overwrite
 echo "TEST$filenr: Open O_CREAT|O_EXCL|O_RDWR"
 file=$testdir/foo$((filenr++))$termslash
 
-assert_is_lower $file
 open_file -c -e -r -w $file -E EEXIST
-assert_is_lower $file
 open_file -r $file -R ":xxx:yyy:zzz"
 
 # Open read/write and append
 echo "TEST$filenr: Open O_CREAT|O_EXCL|O_APPEND|O_RDWR"
 file=$testdir/foo$((filenr++))$termslash
 
-assert_is_lower $file
 open_file -c -e -r -a $file -E EEXIST
-assert_is_lower $file
 open_file -r $file -R ":xxx:yyy:zzz"

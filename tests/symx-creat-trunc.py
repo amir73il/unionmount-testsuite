@@ -1,6 +1,6 @@
-#!/bin/bash
 
-. ./tool_box.inc
+from settings import *
+from tool_box import *
 
 declare -i filenr
 filenr=100
@@ -16,11 +16,7 @@ echo "TEST$filenr: Open(broken) O_CREAT|O_TRUNC|O_RDONLY"
 symlink=$testdir/pointless$((filenr))$termslash
 file=$testdir/no_foo$((filenr++))$termslash
 
-assert_is_lower $symlink
-assert_does_not_exist $file
 open_file -c -t -r $symlink -R ""
-assert_is_lower $symlink
-assert_is_upper $file
 open_file -r $file -R ""
 
 # Open and truncate broken link write-only and overwrite
@@ -28,11 +24,7 @@ echo "TEST$filenr: Open(broken) O_CREAT|O_TRUNC|O_WRONLY"
 symlink=$testdir/pointless$((filenr))$termslash
 file=$testdir/no_foo$((filenr++))$termslash
 
-assert_is_lower $symlink
-assert_does_not_exist $file
 open_file -c -t -w $symlink -W "q"
-assert_is_lower $symlink
-assert_is_upper $file
 open_file -r $file -R "q"
 
 # Open and truncate broken link write-only and append
@@ -40,11 +32,7 @@ echo "TEST$filenr: Open(broken) O_CREAT|O_TRUNC|O_APPEND|O_WRONLY"
 symlink=$testdir/pointless$((filenr))$termslash
 file=$testdir/no_foo$((filenr++))$termslash
 
-assert_is_lower $symlink
-assert_does_not_exist $file
 open_file -c -t -a $symlink -W "q"
-assert_is_lower $symlink
-assert_is_upper $file
 open_file -r $file -R "q"
 
 # Open and truncate broken link read/write and overwrite
@@ -52,11 +40,7 @@ echo "TEST$filenr: Open(broken) O_CREAT|O_TRUNC|O_RDWR"
 symlink=$testdir/pointless$((filenr))$termslash
 file=$testdir/no_foo$((filenr++))$termslash
 
-assert_is_lower $symlink
-assert_does_not_exist $file
 open_file -c -t -r -w $symlink -W "q"
-assert_is_lower $symlink
-assert_is_upper $file
 open_file -r $file -R "q"
 
 # Open and truncate broken link read/write and append
@@ -64,9 +48,5 @@ echo "TEST$filenr: Open(broken) O_CREAT|O_TRUNC|O_APPEND|O_RDWR"
 symlink=$testdir/pointless$((filenr))$termslash
 file=$testdir/no_foo$((filenr++))$termslash
 
-assert_is_lower $symlink
-assert_does_not_exist $file
 open_file -c -t -r -a $symlink -W "q"
-assert_is_lower $symlink
-assert_is_upper $file
 open_file -r $file -R "q"

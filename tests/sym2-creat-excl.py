@@ -1,6 +1,6 @@
-#!/bin/bash
 
-. ./tool_box.inc
+from settings import *
+from tool_box import *
 
 declare -i filenr
 filenr=100
@@ -17,13 +17,8 @@ indirect=$testdir/indirect_sym$((filenr))$termslash
 direct=$testdir/direct_sym$((filenr))$termslash
 file=$testdir/foo$((filenr++))$termslash
 
-assert_is_lower $indirect
-assert_is_lower $file
 open_file -c -e -r $indirect -E EEXIST
-assert_is_lower $indirect
-assert_is_lower $direct
 open_file -r $indirect -R ":xxx:yyy:zzz"
-assert_is_lower $file
 
 # Open(symlink->symlink) write-only and overwrite
 echo "TEST$filenr: Open(symlink->symlink) O_CREAT|O_EXCL|O_WRONLY"
@@ -31,13 +26,8 @@ indirect=$testdir/indirect_sym$((filenr))$termslash
 direct=$testdir/direct_sym$((filenr))$termslash
 file=$testdir/foo$((filenr++))$termslash
 
-assert_is_lower $indirect
-assert_is_lower $file
 open_file -c -e -w $indirect -E EEXIST
-assert_is_lower $indirect
-assert_is_lower $direct
 open_file -r $indirect -R ":xxx:yyy:zzz"
-assert_is_lower $file
 
 # Open(symlink->symlink) write-only and append
 echo "TEST$filenr: Open(symlink->symlink) O_CREAT|O_EXCL|O_APPEND|O_WRONLY"
@@ -45,13 +35,8 @@ indirect=$testdir/indirect_sym$((filenr))$termslash
 direct=$testdir/direct_sym$((filenr))$termslash
 file=$testdir/foo$((filenr++))$termslash
 
-assert_is_lower $indirect
-assert_is_lower $file
 open_file -c -e -a $indirect -E EEXIST
-assert_is_lower $indirect
-assert_is_lower $direct
 open_file -r $indirect -R ":xxx:yyy:zzz"
-assert_is_lower $file
 
 # Open(symlink->symlink) read/write and overwrite
 echo "TEST$filenr: Open(symlink->symlink) O_CREAT|O_EXCL|O_RDWR"
@@ -59,13 +44,8 @@ indirect=$testdir/indirect_sym$((filenr))$termslash
 direct=$testdir/direct_sym$((filenr))$termslash
 file=$testdir/foo$((filenr++))$termslash
 
-assert_is_lower $indirect
-assert_is_lower $file
 open_file -c -e -r -w $indirect -E EEXIST
-assert_is_lower $indirect
-assert_is_lower $direct
 open_file -r $indirect -R ":xxx:yyy:zzz"
-assert_is_lower $file
 
 # Open(symlink->symlink) read/write and append
 echo "TEST$filenr: Open(symlink->symlink) O_CREAT|O_EXCL|O_APPEND|O_RDWR"
@@ -73,10 +53,5 @@ indirect=$testdir/indirect_sym$((filenr))$termslash
 direct=$testdir/direct_sym$((filenr))$termslash
 file=$testdir/foo$((filenr++))$termslash
 
-assert_is_lower $indirect
-assert_is_lower $file
 open_file -c -e -r -a $indirect -E EEXIST
-assert_is_lower $indirect
-assert_is_lower $direct
 open_file -r $indirect -R ":xxx:yyy:zzz"
-assert_is_lower $file

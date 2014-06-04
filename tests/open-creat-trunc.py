@@ -1,12 +1,9 @@
-#!/bin/bash
 
-. ./tool_box.inc
+from settings import *
+from tool_box import *
 
 declare -i filenr
 filenr=100
-
-eisdir=${termslash:+-E EISDIR}
-enotdir=${termslash:+-E ENOTDIR}
 
 ###############################################################################
 #
@@ -18,64 +15,41 @@ enotdir=${termslash:+-E ENOTDIR}
 echo "TEST$filenr: Open O_CREAT|O_TRUNC|O_RDONLY"
 file=$testdir/foo$((filenr++))$termslash
 
-assert_is_lower $file
-open_file -c -t -r $file -R ""		$eisdir
-assert_is_upper $file
-open_file -c -t -r $file -R ""		$eisdir
-assert_is_upper $file
+open_file -c -t -r $file -R ""
+open_file -c -t -r $file -R ""
 
 # Truncate, open write-only and overwrite
 echo "TEST$filenr: Open O_CREAT|O_TRUNC|O_WRONLY"
 file=$testdir/foo$((filenr++))$termslash
 
-assert_is_lower $file
-open_file -c -t -w $file -W "q"		$eisdir
-assert_is_upper $file
-open_file -r $file -R "q"		$enotdir
-assert_is_upper $file
-open_file -c -t -w $file -W "p"		$eisdir
-assert_is_upper $file
-open_file -r $file -R "p"		$enotdir
-assert_is_upper $file
+open_file -c -t -w $file -W "q"
+open_file -r $file -R "q"
+open_file -c -t -w $file -W "p"
+open_file -r $file -R "p"
 
 # Truncate, open write-only and append
 echo "TEST$filenr: Open O_CREAT|O_TRUNC|O_APPEND|O_WRONLY"
 file=$testdir/foo$((filenr++))$termslash
 
-assert_is_lower $file
-open_file -c -t -a $file -W "q"		$eisdir
-assert_is_upper $file
-open_file -r $file -R "q"		$enotdir
-assert_is_upper $file
-open_file -c -t -a $file -W "p"		$eisdir
-assert_is_upper $file
-open_file -r $file -R "p"		$enotdir
-assert_is_upper $file
+open_file -c -t -a $file -W "q"
+open_file -r $file -R "q"
+open_file -c -t -a $file -W "p"
+open_file -r $file -R "p"
 
 # Truncate, open read/write and overwrite
 echo "TEST$filenr: Open O_CREAT|O_TRUNC|O_RDWR"
 file=$testdir/foo$((filenr++))$termslash
 
-assert_is_lower $file
-open_file -c -t -r -w $file -W "q"	$eisdir
-assert_is_upper $file
-open_file -r $file -R "q"		$enotdir
-assert_is_upper $file
-open_file -c -t -r -w $file -W "p"	$eisdir
-assert_is_upper $file
-open_file -r $file -R "p"		$enotdir
-assert_is_upper $file
+open_file -c -t -r -w $file -W "q"
+open_file -r $file -R "q"
+open_file -c -t -r -w $file -W "p"
+open_file -r $file -R "p"
 
 # Truncate, open read/write and append
 echo "TEST$filenr: Open O_CREAT|O_TRUNC|O_APPEND|O_RDWR"
 file=$testdir/foo$((filenr++))$termslash
 
-assert_is_lower $file
-open_file -c -t -r -a $file -W "q"	$eisdir
-assert_is_upper $file
-open_file -r $file -R "q"		$enotdir
-assert_is_upper $file
-open_file -c -t -r -a $file -W "p"	$eisdir
-assert_is_upper $file
-open_file -r $file -R "p"		$enotdir
-assert_is_upper $file
+open_file -c -t -r -a $file -W "q"
+open_file -r $file -R "q"
+open_file -c -t -r -a $file -W "p"
+open_file -r $file -R "p"

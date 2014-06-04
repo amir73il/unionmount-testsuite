@@ -1,6 +1,6 @@
-#!/bin/bash
 
-. ./tool_box.inc
+from settings import *
+from tool_box import *
 
 declare -i filenr
 filenr=100
@@ -16,9 +16,7 @@ echo "TEST$filenr: Open(broken) O_RDONLY"
 symlink=$testdir/pointless$((filenr))$termslash
 file=$testdir/no_foo$((filenr++))$termslash
 
-assert_is_lower $symlink
 open_file -r $symlink -E ENOENT
-assert_is_lower $symlink
 open_file -r $file -E ENOENT
 
 # Open broken link write-only and overwrite
@@ -26,9 +24,7 @@ echo "TEST$filenr: Open(broken) O_WRONLY"
 symlink=$testdir/pointless$((filenr))$termslash
 file=$testdir/no_foo$((filenr++))$termslash
 
-assert_is_lower $symlink
 open_file -w $symlink -E ENOENT
-assert_is_lower $symlink
 open_file -r $file -E ENOENT
 
 # Open broken link write-only and append
@@ -36,9 +32,7 @@ echo "TEST$filenr: Open(broken) O_APPEND|O_WRONLY"
 symlink=$testdir/pointless$((filenr))$termslash
 file=$testdir/no_foo$((filenr++))$termslash
 
-assert_is_lower $symlink
 open_file -a $symlink -E ENOENT
-assert_is_lower $symlink
 open_file -r $file -E ENOENT
 
 # Open broken link read/write and overwrite
@@ -46,9 +40,7 @@ echo "TEST$filenr: Open(broken) O_RDWR"
 symlink=$testdir/pointless$((filenr))$termslash
 file=$testdir/no_foo$((filenr++))$termslash
 
-assert_is_lower $symlink
 open_file -r -w $symlink -E ENOENT
-assert_is_lower $symlink
 open_file -r $file -E ENOENT
 
 # Open broken link read/write and append
@@ -56,7 +48,5 @@ echo "TEST$filenr: Open(broken) O_APPEND|O_RDWR"
 symlink=$testdir/pointless$((filenr))$termslash
 file=$testdir/no_foo$((filenr++))$termslash
 
-assert_is_lower $symlink
 open_file -r -a $symlink -E ENOENT
-assert_is_lower $symlink
 open_file -r $file -E ENOENT

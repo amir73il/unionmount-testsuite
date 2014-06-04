@@ -1,6 +1,6 @@
-#!/bin/bash
 
-. ./tool_box.inc
+from settings import *
+from tool_box import *
 
 declare -i filenr
 filenr=100
@@ -16,87 +16,45 @@ echo "TEST$filenr: Open(symlink) O_TRUNC|O_RDONLY"
 symlink=$testdir/direct_sym$((filenr))$termslash
 file=$testdir/foo$((filenr++))$termslash
 
-assert_is_lower $symlink
-assert_is_lower $file
 open_file -t -r $symlink -R ""
-assert_is_lower $symlink
-assert_is_upper $file
 open_file -t -r $symlink -R ""
-assert_is_lower $symlink
-assert_is_upper $file
 
 # Truncate, open write-only and overwrite
 echo "TEST$filenr: Open(symlink) O_TRUNC|O_WRONLY"
 symlink=$testdir/direct_sym$((filenr))$termslash
 file=$testdir/foo$((filenr++))$termslash
 
-assert_is_lower $symlink
-assert_is_lower $file
 open_file -t -w $symlink -W "q"
-assert_is_lower $symlink
-assert_is_upper $file
 open_file -r $symlink -R "q"
-assert_is_lower $symlink
 open_file -t -w $symlink -W "p"
-assert_is_lower $symlink
-assert_is_upper $file
 open_file -r $symlink -R "p"
-assert_is_lower $symlink
-assert_is_upper $file
 
 # Truncate, open write-only and append
 echo "TEST$filenr: Open(symlink) O_TRUNC|O_APPEND|O_WRONLY"
 symlink=$testdir/direct_sym$((filenr))$termslash
 file=$testdir/foo$((filenr++))$termslash
 
-assert_is_lower $symlink
-assert_is_lower $file
 open_file -t -a $symlink -W "q"
-assert_is_lower $symlink
-assert_is_upper $file
 open_file -r $symlink -R "q"
-assert_is_lower $symlink
 open_file -t -a $symlink -W "p"
-assert_is_lower $symlink
-assert_is_upper $file
 open_file -r $symlink -R "p"
-assert_is_lower $symlink
-assert_is_upper $file
 
 # Truncate, open read/write and overwrite
 echo "TEST$filenr: Open(symlink) O_TRUNC|O_RDWR"
 symlink=$testdir/direct_sym$((filenr))$termslash
 file=$testdir/foo$((filenr++))$termslash
 
-assert_is_lower $symlink
-assert_is_lower $file
 open_file -t -r -w $symlink -W "q"
-assert_is_lower $symlink
-assert_is_upper $file
 open_file -r $symlink -R "q"
-assert_is_lower $symlink
 open_file -t -r -w $symlink -W "p"
-assert_is_lower $symlink
-assert_is_upper $file
 open_file -r $symlink -R "p"
-assert_is_lower $symlink
-assert_is_upper $file
 
 # Truncate, open read/write and append
 echo "TEST$filenr: Open(symlink) O_TRUNC|O_APPEND|O_RDWR"
 symlink=$testdir/direct_sym$((filenr))$termslash
 file=$testdir/foo$((filenr++))$termslash
 
-assert_is_lower $symlink
-assert_is_lower $file
 open_file -t -r -a $symlink -W "q"
-assert_is_lower $symlink
-assert_is_upper $file
 open_file -r $symlink -R "q"
-assert_is_lower $symlink
 open_file -t -r -a $symlink -W "p"
-assert_is_lower $symlink
-assert_is_upper $file
 open_file -r $symlink -R "p"
-assert_is_lower $symlink
-assert_is_upper $file
