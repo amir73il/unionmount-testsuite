@@ -1,21 +1,77 @@
-import sys, os
+#
+# Class of object containing current test configuration
+#
 
-testing_unionmount = False
-testing_overlayfs = False
+__copyright__ = """
+Copyright (C) 2014 Red Hat, Inc. All Rights Reserved.
+Written by David Howells (dhowells@redhat.com)
 
-if "TEST_OVERLAYFS" not in os.environ:
-    testing_unionmount = True
-    lower_mntroot = "/mnt"
-    union_mntroot = "/mnt"
-else:
-    testing_overlayfs = True
-    lower_mntroot = "/lower"
-    upper_mntroot = "/upper"
-    union_mntroot = "/mnt"
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public Licence version 2 as
+published by the Free Software Foundation.
 
-lowerdir = lower_mntroot + "/a"
-testdir = union_mntroot + "/a"
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public Licence for more details.
 
-termslash = ""
-if "TERMSLASH" in os.environ and os.environ["TERMSLASH"] == "1":
-    termslash = "/"
+You should have received a copy of the GNU General Public Licence
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+"""
+
+class config:
+    def __init__(self, progname):
+        self.__progname = progname
+        self.__testing_unionmount = False
+        self.__testing_overlayfs = False
+        self.__testing_none = True
+        self.__lower_mntroot = None
+        self.__upper_mntroot = None
+        self.__union_mntroot = None
+        self.__termslash = None
+        self.__verbose = False
+
+    def progname(self):
+        return self.__progname
+        
+    def testing_none(self):
+        return self.__testing_none
+    def testing_unionmount(self):
+        return self.__testing_unionmount
+    def testing_overlayfs(self):
+        return self.__testing_overlayfs
+
+    def set_testing_none:
+        lower_mntroot = "/mnt"
+        union_mntroot = "/mnt"
+
+    def set_testing_unionmount:
+        lower_mntroot = "/mnt"
+        union_mntroot = "/mnt"
+
+    def set_testing_overlayfs:
+        lower_mntroot = "/lower"
+        upper_mntroot = "/upper"
+        union_mntroot = "/mnt"
+
+    def lower_mntroot(self):
+        return self.__lower_mntroot
+    def upper_mntroot(self):
+        return self.__upper_mntroot
+    def union_mntroot(self):
+        return self.__union_mntroot
+    def lowerdir(self):
+        return self.__lower_mntroot + "/a"
+    def testdir(self):
+        return self.__union_mntroot + "/a"
+
+    def set_termslash(self, to=True):
+        self.__termslash = to
+    def is_termslash(self, to=True):
+        return self.__termslash
+
+    def set_verbose(self, to=True):
+        self.__verbose = to
+    def is_verbose(self, to=True):
+        return self.__verbose

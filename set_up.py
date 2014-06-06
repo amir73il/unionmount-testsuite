@@ -1,7 +1,6 @@
 #
 # Create and set up a lower layer for the test scripts to use
 #
-from settings import *
 from tool_box import *
 import os, shutil
 
@@ -11,13 +10,18 @@ def create_file(name, content):
     fd.close()
 
 def set_up(ctx):
+    cfg = ctx.config()
+    lower_mntroot = cfg.lower_mntroot()
+    lowerdir = cfg.lowerdir()
+    testdir = cfg.testdir()
+
     os.sync()
 
     # Discard anything already mounted on the mountpoint to avoid contamination
     # as unionmount tries to collect all the mounts located there into the
     # union.
-    if testing_unionmount:
-        while system("umount " + union_mntroot):
+    if cfg.testing_unionmount():
+        while system("umount " + cfg.union_mntroot()):
             pass
 
     # Create a lower layer to union over
@@ -41,7 +45,7 @@ def set_up(ctx):
 
     for i in range(100, 130):
         si = str(i)
-        
+
         # Under the test directory, we create a bunch of regular files
         # containing data called foo100 to foo129:
         create_file(lowerdir + "/foo" + si, ":xxx:yyy:zzz")

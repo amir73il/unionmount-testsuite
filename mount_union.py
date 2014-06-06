@@ -1,7 +1,9 @@
-from settings import *
 from tool_box import *
 
 def mount_union(ctx):
+    cfg = ctx.config()
+    union_mntroot = cfg.union_mntroot()
+    testdir = cfg.testdir()
     if testing_unionmount:
         system("/root/util-linux-union/mount/mount -i -t tmpfs upper_layer " +
                union_mntroot + " -o union")
@@ -12,6 +14,8 @@ def mount_union(ctx):
                             ") shouldn't be the same")
 
     else:
+        lower_mntroot = cfg.lower_mntroot()
+        upper_mntroot = cfg.upper_mntroot()
         system("mount -t tmpfs upper_layer " + upper_mntroot)
         upperdir = upper_mntroot + "/upper"
         workdir = upper_mntroot + "/work"

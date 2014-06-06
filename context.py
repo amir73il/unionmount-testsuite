@@ -20,7 +20,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 """
 
-import settings
 from tool_box import TestError
 import sys, os, errno
 
@@ -134,15 +133,16 @@ class dentry:
 #
 ###############################################################################
 class test_context:
-    def __init__(self, termslash, verbose=False):
+    def __init__(self, cfg, termslash=False):
+        self.__cfg = cfg
         self.__root = dentry("/", "d", root=True)
         self.__cwd = None
         self.__filenr = 99
         self.__lower_fs = None
         self.__upper_fs = None
         self.__upper_dir_fs = None
-        self.__verbose = verbose
-        if termslash:
+        self.__verbose = cfg.is_verbose()
+        if cfg.is_termslash():
             self.__termslash = "/"
         else:
             self.__termslash = ""
@@ -164,7 +164,6 @@ class test_context:
         sys.stdout.write(formatstr.format(*args))
 
     def error(self, *args):
-        global exitcode
         sys.stderr.write(program_name + ": ")
         for i in args:
             sys.stderr.write(str(i))
@@ -227,7 +226,7 @@ class test_context:
 
     # Get various filenames
     def gen_filename(self, name):
-        return "{:s}/{:s}{:d}".format(settings.testdir, name, self.__filenr)
+        return "{:s}/{:s}{:d}".format(cfg.testdir(), name, self.__filenr)
     def no_file(self):
         return self.gen_filename("no_foo")
     def pointless(self):

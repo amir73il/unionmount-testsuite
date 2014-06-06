@@ -1,12 +1,14 @@
 #!/usr/bin/python3
 
 import sys, os
-from settings import *
+from settings import config
 from context import test_context
 from tool_box import *
 from set_up import set_up
 from mount_union import mount_union
 from unmount_union import unmount_union
+
+cfg = config(sys.argv[0])
 
 try:
     while True:
@@ -71,23 +73,27 @@ tests = [
 if len(sys.argv) > 1:
     tests = sys.argv[1:]
 
-if testing_overlayfs:
-    test_what = "TEST_OVERLAYFS=1"
+if cfg.testing_unionmount():
+    test_what = "--un"
+elif cfg.testing_overlayfs():
+    test_what = "--ov"
 else:
-    test_what = ""
+    test_what = "--no"
 
-if "TERMSLASH" in os.environ:
-    termslash_list = os.environ["TERMSLASH"]
-else:
+if cfg.is_termslash() == None:
     termslash_list = [ "0", "1" ]
+elif cfg.is_termslash() == True:
+    termslash_list = [ "1" ]
+else:
+    termslash_list = [ "0" ]
 
 for test in tests:
     for ts in termslash_list:
         print("***");
-        print("***", test_what, "TERMSLASH=" + ts, sys.argv[0], test);
+        print("***", cfg.progname(), test_what, "--ts=" + ts, test);
         print("***");
 
-        ctx = test_context(ts == "1")
+        ctx = test_context(cfg, ts == "1")
 
         # Construct the union
         set_up(ctx)
@@ -107,10 +113,10 @@ for test in tests:
         check_not_tainted()
 
         # Make sure that all dentries and inodes are correctly released
-        unmount_union()
+        unmount_union(ctx)
         del ctx
 
 # Leave the union mounted for further playing
-ctx = test_context(ts == "1")
+ctx = test_context(cfg)
 set_up(ctx)
 mount_union(ctx)
