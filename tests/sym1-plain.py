@@ -13,8 +13,8 @@ def subtest_1(ctx):
     symlink = ctx.direct_sym() + ctx.termslash()
     f = ctx.reg_file() + ctx.termslash()
 
-    ctx.open_file(symlink, ro=1, read=b":xxx:yyy:zzz")
-    ctx.open_file(symlink, ro=1, read=b":xxx:yyy:zzz")
+    ctx.open_file(symlink, ro=1, read=":xxx:yyy:zzz")
+    ctx.open_file(symlink, ro=1, read=":xxx:yyy:zzz")
 
 # Open(symlink) write-only and overwrite
 def subtest_2(ctx):
@@ -22,10 +22,10 @@ def subtest_2(ctx):
     symlink = ctx.direct_sym() + ctx.termslash()
     f = ctx.reg_file() + ctx.termslash()
 
-    ctx.open_file(symlink, wo=1, write=b"q")
-    ctx.open_file(symlink, ro=1, read=b"qxxx:yyy:zzz")
-    ctx.open_file(symlink, wo=1, write=b"p")
-    ctx.open_file(symlink, ro=1, read=b"pxxx:yyy:zzz")
+    ctx.open_file(symlink, wo=1, write="q")
+    ctx.open_file(symlink, ro=1, read="qxxx:yyy:zzz")
+    ctx.open_file(symlink, wo=1, write="p")
+    ctx.open_file(symlink, ro=1, read="pxxx:yyy:zzz")
 
 # Open(symlink) write-only and append
 def subtest_3(ctx):
@@ -33,10 +33,10 @@ def subtest_3(ctx):
     symlink = ctx.direct_sym() + ctx.termslash()
     f = ctx.reg_file() + ctx.termslash()
 
-    ctx.open_file(symlink, app=1, write=b"q")
-    ctx.open_file(symlink, ro=1, read=b":xxx:yyy:zzzq")
-    ctx.open_file(symlink, app=1, write=b"p")
-    ctx.open_file(symlink, ro=1, read=b":xxx:yyy:zzzqp")
+    ctx.open_file(symlink, app=1, write="q")
+    ctx.open_file(symlink, ro=1, read=":xxx:yyy:zzzq")
+    ctx.open_file(symlink, app=1, write="p")
+    ctx.open_file(symlink, ro=1, read=":xxx:yyy:zzzqp")
 
 # Open(symlink) read/write and overwrite
 def subtest_4(ctx):
@@ -44,10 +44,10 @@ def subtest_4(ctx):
     symlink = ctx.direct_sym() + ctx.termslash()
     f = ctx.reg_file() + ctx.termslash()
 
-    ctx.open_file(symlink, rw=1, write=b"q")
-    ctx.open_file(symlink, ro=1, read=b"qxxx:yyy:zzz")
-    ctx.open_file(symlink, rw=1, write=b"p")
-    ctx.open_file(symlink, ro=1, read=b"pxxx:yyy:zzz")
+    ctx.open_file(symlink, rw=1, write="q")
+    ctx.open_file(symlink, ro=1, read="qxxx:yyy:zzz")
+    ctx.open_file(symlink, rw=1, write="p")
+    ctx.open_file(symlink, ro=1, read="pxxx:yyy:zzz")
 
 # Open(symlink) read/write and append
 def subtest_5(ctx):
@@ -55,10 +55,10 @@ def subtest_5(ctx):
     symlink = ctx.direct_sym() + ctx.termslash()
     f = ctx.reg_file() + ctx.termslash()
 
-    ctx.open_file(symlink, ro=1, app=1, write=b"q")
-    ctx.open_file(symlink, ro=1, read=b":xxx:yyy:zzzq")
-    ctx.open_file(symlink, ro=1, app=1, write=b"p")
-    ctx.open_file(symlink, ro=1, read=b":xxx:yyy:zzzqp")
+    ctx.open_file(symlink, ro=1, app=1, write="q")
+    ctx.open_file(symlink, ro=1, read=":xxx:yyy:zzzq")
+    ctx.open_file(symlink, ro=1, app=1, write="p")
+    ctx.open_file(symlink, ro=1, read=":xxx:yyy:zzzqp")
 
 subtests = [
     subtest_1,

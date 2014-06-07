@@ -23,7 +23,7 @@ def subtest_2(ctx):
 
     ctx.mkdir(d, 0o755, err=EEXIST)
     ctx.mkdir(d, 0o755, err=EEXIST)
-    ctx.open_file(f, ro=1, read=b":xxx:yyy:zzz")
+    ctx.open_file(f, ro=1, read=":xxx:yyy:zzz")
 
 # Create a directory over an empty lower directory
 def subtest_3(ctx):
@@ -46,7 +46,7 @@ def subtest_5(ctx):
     d = ctx.non_empty_dir() + ctx.termslash()
 
     ctx.mkdir(d, 0o755, err=EEXIST)
-    ctx.open_file(d + "/a", ro=1, read=b"")
+    ctx.open_file(d + "/a", ro=1, read="")
 
 # Create a directory in a populated lower directory
 def subtest_6(ctx):
@@ -56,7 +56,7 @@ def subtest_6(ctx):
 
     ctx.mkdir(subdir, 0o755)
     ctx.mkdir(subdir, 0o755, err=EEXIST)
-    ctx.open_file(d + "/a", ro=1, read=b"")
+    ctx.open_file(d + "/a", ro=1, read="")
 
 # Create a directory over a symlink to a file
 def subtest_7(ctx):
@@ -68,7 +68,7 @@ def subtest_7(ctx):
     ctx.mkdir(sym, 0o755, err=EEXIST)
     ctx.mkdir(sym, 0o755, err=EEXIST)
     ctx.mkdir(d, 0o755, err=EEXIST)
-    ctx.open_file(f, ro=1, read=b":xxx:yyy:zzz")
+    ctx.open_file(f, ro=1, read=":xxx:yyy:zzz")
 
 # Create a directory over a symlink to a symlink to a file
 def subtest_8(ctx):
@@ -82,7 +82,7 @@ def subtest_8(ctx):
     ctx.mkdir(isym, 0o755, err=EEXIST)
     ctx.mkdir(sym, 0o755, err=EEXIST)
     ctx.mkdir(d, 0o755, err=EEXIST)
-    ctx.open_file(f, ro=1, read=b":xxx:yyy:zzz")
+    ctx.open_file(f, ro=1, read=":xxx:yyy:zzz")
 
 # Create a directory over a symlink to a dir
 def subtest_9(ctx):
@@ -93,8 +93,8 @@ def subtest_9(ctx):
     ctx.mkdir(sym, 0o755, err=EEXIST)
     ctx.mkdir(sym, 0o755, err=EEXIST)
     ctx.mkdir(d, 0o755, err=EEXIST)
-    ctx.open_file(sym + "/a", ro=1, read=b"")
-    ctx.open_file(d + "/a", ro=1, read=b"")
+    ctx.open_file(sym + "/a", ro=1, read="")
+    ctx.open_file(d + "/a", ro=1, read="")
 
 # Create a directory over a symlink to a symlink to a dir
 def subtest_10(ctx):
@@ -107,9 +107,9 @@ def subtest_10(ctx):
     ctx.mkdir(isym, 0o755, err=EEXIST)
     ctx.mkdir(sym, 0o755, err=EEXIST)
     ctx.mkdir(d, 0o755, err=EEXIST)
-    ctx.open_file(isym + "/a", ro=1, read=b"")
-    ctx.open_file(sym + "/a", ro=1, read=b"")
-    ctx.open_file(d + "/a", ro=1, read=b"")
+    ctx.open_file(isym + "/a", ro=1, read="")
+    ctx.open_file(sym + "/a", ro=1, read="")
+    ctx.open_file(d + "/a", ro=1, read="")
 
 # Create a directory over a dangling symlink
 def subtest_11(ctx):

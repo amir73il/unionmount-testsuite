@@ -14,8 +14,8 @@ def subtest_1(ctx):
     direct = ctx.direct_sym() + ctx.termslash()
     f = ctx.reg_file() + ctx.termslash()
 
-    ctx.open_file(indirect, ro=1, tr=1, read=b"")
-    ctx.open_file(indirect, ro=1, tr=1, read=b"")
+    ctx.open_file(indirect, ro=1, tr=1, read="")
+    ctx.open_file(indirect, ro=1, tr=1, read="")
 
 # Truncate, open write-only and overwrite
 def subtest_2(ctx):
@@ -24,10 +24,10 @@ def subtest_2(ctx):
     direct = ctx.direct_sym() + ctx.termslash()
     f = ctx.reg_file() + ctx.termslash()
 
-    ctx.open_file(indirect, wo=1, tr=1, write=b"q")
-    ctx.open_file(indirect, ro=1, read=b"q")
-    ctx.open_file(indirect, wo=1, tr=1, write=b"p")
-    ctx.open_file(indirect, ro=1, read=b"p")
+    ctx.open_file(indirect, wo=1, tr=1, write="q")
+    ctx.open_file(indirect, ro=1, read="q")
+    ctx.open_file(indirect, wo=1, tr=1, write="p")
+    ctx.open_file(indirect, ro=1, read="p")
 
 # Truncate, open write-only and append
 def subtest_3(ctx):
@@ -36,10 +36,10 @@ def subtest_3(ctx):
     direct = ctx.direct_sym() + ctx.termslash()
     f = ctx.reg_file() + ctx.termslash()
 
-    ctx.open_file(indirect, app=1, tr=1, write=b"q")
-    ctx.open_file(indirect, ro=1, read=b"q")
-    ctx.open_file(indirect, app=1, tr=1, write=b"p")
-    ctx.open_file(indirect, ro=1, read=b"p")
+    ctx.open_file(indirect, app=1, tr=1, write="q")
+    ctx.open_file(indirect, ro=1, read="q")
+    ctx.open_file(indirect, app=1, tr=1, write="p")
+    ctx.open_file(indirect, ro=1, read="p")
 
 # Truncate, open read/write and overwrite
 def subtest_4(ctx):
@@ -48,10 +48,10 @@ def subtest_4(ctx):
     direct = ctx.direct_sym() + ctx.termslash()
     f = ctx.reg_file() + ctx.termslash()
 
-    ctx.open_file(indirect, rw=1, tr=1, write=b"q")
-    ctx.open_file(indirect, ro=1, read=b"q")
-    ctx.open_file(indirect, rw=1, tr=1, write=b"p")
-    ctx.open_file(indirect, ro=1, read=b"p")
+    ctx.open_file(indirect, rw=1, tr=1, write="q")
+    ctx.open_file(indirect, ro=1, read="q")
+    ctx.open_file(indirect, rw=1, tr=1, write="p")
+    ctx.open_file(indirect, ro=1, read="p")
 
 # Truncate, open read/write and append
 def subtest_5(ctx):
@@ -60,10 +60,10 @@ def subtest_5(ctx):
     direct = ctx.direct_sym() + ctx.termslash()
     f = ctx.reg_file() + ctx.termslash()
 
-    ctx.open_file(indirect, ro=1, app=1, tr=1, write=b"q")
-    ctx.open_file(indirect, ro=1, read=b"q")
-    ctx.open_file(indirect, ro=1, app=1, tr=1, write=b"p")
-    ctx.open_file(indirect, ro=1, read=b"p")
+    ctx.open_file(indirect, ro=1, app=1, tr=1, write="q")
+    ctx.open_file(indirect, ro=1, read="q")
+    ctx.open_file(indirect, ro=1, app=1, tr=1, write="p")
+    ctx.open_file(indirect, ro=1, read="p")
 
 subtests = [
     subtest_1,

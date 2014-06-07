@@ -573,7 +573,7 @@ class test_context:
 
         # Write the data to it, if any
         if fd != None and "write" in args:
-            data = args["write"]
+            data = args["write"].encode()
             self.verbose("os.write(", fd, ",", data, ")\n");
             res = os.write(fd, data)
             l = len(data)
@@ -583,7 +583,7 @@ class test_context:
 
         # Read the contents back from it and compare if requested
         if fd != None and "read" in args:
-            data = args["read"]
+            data = args["read"].encode()
             l = len(data)
             self.verbose("os.fstat(", fd, ")\n");
             st = os.fstat(fd)

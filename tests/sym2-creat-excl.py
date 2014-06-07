@@ -15,7 +15,7 @@ def subtest_1(ctx):
     f = ctx.reg_file() + ctx.termslash()
 
     ctx.open_file(indirect, ro=1, crt=1, ex=1, err=EEXIST)
-    ctx.open_file(indirect, ro=1, read=b":xxx:yyy:zzz")
+    ctx.open_file(indirect, ro=1, read=":xxx:yyy:zzz")
 
 # Open(symlink->symlink) write-only and overwrite
 def subtest_2(ctx):
@@ -25,7 +25,7 @@ def subtest_2(ctx):
     f = ctx.reg_file() + ctx.termslash()
 
     ctx.open_file(indirect, wo=1, crt=1, ex=1, err=EEXIST)
-    ctx.open_file(indirect, ro=1, read=b":xxx:yyy:zzz")
+    ctx.open_file(indirect, ro=1, read=":xxx:yyy:zzz")
 
 # Open(symlink->symlink) write-only and append
 def subtest_3(ctx):
@@ -35,7 +35,7 @@ def subtest_3(ctx):
     f = ctx.reg_file() + ctx.termslash()
 
     ctx.open_file(indirect, app=1, crt=1, ex=1, err=EEXIST)
-    ctx.open_file(indirect, ro=1, read=b":xxx:yyy:zzz")
+    ctx.open_file(indirect, ro=1, read=":xxx:yyy:zzz")
 
 # Open(symlink->symlink) read/write and overwrite
 def subtest_4(ctx):
@@ -45,7 +45,7 @@ def subtest_4(ctx):
     f = ctx.reg_file() + ctx.termslash()
 
     ctx.open_file(indirect, rw=1, crt=1, ex=1, err=EEXIST)
-    ctx.open_file(indirect, ro=1, read=b":xxx:yyy:zzz")
+    ctx.open_file(indirect, ro=1, read=":xxx:yyy:zzz")
 
 # Open(symlink->symlink) read/write and append
 def subtest_5(ctx):
@@ -55,7 +55,7 @@ def subtest_5(ctx):
     f = ctx.reg_file() + ctx.termslash()
 
     ctx.open_file(indirect, ro=1, app=1, crt=1, ex=1, err=EEXIST)
-    ctx.open_file(indirect, ro=1, read=b":xxx:yyy:zzz")
+    ctx.open_file(indirect, ro=1, read=":xxx:yyy:zzz")
 
 subtests = [
     subtest_1,

@@ -22,14 +22,14 @@ def subtest_2(ctx):
     symlink = ctx.direct_sym() + ctx.termslash()
     f = ctx.reg_file() + ctx.termslash()
 
-    ctx.open_file(symlink, ro=1, read=b":xxx:yyy:zzz")
+    ctx.open_file(symlink, ro=1, read=":xxx:yyy:zzz")
     ctx.unlink(symlink)
     ctx.open_file(symlink, ro=1, err=ENOENT)
-    ctx.open_file(f, ro=1, read=b":xxx:yyy:zzz")
+    ctx.open_file(f, ro=1, read=":xxx:yyy:zzz")
 
     ctx.unlink(symlink, err=ENOENT)
     ctx.open_file(symlink, ro=1, err=ENOENT)
-    ctx.open_file(f, ro=1, read=b":xxx:yyy:zzz")
+    ctx.open_file(f, ro=1, read=":xxx:yyy:zzz")
 
 def subtest_3(ctx):
     ctx.begin_test(3, "Unlink indirect symlink to file")
@@ -37,15 +37,15 @@ def subtest_3(ctx):
     symlink = ctx.direct_sym() + ctx.termslash()
     f = ctx.reg_file() + ctx.termslash()
 
-    ctx.open_file(indirect, ro=1, read=b":xxx:yyy:zzz")
+    ctx.open_file(indirect, ro=1, read=":xxx:yyy:zzz")
     ctx.unlink(indirect)
     ctx.open_file(indirect, ro=1, err=ENOENT)
-    ctx.open_file(symlink, ro=1, read=b":xxx:yyy:zzz")
-    ctx.open_file(f, ro=1, read=b":xxx:yyy:zzz")
+    ctx.open_file(symlink, ro=1, read=":xxx:yyy:zzz")
+    ctx.open_file(f, ro=1, read=":xxx:yyy:zzz")
 
     ctx.unlink(indirect, err=ENOENT)
     ctx.open_file(indirect, ro=1, err=ENOENT)
-    ctx.open_file(symlink, ro=1, read=b":xxx:yyy:zzz")
+    ctx.open_file(symlink, ro=1, read=":xxx:yyy:zzz")
 
 #
 #

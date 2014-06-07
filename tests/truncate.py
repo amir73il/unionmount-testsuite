@@ -12,9 +12,9 @@ def subtest_1(ctx):
     # Truncate extant file
     ctx.begin_test(0, "Truncate file")
     
-    key = b":xxx:yyy:zzz"
+    key = ":xxx:yyy:zzz"
     while len(key) != 29:
-        key += b"\0"
+        key += "\0"
     
     for loop in range(0, 29):
         f = ctx.reg_file() + ctx.termslash()
