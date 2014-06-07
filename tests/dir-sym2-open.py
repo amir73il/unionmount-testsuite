@@ -1,5 +1,4 @@
 from errno import *
-from settings import *
 from tool_box import *
 
 ###############################################################################
