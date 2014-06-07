@@ -133,7 +133,7 @@ class dentry:
 #
 ###############################################################################
 class test_context:
-    def __init__(self, cfg, termslash=False):
+    def __init__(self, cfg, termslash=False, direct_mode=False):
         self.__cfg = cfg
         self.__root = dentry("/", "d", root=True)
         self.__cwd = None
@@ -142,10 +142,17 @@ class test_context:
         self.__upper_fs = None
         self.__upper_dir_fs = None
         self.__verbose = cfg.is_verbose()
+        self.__direct_mode = direct_mode
         if cfg.is_termslash():
             self.__termslash = "/"
         else:
             self.__termslash = ""
+
+    def config(self):
+        return self.__cfg
+
+    def direct_mode(self):
+        return self.__direct_mode
 
     def verbose(self, *args):
         if self.__verbose:
@@ -226,7 +233,7 @@ class test_context:
 
     # Get various filenames
     def gen_filename(self, name):
-        return "{:s}/{:s}{:d}".format(cfg.testdir(), name, self.__filenr)
+        return "{:s}/{:s}{:d}".format(self.config().testdir(), name, self.__filenr)
     def no_file(self):
         return self.gen_filename("no_foo")
     def pointless(self):
@@ -330,6 +337,9 @@ class test_context:
 
     # Walk over a path.  Returns a tuple of (parent, target).
     def pathwalk(self, filename, **args):
+        if self.direct_mode():
+            cursor = dentry(filename, None)
+            return (cursor, cursor)
         args["linkcount"] = 20
         args["orig_filename"] = filename
         if "no_follow" not in args:
@@ -393,6 +403,8 @@ class test_context:
     #
     ###########################################################################
     def check_layer(self, filename, dir_fd=None):
+        if self.direct_mode():
+            return
         (parent, dentry) = self.pathwalk(filename, no_follow=True, dir_fd=dir_fd,
                                          missing_ok=True)
         name = dentry.filename()
@@ -545,13 +557,14 @@ class test_context:
             if want_error:
                 raise TestError(filename + ": Expected error (" +
                                 os.strerror(want_error) + ") was not produced")
-            if dentry.is_negative():
-                if not create:
-                    raise TestError(filename + ": File was created without O_CREAT")
-                dentry.created("f")
-            else:
-                if copy_up:
-                    dentry.copied_up()
+            if not self.direct_mode():
+                if dentry.is_negative():
+                    if not create:
+                        raise TestError(filename + ": File was created without O_CREAT")
+                    dentry.created("f")
+                else:
+                    if copy_up:
+                        dentry.copied_up()
         except OSError as oe:
             if "as_bin" in args:
                 self.verbosef("os.seteuid(0)")
@@ -674,7 +687,7 @@ class test_context:
             line += " -B"
         if want_error:
             line += " -E " + errno.errorcode[want_error]
-        self.output(" ./run --fs-op ", line, "\n")
+        self.output(" ./run --", line, "\n")
 
         self.check_layer(filename)
 

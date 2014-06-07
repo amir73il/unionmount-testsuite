@@ -1,7 +1,13 @@
 #
 # Tools for test scripts
 #
-import os, sys
+import os
+
+class ArgumentError(Exception):
+    def __init__(self, msg):
+        self.__msg = msg
+    def __str__(self):
+        return self.__msg
 
 class TestError(Exception):
     def __init__(self, msg):
