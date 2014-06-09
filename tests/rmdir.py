@@ -145,67 +145,65 @@ def subtest_11(ctx):
     ctx.rmtree(d)
     ctx.open_file(f, ro=1, err=ENOENT)
 
-# # Remove a directory over a symlink to a file
-# def subtest_12(ctx):
-#     ctx.begin_test(12, "Remove directory over sym to file")
-#     f = ctx.reg_file()
-#     d = ctx.reg_file() + ctx.termslash()
-#     sym = ctx.direct_sym() + ctx.termslash()
+# Remove directory symlinks pointing to a file
+def subtest_12(ctx):
+    ctx.begin_test(12, "Remove-dir symlinks to file")
+    f = ctx.reg_file()
+    d = ctx.reg_file() + ctx.termslash()
+    sym = ctx.direct_sym() + ctx.termslash()
+    isym = ctx.indirect_sym() + ctx.termslash()
 
-#     ctx.rmdir(sym, err=EEXIST)
-#     ctx.rmdir(sym, err=EEXIST)
-#     ctx.rmdir(d, err=EEXIST)
-#     ctx.open_file(f, ro=1, read=":xxx:yyy:zzz")
+    ctx.rmdir(isym, err=ENOTDIR)
+    ctx.rmdir(isym, err=ENOTDIR)
+    ctx.rmdir(sym, err=ENOTDIR)
+    ctx.rmdir(sym, err=ENOTDIR)
+    ctx.rmdir(d, err=ENOTDIR)
+    ctx.rmdir(d, err=ENOTDIR)
+    ctx.open_file(f, ro=1, read=":xxx:yyy:zzz")
 
-# # Remove a directory over a symlink to a symlink to a file
-# def subtest_13(ctx):
-#     ctx.begin_test(13, "Remove directory over sym to sym to file")
-#     f = ctx.reg_file()
-#     d = ctx.reg_file() + ctx.termslash()
-#     sym = ctx.direct_sym() + ctx.termslash()
-#     isym = ctx.indirect_sym() + ctx.termslash()
+# Remove a directory over a symlink to a dir
+def subtest_13(ctx):
+    ctx.begin_test(13, "Remove directory over sym to dir")
+    d = ctx.non_empty_dir() + ctx.termslash()
+    sym = ctx.direct_dir_sym() + ctx.termslash()
 
-#     ctx.rmdir(isym, err=EEXIST)
-#     ctx.rmdir(isym, err=EEXIST)
-#     ctx.rmdir(sym, err=EEXIST)
-#     ctx.rmdir(d, err=EEXIST)
-#     ctx.open_file(f, ro=1, read=":xxx:yyy:zzz")
+    ctx.rmdir(sym, err=ENOTDIR)
+    ctx.rmdir(sym, err=ENOTDIR)
+    ctx.rmdir(d, err=ENOTEMPTY)
+    ctx.open_file(sym + "/a", ro=1, read="")
+    ctx.open_file(d + "/a", ro=1, read="")
+    ctx.rmtree(d)
+    ctx.open_file(sym + "/a", ro=1, err=ENOENT)
+    ctx.open_file(d + "/a", ro=1, err=ENOENT)
 
-# # Remove a directory over a symlink to a dir
-# def subtest_14(ctx):
-#     ctx.begin_test(14, "Remove directory over sym to dir")
-#     d = ctx.non_empty_dir() + ctx.termslash()
-#     sym = ctx.direct_dir_sym() + ctx.termslash()
+# Remove a directory over a symlink to a symlink to a dir
+def subtest_14(ctx):
+    ctx.begin_test(14, "Remove directory over sym to sym to dir")
+    d = ctx.non_empty_dir() + ctx.termslash()
+    sym = ctx.direct_dir_sym() + ctx.termslash()
+    isym = ctx.indirect_dir_sym() + ctx.termslash()
 
-#     ctx.rmdir(sym, err=EEXIST)
-#     ctx.rmdir(sym, err=EEXIST)
-#     ctx.rmdir(d, err=EEXIST)
-#     ctx.open_file(sym + "/a", ro=1, read="")
-#     ctx.open_file(d + "/a", ro=1, read="")
+    ctx.rmdir(isym, err=ENOTDIR)
+    ctx.rmdir(isym, err=ENOTDIR)
+    ctx.rmdir(sym, err=ENOTDIR)
+    ctx.rmdir(d, err=ENOTEMPTY)
+    ctx.open_file(isym + "/a", ro=1, read="")
+    ctx.open_file(sym + "/a", ro=1, read="")
+    ctx.open_file(d + "/a", ro=1, read="")
+    ctx.rmtree(d)
+    ctx.open_file(isym + "/a", ro=1, err=ENOENT)
+    ctx.open_file(sym + "/a", ro=1, err=ENOENT)
+    ctx.open_file(d + "/a", ro=1, err=ENOENT)
 
-# # Remove a directory over a symlink to a symlink to a dir
-# def subtest_15(ctx):
-#     ctx.begin_test(15, "Remove directory over sym to sym to dir")
-#     d = ctx.non_empty_dir() + ctx.termslash()
-#     sym = ctx.direct_dir_sym() + ctx.termslash()
-#     isym = ctx.indirect_dir_sym() + ctx.termslash()
+# Remove a directory over a dangling symlink
+def subtest_15(ctx):
+    ctx.begin_test(15, "Remove directory over dangling sym")
+    d = ctx.no_file() + ctx.termslash()
+    sym = ctx.pointless() + ctx.termslash()
 
-#     ctx.rmdir(isym, err=EEXIST)
-#     ctx.rmdir(isym, err=EEXIST)
-#     ctx.rmdir(sym, err=EEXIST)
-#     ctx.rmdir(d, err=EEXIST)
-#     ctx.open_file(isym + "/a", ro=1, read="")
-#     ctx.open_file(sym + "/a", ro=1, read="")
-#     ctx.open_file(d + "/a", ro=1, read="")
-
-# # Remove a directory over a dangling symlink
-# def subtest_16(ctx):
-#     ctx.begin_test(16, "Remove directory over dangling sym")
-#     d = ctx.no_file() + ctx.termslash()
-#     sym = ctx.pointless() + ctx.termslash()
-
-#     ctx.rmdir(sym, err=EEXIST)
-#     ctx.rmdir(sym, err=EEXIST)
+    ctx.rmdir(sym, err=ENOTDIR)
+    ctx.rmdir(sym, err=ENOTDIR)
+    ctx.rmdir(d, err=ENOENT)
 
 subtests = [
     subtest_1,
@@ -219,9 +217,8 @@ subtests = [
     subtest_9,
     subtest_10,
     subtest_11,
-    # subtest_12,
-    # subtest_13,
-    # subtest_14,
-    # subtest_15,
-    # subtest_16,
+    subtest_12,
+    subtest_13,
+    subtest_14,
+    subtest_15,
 ]

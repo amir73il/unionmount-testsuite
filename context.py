@@ -601,8 +601,8 @@ class test_context:
             self.verbose("os.fstat(", fd, ")\n");
             st = os.fstat(fd)
             if st.st_size != l:
-                raise TestError(filename + ": File size wrong (" +
-                                str(st.st_size) + " != " + str(l) + ")")
+                raise TestError(filename + ": File size wrong (got " +
+                                str(st.st_size) + ", want " + str(l) + ")")
 
             self.verbose("os.lseek(", fd, ",0,0)\n");
             os.lseek(fd, 0, os.SEEK_SET)
