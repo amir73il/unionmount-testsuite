@@ -43,7 +43,7 @@ class config:
         return self.__testing_overlayfs
 
     def set_testing_none(self):
-        self.__lower_mntroot = "/mnt"
+        self.__lower_mntroot = "/lower"
         self.__union_mntroot = "/mnt"
         self.__testing_none = True
 

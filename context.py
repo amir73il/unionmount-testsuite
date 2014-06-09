@@ -143,6 +143,7 @@ class test_context:
         self.__upper_dir_fs = None
         self.__verbose = cfg.is_verbose()
         self.__direct_mode = direct_mode
+        self.__skip_layer_test = cfg.testing_none()
         if cfg.is_termslash():
             self.__termslash = "/"
         else:
@@ -221,6 +222,9 @@ class test_context:
 
     def upper_dir_fs(self):
         return self.__upper_dir_fs
+
+    def skip_layer_test(self):
+        return self.__skip_layer_test
 
     # Display the banner beginning the test
     def begin_test(self, nr, name):
@@ -419,7 +423,9 @@ class test_context:
             raise TestError(name + ": File unexpectedly found")
 
         #self.output("- check_layer ", dentry.filename(), " -", dentry.layer(), " # ", dev, "\n")
-        if dev == self.lower_fs():
+        if self.skip_layer_test():
+            pass
+        elif dev == self.lower_fs():
             if dentry.is_dir():
                 raise TestError(name + ": Directory unexpectedly on lower filesystem")
             if dentry.on_upper():

@@ -4,7 +4,13 @@ def mount_union(ctx):
     cfg = ctx.config()
     union_mntroot = cfg.union_mntroot()
     testdir = cfg.testdir()
-    if cfg.testing_unionmount():
+    if cfg.testing_none():
+        lower_mntroot = cfg.lower_mntroot()
+        system("mount -o remount,rw " + lower_mntroot)
+        system("mount -o bind " + lower_mntroot + " " + union_mntroot)
+        ctx.note_upper_fs(lower_mntroot, testdir)
+
+    elif cfg.testing_unionmount():
         system("/root/util-linux-union/mount/mount -i -t tmpfs upper_layer " +
                union_mntroot + " -o union")
         ctx.note_upper_fs(testdir, testdir)
