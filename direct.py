@@ -146,6 +146,10 @@ def direct_fs_op(cfg, cmdargs):
         if len(xargs) != 0:
             raise ArgumentError("readlink requires no additional arguments")
         ctx.readlink(f, **args)
+    elif op == "rename":
+        if len(xargs) != 1:
+            raise ArgumentError("rename requires a single additional filename")
+        ctx.rename(f, xargs[0], **args)
     elif op == "rmdir":
         if len(xargs) != 0:
             raise ArgumentError("rmdir requires no additional arguments")

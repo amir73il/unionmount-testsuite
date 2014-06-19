@@ -34,6 +34,7 @@ class dentry:
         self.__failed_create = False
         self.__parent = None
         self.__children = dict()
+        self.__rename_exdev = not on_upper
 
     def created(self, filetype, symlink_val=None, symlink_to=None, on_upper=True):
         assert(self.__filetype == None)
@@ -63,6 +64,9 @@ class dentry:
             return ""
         return self.__parent.filename() + "/" + self.__name
 
+    def filetype(self):
+        return self.__filetype
+
     def is_negative(self):
         return self.__filetype == None
 
@@ -90,13 +94,25 @@ class dentry:
         child.__parent = None
 
     def unlink(self):
-        self.parent().unlink_child(self)
+        if self.parent():
+            self.parent().unlink_child(self)
 
     def did_create_fail(self):
         return self.__failed_create
 
     def copied_up(self):
         self.__upper = True
+
+    def replace_with(self, src):
+        self.__filetype = src.__filetype
+        self.__symlink_val = src.__symlink_val
+        self.__symlink_to = src.__symlink_to
+        self.__upper = src.__upper
+        self.__failed_create = False
+        self.__children = src.__children
+        if self.__children:
+            for i in self.__children.values():
+                i.__parent = self
 
     def on_upper(self):
         return self.__upper
@@ -126,6 +142,9 @@ class dentry:
 
     def is_dir_or_sym_to_dir(self):
         return self.__filetype == "d" or self.is_sym() and self.sym_target().is_dir_or_sym_to_dir()
+
+    def get_exdev_on_rename(self):
+        return self.__rename_exdev
 
 ###############################################################################
 #
@@ -526,6 +545,12 @@ class test_context:
         # that we have to automatically change the error if we expect a failure
         # due to a path with a terminal slash.
         #
+        # Further, it's possible to get EXDEV on renaming a directory that
+        # mirrors an underlying directory.
+        #
+        if dentry.get_exdev_on_rename() and "xerr" in args and not self.__skip_layer_test:
+            args["err"] = args["xerr"]
+
         if filename.endswith("/"):
             if not dentry.is_negative():
                 if create:
@@ -640,10 +665,10 @@ class test_context:
     # VFS Operation common bits
     #
     ###########################################################################
-    def vfs_op_prelude(self, line, filename, args,
-                       create=False, tslash_ok=False, no_follow=True, expect_sym=False):
+    def vfs_op_prelude(self, line, filename, args, filename2 = None,
+                       create=False, tslash_ok=False, no_follow=True,
+                       expect_sym=False):
         line = line.replace("//", "/")
-        filename = filename.replace("//", "/")
         if "no_follow" in args:
             no_follow = True
         if "err" not in args:
@@ -651,13 +676,25 @@ class test_context:
         want_error = args["err"]
         missing_ok = (want_error != None) or create
 
+        filename = filename.replace("//", "/")
         (parent, dentry) = self.pathwalk(filename, no_follow=no_follow,
                                          missing_ok=missing_ok)
+
+        if filename2 != None:
+            filename2 = filename2.replace("//", "/")
+            (parent2, dentry2) = self.pathwalk(filename2, no_follow=no_follow,
+                                               missing_ok=missing_ok)
 
         # Determine the error we might expect.  This is complicated by the fact
         # that we have to automatically change the error if we expect a failure
         # due to a path with a terminal slash.
         #
+        # Further, it's possible to get EXDEV on renaming a directory that
+        # mirrors an underlying directory.
+        #
+        if dentry.get_exdev_on_rename() and "xerr" in args and not self.__skip_layer_test:
+            args["err"] = args["xerr"]
+
         if not tslash_ok and filename.endswith("/"):
             if not dentry.is_negative():
                 if dentry.is_sym():
@@ -681,6 +718,23 @@ class test_context:
                 elif dentry.did_create_fail():
                     args["err"] = errno.ENOENT
 
+        if filename2 != None and not tslash_ok and filename2.endswith("/"):
+            if not dentry2.is_negative():
+                if dentry2.is_sym():
+                    if dentry2.is_dir_or_sym_to_dir():
+                        if expect_sym:
+                            args["err"] = errno.EINVAL
+                        else:
+                            args["err"] = errno.ENOTDIR
+                    elif expect_sym and dentry2.is_neg_or_sym_to_neg():
+                        args["err"] = errno.ENOENT
+                    else:
+                        args["err"] = errno.ENOTDIR
+                elif dentry2.is_reg_or_sym_to_reg():
+                    args["err"] = errno.EISDIR
+            elif dentry2.is_negative():
+                args["err"] = errno.EISDIR
+
         want_error = args["err"]
 
         # Build the commandline to repeat the test
@@ -699,6 +753,8 @@ class test_context:
         self.output(" ./run --", line, "\n")
 
         self.check_layer(filename)
+        if filename2 != None:
+            self.check_layer(filename)
 
         if "as_bin" in args:
             self.verbosef("os.setegid(1)")
@@ -706,7 +762,10 @@ class test_context:
             self.verbosef("os.seteuid(1)")
             os.seteuid(1)
 
-        return dentry
+        if filename2 != None:
+            return (dentry, dentry2)
+        else:
+            return dentry
 
     # Determine how to handle success
     def vfs_op_success(self, filename, dentry, args, filetype="f", create=False, copy_up=False):
@@ -819,6 +878,31 @@ class test_context:
             self.vfs_op_success(filename, dentry, args)
         except OSError as oe:
             self.vfs_op_error(oe, filename, dentry, args)
+
+    ###########################################################################
+    #
+    # Rename operation
+    #
+    ###########################################################################
+    def rename(self, filename, filename2, **args):
+        line = "rename " + filename + " " + filename2
+        (dentry, dentry2) = self.vfs_op_prelude(line, filename, args, filename2,
+                                                tslash_ok=True, no_follow=True,
+                                                create=True)
+
+        try:
+            self.verbosef("os.rename({:s},{:s})\n", filename, filename2)
+            filetype = dentry.filetype()
+            os.rename(filename, filename2)
+            if dentry != dentry2:
+                dentry.copied_up()
+                dentry2.replace_with(dentry)
+                dentry.unlink()
+            self.vfs_op_success(filename, dentry, args)
+            self.vfs_op_success(filename2, dentry2, args, create=True, filetype=filetype)
+        except OSError as oe:
+            self.vfs_op_error(oe, filename, dentry, args)
+            self.vfs_op_error(oe, filename2, dentry2, args)
 
     ###########################################################################
     #

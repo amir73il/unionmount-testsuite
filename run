@@ -43,6 +43,7 @@ if args[0] == "--open-file":
 if (args[0] == "--chmod" or
     args[0] == "--mkdir" or
     args[0] == "--readlink" or
+    args[0] == "--rename" or
     args[0] == "--rmdir" or
     args[0] == "--truncate" or
     args[0] == "--unlink" or
@@ -161,6 +162,12 @@ tests = [
     "mkdir",
     "rmdir",
     "unlink",
+    "rename-file",
+    "rename-empty-dir",
+    "rename-new-dir",
+    "rename-pop-dir",
+    "rename-new-pop-dir",
+    "rename-move-dir",
     "impermissible"
     ]
 
