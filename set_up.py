@@ -21,7 +21,10 @@ def set_up(ctx):
     # as unionmount tries to collect all the mounts located there into the
     # union.
     if cfg.testing_unionmount():
-        while system("umount " + cfg.union_mntroot()):
+        try:
+            while system("umount " + cfg.union_mntroot()):
+                pass
+        except RuntimeError:
             pass
 
     # Create a lower layer to union over
