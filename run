@@ -168,7 +168,7 @@ if len(args) > 0:
     tests = args 
 
 if cfg.testing_unionmount():
-    test_what = "--un"
+    test_what = "--um"
 elif cfg.testing_overlayfs():
     test_what = "--ov"
 else:
