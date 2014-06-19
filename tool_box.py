@@ -19,6 +19,7 @@ def system(command):
     ret = os.system(command)
     if ret != 0:
         raise RuntimeError("Command failed: " + command)
+    return True
 
 def read_file(path):
     fd = open(path, "r")
