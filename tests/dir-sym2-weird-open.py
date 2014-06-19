@@ -1,5 +1,4 @@
 from errno import *
-from tool_box import *
 
 ###############################################################################
 #
@@ -10,7 +9,7 @@ from tool_box import *
 
 # Open(dir symlink) read-only and create
 def subtest_1(ctx):
-    ctx.begin_test(1, "Open(dir symlink) O_RDONLY | O_CREAT")
+    """Open(dir symlink) O_RDONLY | O_CREAT"""
     indirect = ctx.indirect_dir_sym() + ctx.termslash()
     direct = ctx.direct_dir_sym() + ctx.termslash()
     f = ctx.non_empty_dir() + ctx.termslash()
@@ -20,7 +19,7 @@ def subtest_1(ctx):
 
 # Open(dir symlink) read-only and create exclusive
 def subtest_2(ctx):
-    ctx.begin_test(2, "Open(dir symlink) O_RDONLY | O_CREAT | O_EXCL")
+    """Open(dir symlink) O_RDONLY | O_CREAT | O_EXCL"""
     indirect = ctx.indirect_dir_sym() + ctx.termslash()
     direct = ctx.direct_dir_sym() + ctx.termslash()
     f = ctx.non_empty_dir() + ctx.termslash()
@@ -30,7 +29,7 @@ def subtest_2(ctx):
 
 # Open(dir symlink) read-only and truncate
 def subtest_3(ctx):
-    ctx.begin_test(3, "Open(dir symlink) O_RDONLY | O_TRUNC")
+    """Open(dir symlink) O_RDONLY | O_TRUNC"""
     indirect = ctx.indirect_dir_sym() + ctx.termslash()
     direct = ctx.direct_dir_sym() + ctx.termslash()
     f = ctx.non_empty_dir() + ctx.termslash()
@@ -40,7 +39,7 @@ def subtest_3(ctx):
 
 # Open(dir symlink) read-only and truncate create
 def subtest_4(ctx):
-    ctx.begin_test(4, "Open(dir symlink) O_RDONLY | O_TRUNC | O_CREAT")
+    """Open(dir symlink) O_RDONLY | O_TRUNC | O_CREAT"""
     indirect = ctx.indirect_dir_sym() + ctx.termslash()
     direct = ctx.direct_dir_sym() + ctx.termslash()
     f = ctx.non_empty_dir() + ctx.termslash()
@@ -50,7 +49,7 @@ def subtest_4(ctx):
 
 # Open(dir symlink) read-only and truncate create exclusive
 def subtest_5(ctx):
-    ctx.begin_test(5, "Open(dir symlink) O_RDONLY | O_TRUNC | O_CREAT | O_EXCL")
+    """Open(dir symlink) O_RDONLY | O_TRUNC | O_CREAT | O_EXCL"""
     indirect = ctx.indirect_dir_sym() + ctx.termslash()
     direct = ctx.direct_dir_sym() + ctx.termslash()
     f = ctx.non_empty_dir() + ctx.termslash()
@@ -60,7 +59,7 @@ def subtest_5(ctx):
 
 # Open(dir symlink) write-only and create
 def subtest_6(ctx):
-    ctx.begin_test(6, "Open(dir symlink) O_WRONLY | O_CREAT")
+    """Open(dir symlink) O_WRONLY | O_CREAT"""
     indirect = ctx.indirect_dir_sym() + ctx.termslash()
     direct = ctx.direct_dir_sym() + ctx.termslash()
     f = ctx.non_empty_dir() + ctx.termslash()
@@ -70,7 +69,7 @@ def subtest_6(ctx):
 
 # Open(dir symlink) write-only and create exclusive
 def subtest_7(ctx):
-    ctx.begin_test(7, "Open(dir symlink) O_WRONLY | O_CREAT | O_EXCL")
+    """Open(dir symlink) O_WRONLY | O_CREAT | O_EXCL"""
     indirect = ctx.indirect_dir_sym() + ctx.termslash()
     direct = ctx.direct_dir_sym() + ctx.termslash()
     f = ctx.non_empty_dir() + ctx.termslash()
@@ -80,7 +79,7 @@ def subtest_7(ctx):
 
 # Open(dir symlink) write-only and truncate
 def subtest_8(ctx):
-    ctx.begin_test(8, "Open(dir symlink) O_WRONLY | O_TRUNC")
+    """Open(dir symlink) O_WRONLY | O_TRUNC"""
     indirect = ctx.indirect_dir_sym() + ctx.termslash()
     direct = ctx.direct_dir_sym() + ctx.termslash()
     f = ctx.non_empty_dir() + ctx.termslash()
@@ -90,7 +89,7 @@ def subtest_8(ctx):
 
 # Open(dir symlink) write-only and truncate create
 def subtest_9(ctx):
-    ctx.begin_test(9, "Open(dir symlink) O_WRONLY | O_TRUNC | O_CREAT")
+    """Open(dir symlink) O_WRONLY | O_TRUNC | O_CREAT"""
     indirect = ctx.indirect_dir_sym() + ctx.termslash()
     direct = ctx.direct_dir_sym() + ctx.termslash()
     f = ctx.non_empty_dir() + ctx.termslash()
@@ -100,23 +99,10 @@ def subtest_9(ctx):
 
 # Open(dir symlink) write-only and truncate create exclusive
 def subtest_10(ctx):
-    ctx.begin_test(10, "Open(dir symlink) O_WRONLY | O_TRUNC | O_CREAT | O_EXCL")
+    """Open(dir symlink) O_WRONLY | O_TRUNC | O_CREAT | O_EXCL"""
     indirect = ctx.indirect_dir_sym() + ctx.termslash()
     direct = ctx.direct_dir_sym() + ctx.termslash()
     f = ctx.non_empty_dir() + ctx.termslash()
 
     ctx.open_file(indirect, wo=1, tr=1, crt=1, ex=1, err=EEXIST)
     ctx.open_file(indirect, ro=1)
-
-subtests = [
-    subtest_1,
-    subtest_2,
-    subtest_3,
-    subtest_4,
-    subtest_5,
-    subtest_6,
-    subtest_7,
-    subtest_8,
-    subtest_9,
-    subtest_10,
-]

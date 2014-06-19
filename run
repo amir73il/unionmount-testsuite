@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-import sys, os
+import sys, os, types, inspect
 from settings import config
 from context import test_context
 from tool_box import *
@@ -197,7 +197,16 @@ for test in tests:
         # Run a test script
         script = __import__("tests." + test, globals(), locals(), ['subtests'])
         try:
-            for subtest in script.subtests:
+            for name in dir(script):
+                if not name.startswith("subtest_"):
+                    continue
+                subtest = getattr(script, name)
+                if type(subtest) != types.FunctionType:
+                    continue
+
+                ctx.begin_test(inspect.getfile(subtest),
+                               inspect.getsourcelines(subtest)[1],
+                               subtest.__doc__)
                 subtest(ctx)
         except TestError as te:
             print(te)

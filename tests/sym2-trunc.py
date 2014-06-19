@@ -1,5 +1,4 @@
 from errno import *
-from tool_box import *
 
 ###############################################################################
 #
@@ -9,7 +8,7 @@ from tool_box import *
 
 # Truncate and open read-only
 def subtest_1(ctx):
-    ctx.begin_test(1, "Open(symlink->symlink) O_TRUNC|O_RDONLY")
+    """Open(symlink->symlink) O_TRUNC|O_RDONLY"""
     indirect = ctx.indirect_sym() + ctx.termslash()
     direct = ctx.direct_sym() + ctx.termslash()
     f = ctx.reg_file() + ctx.termslash()
@@ -19,7 +18,7 @@ def subtest_1(ctx):
 
 # Truncate, open write-only and overwrite
 def subtest_2(ctx):
-    ctx.begin_test(2, "Open(symlink->symlink) O_TRUNC|O_WRONLY")
+    """Open(symlink->symlink) O_TRUNC|O_WRONLY"""
     indirect = ctx.indirect_sym() + ctx.termslash()
     direct = ctx.direct_sym() + ctx.termslash()
     f = ctx.reg_file() + ctx.termslash()
@@ -31,7 +30,7 @@ def subtest_2(ctx):
 
 # Truncate, open write-only and append
 def subtest_3(ctx):
-    ctx.begin_test(3, "Open(symlink->symlink) O_TRUNC|O_APPEND|O_WRONLY")
+    """Open(symlink->symlink) O_TRUNC|O_APPEND|O_WRONLY"""
     indirect = ctx.indirect_sym() + ctx.termslash()
     direct = ctx.direct_sym() + ctx.termslash()
     f = ctx.reg_file() + ctx.termslash()
@@ -43,7 +42,7 @@ def subtest_3(ctx):
 
 # Truncate, open read/write and overwrite
 def subtest_4(ctx):
-    ctx.begin_test(4, "Open(symlink->symlink) O_TRUNC|O_RDWR")
+    """Open(symlink->symlink) O_TRUNC|O_RDWR"""
     indirect = ctx.indirect_sym() + ctx.termslash()
     direct = ctx.direct_sym() + ctx.termslash()
     f = ctx.reg_file() + ctx.termslash()
@@ -55,7 +54,7 @@ def subtest_4(ctx):
 
 # Truncate, open read/write and append
 def subtest_5(ctx):
-    ctx.begin_test(5, "Open(symlink->symlink) O_TRUNC|O_APPEND|O_RDWR")
+    """Open(symlink->symlink) O_TRUNC|O_APPEND|O_RDWR"""
     indirect = ctx.indirect_sym() + ctx.termslash()
     direct = ctx.direct_sym() + ctx.termslash()
     f = ctx.reg_file() + ctx.termslash()
@@ -64,11 +63,3 @@ def subtest_5(ctx):
     ctx.open_file(indirect, ro=1, read="q")
     ctx.open_file(indirect, ro=1, app=1, tr=1, write="p")
     ctx.open_file(indirect, ro=1, read="p")
-
-subtests = [
-    subtest_1,
-    subtest_2,
-    subtest_3,
-    subtest_4,
-    subtest_5,
-]

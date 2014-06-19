@@ -227,8 +227,11 @@ class test_context:
         return self.__skip_layer_test
 
     # Display the banner beginning the test
-    def begin_test(self, nr, name):
-        self.outputf("TEST{:03d}: {:s}\n", nr, name)
+    def begin_test(self, source, nr, name):
+        ix = source.rfind("/")
+        if ix >= 0:
+            source = source[ix + 1:]
+        self.output("TEST ", source, ":", nr, ": ", name, "\n")
         self.__filenr += 1
 
     # Increment the test fileset number

@@ -1,6 +1,4 @@
 from errno import *
-from tool_box import *
-import os
 
 ###############################################################################
 #
@@ -10,7 +8,7 @@ import os
 
 def subtest_1(ctx):
     # Truncate extant file
-    ctx.begin_test(0, "Truncate file")
+    """Truncate file"""
     
     key = ":xxx:yyy:zzz"
     while len(key) != 29:
@@ -35,7 +33,3 @@ def subtest_1(ctx):
         else:
             ctx.truncate(f, loop, err=ENOTDIR)
         ctx.incr_filenr()
-
-subtests = [
-        subtest_1
-]

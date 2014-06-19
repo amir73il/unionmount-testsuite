@@ -1,5 +1,4 @@
 from errno import *
-from tool_box import *
 
 ###############################################################################
 #
@@ -8,7 +7,7 @@ from tool_box import *
 ###############################################################################
 
 def subtest_1(ctx):
-    ctx.begin_test(1, "Unlink file")
+    """Unlink file"""
     f = ctx.reg_file() + ctx.termslash()
 
     ctx.unlink(f)
@@ -18,7 +17,7 @@ def subtest_1(ctx):
     ctx.open_file(f, ro=1, err=ENOENT)
 
 def subtest_2(ctx):
-    ctx.begin_test(2, "Unlink direct symlink to file")
+    """Unlink direct symlink to file"""
     symlink = ctx.direct_sym() + ctx.termslash()
     f = ctx.reg_file() + ctx.termslash()
 
@@ -32,7 +31,7 @@ def subtest_2(ctx):
     ctx.open_file(f, ro=1, read=":xxx:yyy:zzz")
 
 def subtest_3(ctx):
-    ctx.begin_test(3, "Unlink indirect symlink to file")
+    """Unlink indirect symlink to file"""
     indirect = ctx.indirect_sym() + ctx.termslash()
     symlink = ctx.direct_sym() + ctx.termslash()
     f = ctx.reg_file() + ctx.termslash()
@@ -51,7 +50,7 @@ def subtest_3(ctx):
 #
 #
 def subtest_4(ctx):
-    ctx.begin_test(4, "Unlink dir")
+    """Unlink dir"""
     f = ctx.non_empty_dir() + ctx.termslash()
 
     ctx.unlink(f, err=EISDIR)
@@ -61,7 +60,7 @@ def subtest_4(ctx):
     ctx.open_dir(f, ro=1)
 
 def subtest_5(ctx):
-    ctx.begin_test(5, "Unlink direct symlink to dir")
+    """Unlink direct symlink to dir"""
     symlink = ctx.direct_dir_sym() + ctx.termslash()
     f = ctx.non_empty_dir() + ctx.termslash()
 
@@ -81,7 +80,7 @@ def subtest_5(ctx):
     ctx.open_dir(f, ro=1)
 
 def subtest_6(ctx):
-    ctx.begin_test(6, "Unlink indirect symlink to dir")
+    """Unlink indirect symlink to dir"""
     indirect = ctx.indirect_dir_sym() + ctx.termslash()
     symlink = ctx.direct_dir_sym() + ctx.termslash()
     f = ctx.non_empty_dir() + ctx.termslash()
@@ -106,42 +105,29 @@ def subtest_6(ctx):
 #
 #
 def subtest_7(ctx):
-    ctx.begin_test(7, "Unlink absent file")
+    """Unlink absent file"""
     f = ctx.no_file() + ctx.termslash()
 
     ctx.unlink(f, err=ENOENT)
     ctx.unlink(f, err=ENOENT)
 
 def subtest_8(ctx):
-    ctx.begin_test(8, "Unlink broken symlink to absent file")
+    """Unlink broken symlink to absent file"""
     f = ctx.pointless() + ctx.termslash()
 
     ctx.unlink(f)
     ctx.unlink(f, err=ENOENT)
 
 def subtest_9(ctx):
-    ctx.begin_test(9, "Unlink broken symlink")
+    """Unlink broken symlink"""
     f = ctx.pointless() + ctx.termslash()
 
     ctx.unlink(f)
     ctx.unlink(f, err=ENOENT)
 
 def subtest_10(ctx):
-    ctx.begin_test(10, "Unlink absent file pointed to by broken symlink")
+    """Unlink absent file pointed to by broken symlink"""
     f = ctx.no_file() + ctx.termslash()
 
     ctx.unlink(f, err=ENOENT)
     ctx.unlink(f, err=ENOENT)
-
-subtests = [
-    subtest_1,
-    subtest_2,
-    subtest_3,
-    subtest_4,
-    subtest_5,
-    subtest_6,
-    subtest_7,
-    subtest_8,
-    subtest_9,
-    subtest_10,
-]
