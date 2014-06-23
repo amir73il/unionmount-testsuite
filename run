@@ -165,7 +165,7 @@ tests = [
     ]
 
 if len(args) > 0:
-    tests = args 
+    tests = args
 
 if cfg.testing_unionmount():
     test_what = "--um"
@@ -197,17 +197,23 @@ for test in tests:
         # Run a test script
         script = __import__("tests." + test, globals(), locals(), ['subtests'])
         try:
+            subtests = []
             for name in dir(script):
                 if not name.startswith("subtest_"):
                     continue
                 subtest = getattr(script, name)
                 if type(subtest) != types.FunctionType:
                     continue
+                subtests.append((inspect.getfile(subtest),
+                                 inspect.getsourcelines(subtest)[1],
+                                 subtest.__doc__,
+                                 subtest))
 
-                ctx.begin_test(inspect.getfile(subtest),
-                               inspect.getsourcelines(subtest)[1],
-                               subtest.__doc__)
-                subtest(ctx)
+            # Perform the subtests in the order they're defined in the file
+            for (f, line, doc, func) in sorted(subtests, key=lambda s: s[1]):
+                ctx.begin_test(f, line, doc)
+                func(ctx)
+
         except TestError as te:
             print(te)
             sys.exit(1)
