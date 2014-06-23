@@ -669,6 +669,8 @@ class test_context:
                        create=False, tslash_ok=False, no_follow=True,
                        expect_sym=False):
         line = line.replace("//", "/")
+        if "follow" in args:
+            no_follow = False
         if "no_follow" in args:
             no_follow = True
         if "err" not in args:
@@ -826,6 +828,31 @@ class test_context:
             self.vfs_op_success(filename, dentry, args, copy_up=True)
         except OSError as oe:
             self.vfs_op_error(oe, filename, dentry, args)
+
+    ###########################################################################
+    #
+    # Create hard link operation
+    #
+    ###########################################################################
+    def link(self, filename, filename2, **args):
+        line = "link " + filename + " " + filename2
+        (dentry, dentry2) = self.vfs_op_prelude(line, filename, args, filename2,
+                                                create=True)
+        follow_symlinks = False
+        if "follow" in args:
+            follow_symlinks = True
+        if "no_follow" in args:
+            follow_symlinks = False
+
+        try:
+            self.verbosef("os.link({:s},{:s})\n", filename, filename2)
+            os.link(filename, filename2, follow_symlinks=follow_symlinks)
+            dentry.copied_up()
+            self.vfs_op_success(filename, dentry, args)
+            self.vfs_op_success(filename2, dentry2, args, create=True, filetype=dentry.filetype())
+        except OSError as oe:
+            self.vfs_op_error(oe, filename, dentry, args)
+            self.vfs_op_error(oe, filename2, dentry2, args, create=True)
 
     ###########################################################################
     #

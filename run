@@ -41,6 +41,7 @@ if args[0] == "--open-file":
     sys.exit(0)
 
 if (args[0] == "--chmod" or
+    args[0] == "--link" or
     args[0] == "--mkdir" or
     args[0] == "--readlink" or
     args[0] == "--rename" or
@@ -161,6 +162,8 @@ tests = [
     "readlink",
     "mkdir",
     "rmdir",
+    "hard-link",
+    "hard-link-dir",
     "unlink",
     "rename-file",
     "rename-empty-dir",

@@ -138,6 +138,10 @@ def direct_fs_op(cfg, cmdargs):
         if len(xargs) != 1:
             raise ArgumentError("chmod requires a single mode argument")
         ctx.chmod(f, parse_C_int(xargs[0]), **args)
+    elif op == "link":
+        if len(xargs) != 1:
+            raise ArgumentError("link requires a single additional filename")
+        ctx.rename(f, xargs[0], **args)
     elif op == "mkdir":
         if len(xargs) != 1:
             raise ArgumentError("mkdir requires a single mode argument")
