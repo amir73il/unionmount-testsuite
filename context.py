@@ -510,10 +510,10 @@ class test_context:
             line += " -m " + str(mode)
 
         if "read" in args:
-            line += " -R " + str(args["read"])[1:]
+            line += " -R " + args["read"]
 
         if "write" in args:
-            line += " -W " + str(args["write"])[1:]
+            line += " -W " + args["write"]
 
         if "err" not in args:
             args["err"] = None
@@ -624,7 +624,7 @@ class test_context:
 
             if content != data:
                 raise TestError(filename + ": File contents differ (expected '" +
-                                data + "', got '" + str(content) + "')")
+                                data.decode() + "', got '" + content.decode() + "')")
 
         if fd != None:
             self.verbose("os.close(", fd, ")\n");
