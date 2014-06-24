@@ -171,6 +171,8 @@ tests = [
     "rename-pop-dir",
     "rename-new-pop-dir",
     "rename-move-dir",
+    "rename-mass",
+    "rename-mass-2",
     "impermissible"
     ]
 

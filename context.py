@@ -90,6 +90,7 @@ class dentry:
 
     def unlink_child(self, child):
         assert(self.is_dir())
+        assert(self.__children[child.__name] == child)
         del self.__children[child.__name]
         child.__parent = None
 
@@ -104,15 +105,14 @@ class dentry:
         self.__upper = True
 
     def replace_with(self, src):
-        self.__filetype = src.__filetype
-        self.__symlink_val = src.__symlink_val
-        self.__symlink_to = src.__symlink_to
-        self.__upper = src.__upper
-        self.__failed_create = False
-        self.__children = src.__children
-        if self.__children:
-            for i in self.__children.values():
-                i.__parent = self
+        old_parent = src.parent()
+        new_parent = self.parent()
+        miss = dentry(src.__name, None, on_upper = True)
+        old_parent.unlink_child(src)
+        old_parent.add_child(miss)
+        src.__name = self.__name
+        new_parent.unlink_child(self)
+        new_parent.add_child(src)
 
     def on_upper(self):
         return self.__upper
@@ -924,7 +924,6 @@ class test_context:
             if dentry != dentry2:
                 dentry.copied_up()
                 dentry2.replace_with(dentry)
-                dentry.unlink()
             self.vfs_op_success(filename, dentry, args)
             self.vfs_op_success(filename2, dentry2, args, create=True, filetype=filetype)
         except OSError as oe:
