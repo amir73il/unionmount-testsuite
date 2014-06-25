@@ -23,37 +23,44 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 from tool_box import TestError
 import sys, os, errno
 
-class dentry:
-    def __init__(self, name, filetype,
-                 symlink_val=None, symlink_to=None, on_upper=None, root=False):
-        self.__name = name
+class inode:
+    def __init__(self, filetype, symlink_val=None, symlink_to=None):
+        assert(filetype != None)
+        assert(filetype != "s" or symlink_val)
         self.__filetype = filetype
         self.__symlink_val = symlink_val
         self.__symlink_to = symlink_to
-        self.__upper = on_upper or filetype == "d"
-        self.__failed_create = False
+
+    def filetype(self):
+        return self.__filetype
+
+    def sym_val(self):
+        return self.__symlink_val
+
+    def sym_target(self):
+        return self.__symlink_to
+
+class dentry:
+    def __init__(self, name, inode=None, root=False, on_upper=None):
+        self.__name = name
         self.__parent = None
+        self.created(inode, on_upper=on_upper)
+
+    def created(self, inode, on_upper=None):
+        self.__i = inode
+        self.__failed_create = False
         self.__children = dict()
+        self.__is_dir = inode and inode.filetype() == "d"
+        self.__upper = on_upper or not inode or inode.filetype() == "d"
         self.__rename_exdev = not on_upper
 
-    def created(self, filetype, symlink_val=None, symlink_to=None, on_upper=True):
-        assert(self.__filetype == None)
-        self.__filetype = filetype
-        self.__symlink_val = symlink_val
-        self.__symlink_to = symlink_to
-        self.__upper = on_upper
-        self.__failed_create = False
-
     def failed_to_create(self):
-        if self.__filetype == None:
+        if self.__i == None:
             self.__failed_create = True
 
     def clear(self):
-        assert(self.__filetype != None)
-        self.__filetype = None
-        self.__symlink_val = None
-        self.__symlink_to = None
-        self.__upper = True
+        assert(self.__i != None)
+        self.__i = None
         self.__children = dict()
 
     def name(self):
@@ -64,11 +71,16 @@ class dentry:
             return ""
         return self.__parent.filename() + "/" + self.__name
 
+    def inode(self):
+        return self.__i
+
     def filetype(self):
-        return self.__filetype
+        if self.__i:
+            return self.__i.filetype()
+        return None
 
     def is_negative(self):
-        return self.__filetype == None
+        return self.__i == None
 
     def parent(self):
         return self.__parent
@@ -123,25 +135,25 @@ class dentry:
         return "lower"
 
     def is_dir(self):
-        return self.__filetype == "d"
+        return self.__is_dir
 
     def is_sym(self):
-        return self.__filetype == "s"
+        return self.__i and self.__i.filetype() == "s"
 
     def sym_val(self):
-        return self.__symlink_val
+        return self.__i.sym_val()
 
     def sym_target(self):
-        return self.__symlink_to
+        return self.__i.symlink_target()
 
     def is_neg_or_sym_to_neg(self):
-        return self.__filetype == None or self.is_sym() and self.sym_target().is_neg_or_sym_to_neg()
+        return self.__i.filetype() == None or self.is_sym() and self.sym_target().is_neg_or_sym_to_neg()
 
     def is_reg_or_sym_to_reg(self):
-        return self.__filetype == "r" or self.is_sym() and self.sym_target().is_reg_or_sym_to_reg()
+        return self.__i.filetype() == "r" or self.is_sym() and self.sym_target().is_reg_or_sym_to_reg()
 
     def is_dir_or_sym_to_dir(self):
-        return self.__filetype == "d" or self.is_sym() and self.sym_target().is_dir_or_sym_to_dir()
+        return self.__i.filetype() == "d" or self.is_sym() and self.sym_target().is_dir_or_sym_to_dir()
 
     def get_exdev_on_rename(self):
         return self.__rename_exdev
@@ -154,7 +166,7 @@ class dentry:
 class test_context:
     def __init__(self, cfg, termslash=False, direct_mode=False):
         self.__cfg = cfg
-        self.__root = dentry("/", "d", root=True)
+        self.__root = dentry("/", inode("d"), root=True)
         self.__cwd = None
         self.__filenr = 99
         self.__lower_fs = None
@@ -363,8 +375,9 @@ class test_context:
 
     # Walk over a path.  Returns a tuple of (parent, target).
     def pathwalk(self, filename, **args):
+        assert(filename)
         if self.direct_mode():
-            cursor = dentry(filename, None)
+            cursor = dentry(filename)
             return (cursor, cursor)
         args["linkcount"] = 20
         args["orig_filename"] = filename
@@ -384,8 +397,12 @@ class test_context:
 
     # Record a file's type ("r", "s", "d", None) and symlink target record
     def record_file(self, filename, filetype, symlink_val=None, symlink_to=None, on_upper=False):
+        if filetype == None:
+            i = None
+        else:
+            i = inode(filetype, symlink_val, symlink_to)
         (parent, dentry) = self.pathwalk(filename, missing_ok=True)
-        dentry.created(filetype, symlink_val, symlink_to, on_upper)
+        dentry.created(i, on_upper)
         return dentry
 
     # Change base directory
@@ -595,7 +612,7 @@ class test_context:
                 if dentry.is_negative():
                     if not create:
                         raise TestError(filename + ": File was created without O_CREAT")
-                    dentry.created("f")
+                    dentry.created(inode("f"), on_upper=True)
                 else:
                     if copy_up:
                         dentry.copied_up()
@@ -770,7 +787,8 @@ class test_context:
             return dentry
 
     # Determine how to handle success
-    def vfs_op_success(self, filename, dentry, args, filetype="f", create=False, copy_up=False):
+    def vfs_op_success(self, filename, dentry, args, filetype="f", create=False, copy_up=False,
+                       hardlink_to=None):
         if "as_bin" in args:
             self.verbosef("os.seteuid(0)")
             os.seteuid(0)
@@ -788,7 +806,10 @@ class test_context:
                     raise TestError(filename + ": Symlink was created unexpectedly")
                 else:
                     raise TestError(filename + ": File was created unexpectedly")
-            dentry.created(filetype)
+            if not hardlink_to:
+                dentry.created(inode(filetype))
+            else:
+                dentry.created(hardlink_to, on_upper = dentry.on_upper())
         else:
             if copy_up:
                 dentry.copied_up()
@@ -848,8 +869,9 @@ class test_context:
             self.verbosef("os.link({:s},{:s})\n", filename, filename2)
             os.link(filename, filename2, follow_symlinks=follow_symlinks)
             dentry.copied_up()
-            self.vfs_op_success(filename, dentry, args)
-            self.vfs_op_success(filename2, dentry2, args, create=True, filetype=dentry.filetype())
+            self.vfs_op_success(filename, dentry, args, copy_up=True)
+            self.vfs_op_success(filename2, dentry2, args, create=True, filetype=dentry.filetype(),
+                                hardlink_to=dentry)
         except OSError as oe:
             self.vfs_op_error(oe, filename, dentry, args)
             self.vfs_op_error(oe, filename2, dentry2, args, create=True)
@@ -925,7 +947,8 @@ class test_context:
                 dentry.copied_up()
                 dentry2.replace_with(dentry)
             self.vfs_op_success(filename, dentry, args)
-            self.vfs_op_success(filename2, dentry2, args, create=True, filetype=filetype)
+            self.vfs_op_success(filename2, dentry2, args, create=True, filetype=filetype,
+                                hardlink_to=dentry)
         except OSError as oe:
             self.vfs_op_error(oe, filename, dentry, args)
             self.vfs_op_error(oe, filename2, dentry2, args)
