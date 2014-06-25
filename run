@@ -173,6 +173,11 @@ tests = [
     "rename-move-dir",
     "rename-mass",
     "rename-mass-2",
+    "rename-mass-3",
+    "rename-mass-4",
+    "rename-mass-5",
+    "rename-mass-dir",
+    "rename-mass-sym",
     "impermissible"
     ]
 
