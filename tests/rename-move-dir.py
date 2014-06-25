@@ -16,4 +16,4 @@ def subtest_1(ctx):
     ctx.rename(d, d2 + n, xerr=EXDEV)
     ctx.rename(d, d2 + n, err=ENOENT, xerr=EXDEV)
     ctx.open_dir(d2 + n, ro=1, xerr=ENOENT)
-    ctx.open_dir(d, ro=1, xerr=None)
+    ctx.open_dir(d, ro=1, err=ENOENT, xerr=None)
