@@ -164,6 +164,7 @@ tests = [
     "rmdir",
     "hard-link",
     "hard-link-dir",
+    "hard-link-sym",
     "unlink",
     "rename-file",
     "rename-empty-dir",
