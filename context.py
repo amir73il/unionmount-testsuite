@@ -322,9 +322,13 @@ class test_context:
     ###########################################################################
     # Walk over a symlink
     def pathwalk_symlink(self, cursor, symlink, remnant_filename, args):
-        if args["linkcount"] <= 0:
-            raise TestError(args["orig_filename"] + ": Too many symlinks")
-        args["linkcount"] -= 1
+        if symlink in args["symlinks"]:
+            if remnant_filename == "":
+                fake_dentry = dentry(symlink.name())
+                fake_dentry.failed_to_create()
+                return (cursor, fake_dentry)
+            raise TestError(args["orig_filename"] + ": Recursive symlink")
+        args["symlinks"].add(symlink)
         content = symlink.sym_val()
         if content.startswith("/"):
             cursor = self.__root
@@ -379,7 +383,7 @@ class test_context:
         if self.direct_mode():
             cursor = dentry(filename)
             return (cursor, cursor)
-        args["linkcount"] = 20
+        args["symlinks"] = set()
         args["orig_filename"] = filename
         if "no_follow" not in args:
             args["no_follow"] = False
@@ -445,7 +449,7 @@ class test_context:
     # Layer check operation
     #
     ###########################################################################
-    def check_layer(self, filename, dir_fd=None):
+    def check_layer(self, filename, dir_fd=None, symlinks=set()):
         if self.direct_mode():
             return
         (parent, dentry) = self.pathwalk(filename, no_follow=True, dir_fd=dir_fd,
@@ -477,8 +481,9 @@ class test_context:
         elif not dentry.on_upper():
             raise TestError(name + ": File unexpectedly on upper layer")
 
-        if dentry.is_sym():
-            self.check_layer(dentry.sym_val(), dir_fd=parent)
+        if dentry.is_sym() and dentry not in symlinks:
+            symlinks.add(dentry)
+            self.check_layer(dentry.sym_val(), dir_fd=parent, symlinks=symlinks)
 
     ###########################################################################
     #
