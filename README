@@ -1,13 +1,18 @@
 To run these tests:
 
- (1) Run make
+ (1) If testing unionmount, do:
 
- (2) Copy fs-op and open-file to /usr/local/bin/
-
- (3) If testing unionmount, do:
-
-	./run
+	./run --um
 
      If testing overlayfs, do:
 
-	TEST_OVERLAYFS=1 ./run.sh
+	./run --ov
+
+     To run the tests without any unioning, do:
+
+	./run --no
+
+     To just set up the environment and exit without doing any tests,
+     add the --set-up flag, eg:
+
+	./run --ov --set-up
