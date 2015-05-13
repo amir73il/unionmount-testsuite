@@ -203,3 +203,19 @@ def subtest_15(ctx):
     ctx.rmdir(sym, err=ENOTDIR)
     ctx.rmdir(sym, err=ENOTDIR)
     ctx.rmdir(d, err=ENOENT)
+
+# Remove an empty lower directory, recreate, populate and try to remove
+def subtest_16(ctx):
+    """Remove non-empty opaque directory"""
+    d = ctx.empty_dir() + ctx.termslash()
+    f = d + "/b"
+
+    ctx.rmdir(d)
+    ctx.rmdir(d, err=ENOENT)
+    ctx.mkdir(d, 0o755)
+    ctx.open_file(f, wo=1, crt=1, ex=1, write="abcq")
+    ctx.rmdir(d, err=ENOTEMPTY)
+    ctx.unlink(f)
+    ctx.open_file(f, ro=1, err=ENOENT)
+    ctx.unlink(f, err=ENOENT)
+    ctx.rmdir(d)
