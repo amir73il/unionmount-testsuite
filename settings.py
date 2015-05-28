@@ -29,7 +29,6 @@ class config:
         self.__lower_mntroot = None
         self.__upper_mntroot = None
         self.__union_mntroot = None
-        self.__termslash = None
         self.__verbose = False
 
     def progname(self):
@@ -68,11 +67,6 @@ class config:
         return self.__lower_mntroot + "/a"
     def testdir(self):
         return self.__union_mntroot + "/a"
-
-    def set_termslash(self, to=True):
-        self.__termslash = to
-    def is_termslash(self, to=True):
-        return self.__termslash
 
     def set_verbose(self, to=True):
         self.__verbose = to

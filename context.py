@@ -175,10 +175,9 @@ class test_context:
         self.__verbose = cfg.is_verbose()
         self.__direct_mode = direct_mode
         self.__skip_layer_test = cfg.testing_none()
-        if cfg.is_termslash():
+        self.__termslash = ""
+        if termslash:
             self.__termslash = "/"
-        else:
-            self.__termslash = ""
 
     def config(self):
         return self.__cfg
