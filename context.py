@@ -144,7 +144,7 @@ class dentry:
         return self.__i.sym_val()
 
     def sym_target(self):
-        return self.__i.symlink_target()
+        return self.__i.sym_target()
 
     def is_neg_or_sym_to_neg(self):
         return self.__i.filetype() == None or self.is_sym() and self.sym_target().is_neg_or_sym_to_neg()
