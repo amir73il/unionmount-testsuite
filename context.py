@@ -147,13 +147,27 @@ class dentry:
         return self.__i.sym_target()
 
     def is_neg_or_sym_to_neg(self):
-        return self.__i.filetype() == None or self.is_sym() and self.sym_target().is_neg_or_sym_to_neg()
+        if self.is_negative():
+            return True
+        return self.is_sym() and self.sym_target().is_neg_or_sym_to_neg()
 
     def is_reg_or_sym_to_reg(self):
-        return self.__i.filetype() == "r" or self.is_sym() and self.sym_target().is_reg_or_sym_to_reg()
+        if self.__i.filetype() == "r":
+            return True
+        if not self.is_sym():
+            return False
+        if self.sym_target().is_negative():
+            return False
+        return self.sym_target().is_reg_or_sym_to_reg()
 
     def is_dir_or_sym_to_dir(self):
-        return self.__i.filetype() == "d" or self.is_sym() and self.sym_target().is_dir_or_sym_to_dir()
+        if self.__i.filetype() == "d":
+            return True
+        if not self.is_sym():
+            return False
+        if self.sym_target().is_negative():
+            return False
+        return self.sym_target().is_dir_or_sym_to_dir()
 
     def get_exdev_on_rename(self):
         return self.__rename_exdev
