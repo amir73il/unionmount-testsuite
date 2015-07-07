@@ -9,9 +9,10 @@ from errno import *
 # Move a directory into another
 def subtest_1(ctx):
     """Move dir into another"""
-    d = ctx.empty_dir() + ctx.termslash()
-    d2 = ctx.non_empty_dir() + ctx.termslash()
+    d = ctx.empty_dir()
     n = d[d.rfind("/"):]
+    d = d + ctx.termslash()
+    d2 = ctx.non_empty_dir() + ctx.termslash()
 
     ctx.rename(d, d2 + n, xerr=EXDEV)
     ctx.rename(d, d2 + n, err=ENOENT, xerr=EXDEV)
