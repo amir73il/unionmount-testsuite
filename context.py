@@ -931,23 +931,6 @@ class test_context:
 
     ###########################################################################
     #
-    # Remove directory operation
-    #
-    ###########################################################################
-    def rmdir(self, filename, **args):
-        line = "rmdir " + filename
-        dentry = self.vfs_op_prelude(line, filename, args, tslash_ok=True, no_follow=True)
-
-        try:
-            self.verbosef("os.rmdir({:s})\n", filename)
-            os.rmdir(filename)
-            dentry.unlink()
-            self.vfs_op_success(filename, dentry, args)
-        except OSError as oe:
-            self.vfs_op_error(oe, filename, dentry, args)
-
-    ###########################################################################
-    #
     # Rename operation
     #
     ###########################################################################
@@ -970,6 +953,23 @@ class test_context:
         except OSError as oe:
             self.vfs_op_error(oe, filename, dentry, args)
             self.vfs_op_error(oe, filename2, dentry2, args)
+
+    ###########################################################################
+    #
+    # Remove directory operation
+    #
+    ###########################################################################
+    def rmdir(self, filename, **args):
+        line = "rmdir " + filename
+        dentry = self.vfs_op_prelude(line, filename, args, tslash_ok=True, no_follow=True)
+
+        try:
+            self.verbosef("os.rmdir({:s})\n", filename)
+            os.rmdir(filename)
+            dentry.unlink()
+            self.vfs_op_success(filename, dentry, args)
+        except OSError as oe:
+            self.vfs_op_error(oe, filename, dentry, args)
 
     ###########################################################################
     #
