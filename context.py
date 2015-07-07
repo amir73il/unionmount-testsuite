@@ -697,12 +697,54 @@ class test_context:
 
     ###########################################################################
     #
+    # Determine the error that should be produced for a single-filename
+    # function that doesn't create the file where the filename has an incorrect
+    # slash appended.
+    #
+    # Pass to vfs_op_prelude() with guess=guess1_error
+    #
+    ###########################################################################
+    def guess1_error(self, dentry, has_ts, dentry2, has_ts2):
+        if not has_ts:
+            return None
+        if dentry.is_negative():
+            return errno.ENOENT
+        if dentry.is_sym():
+            return errno.ENOTDIR
+        if dentry.is_reg_or_sym_to_reg():
+            return errno.ENOTDIR
+        return None
+
+    ###########################################################################
+    #
+    # Determine the error that should be produced for a single-filename
+    # function that doesn't create the file where the filename has an incorrect
+    # slash appended.
+    #
+    # Pass to vfs_op_prelude() with guess=guess1_error_create
+    #
+    ###########################################################################
+    def guess1_error_create(self, dentry, has_ts, dentry2, has_ts2):
+        if not has_ts:
+            return None
+        if not dentry.is_negative():
+            if dentry.is_sym():
+                return errno.ENOTDIR
+            elif dentry.is_reg_or_sym_to_reg():
+                return errno.EISDIR
+        elif dentry.is_negative():
+            return errno.EISDIR
+        return None
+
+    ###########################################################################
+    #
     # VFS Operation common bits
     #
     ###########################################################################
-    def vfs_op_prelude(self, line, filename, args, filename2 = None,
-                       create=False, tslash_ok=False, no_follow=True,
-                       expect_sym=False):
+    def vfs_op_prelude(self, line, filename, args, filename2=None,
+                       no_follow=True,
+                       guess=None,
+                       create=False):
         line = line.replace("//", "/")
         if "follow" in args:
             no_follow = False
@@ -711,16 +753,22 @@ class test_context:
         if "err" not in args:
             args["err"] = None
         want_error = args["err"]
-        missing_ok = (want_error != None) or create
+        missing_ok = filename2 == None and ((want_error != None) or create)
 
         filename = filename.replace("//", "/")
         (parent, dentry) = self.pathwalk(filename, no_follow=no_follow,
                                          missing_ok=missing_ok)
+        has_ts=filename.endswith("/")
 
         if filename2 != None:
             filename2 = filename2.replace("//", "/")
             (parent2, dentry2) = self.pathwalk(filename2, no_follow=no_follow,
-                                               missing_ok=missing_ok)
+                                               missing_ok=True)
+            has_ts2=filename.endswith("/")
+        else:
+            parent2 = None
+            dentry2 = None
+            has_ts2 = None
 
         # Determine the error we might expect.  This is complicated by the fact
         # that we have to automatically change the error if we expect a failure
@@ -732,46 +780,9 @@ class test_context:
         if dentry.get_exdev_on_rename() and "xerr" in args and not self.__skip_layer_test:
             args["err"] = args["xerr"]
 
-        if not tslash_ok and filename.endswith("/"):
-            if not dentry.is_negative():
-                if dentry.is_sym():
-                    if dentry.is_dir_or_sym_to_dir():
-                        if expect_sym:
-                            args["err"] = errno.EINVAL
-                        else:
-                            args["err"] = errno.ENOTDIR
-                    elif expect_sym and dentry.is_neg_or_sym_to_neg():
-                        args["err"] = errno.ENOENT
-                    else:
-                        args["err"] = errno.ENOTDIR
-                elif dentry.is_reg_or_sym_to_reg():
-                    if create:
-                        args["err"] = errno.EISDIR
-                    else:
-                        args["err"] = errno.ENOTDIR
-            elif dentry.is_negative():
-                if create:
-                    args["err"] = errno.EISDIR
-                elif dentry.did_create_fail():
-                    args["err"] = errno.ENOENT
-
-        if filename2 != None and not tslash_ok and filename2.endswith("/"):
-            if not dentry2.is_negative():
-                if dentry2.is_sym():
-                    if dentry2.is_dir_or_sym_to_dir():
-                        if expect_sym:
-                            args["err"] = errno.EINVAL
-                        else:
-                            args["err"] = errno.ENOTDIR
-                    elif expect_sym and dentry2.is_neg_or_sym_to_neg():
-                        args["err"] = errno.ENOENT
-                    else:
-                        args["err"] = errno.ENOTDIR
-                elif dentry2.is_reg_or_sym_to_reg():
-                    args["err"] = errno.EISDIR
-            elif dentry2.is_negative():
-                args["err"] = errno.EISDIR
-
+        override = guess(dentry, has_ts, dentry2, has_ts2)
+        if override:
+            args["err"] = override
         want_error = args["err"]
 
         # Build the commandline to repeat the test
@@ -859,7 +870,7 @@ class test_context:
     ###########################################################################
     def chmod(self, filename, mode, **args):
         line = "chmod " + filename + " 0{:o}".format(mode)
-        dentry = self.vfs_op_prelude(line, filename, args)
+        dentry = self.vfs_op_prelude(line, filename, args, guess=self.guess1_error_create)
 
         try:
             self.verbosef("os.chmod({:s},0{:o})\n", filename, mode)
@@ -874,9 +885,38 @@ class test_context:
     #
     ###########################################################################
     def link(self, filename, filename2, **args):
+        # Guess the error that should be produced with terminal slashes added
+        def guess_error(dentry, has_ts, dentry2, has_ts2):
+            if not has_ts and not has_ts2:
+                return None
+
+            if has_ts2 and dentry.is_dir():
+                if dentry2.is_negative():
+                    return errno.ENOENT
+                if dentry2.is_reg_or_sym_to_reg():
+                    return errno.EEXIST
+
+            if has_ts:
+                if dentry.is_negative():
+                    return errno.ENOENT
+                if dentry.is_neg_or_sym_to_neg():
+                    return errno.ENOENT
+                if not dentry.is_dir():
+                    return errno.ENOTDIR
+
+            if has_ts2:
+                if dentry2.is_negative():
+                    return errno.EISDIR
+                if dentry2.is_sym():
+                    return errno.ENOTDIR
+                if dentry2.is_reg_or_sym_to_reg():
+                    return errno.EISDIR
+
+            return None
+
         line = "link " + filename + " " + filename2
         (dentry, dentry2) = self.vfs_op_prelude(line, filename, args, filename2,
-                                                create=True)
+                                                guess=guess_error, create=True)
         follow_symlinks = False
         if "follow" in args:
             follow_symlinks = True
@@ -900,8 +940,14 @@ class test_context:
     #
     ###########################################################################
     def mkdir(self, filename, mode, **args):
+        # Guess the error that should be produced with terminal slashes added
+        def guess_error(dentry, has_ts, dentry2, has_ts2):
+            return None
+
         line = "mkdir " + filename + " 0{:o}".format(mode)
-        dentry = self.vfs_op_prelude(line, filename, args, create=True, tslash_ok=True)
+        dentry = self.vfs_op_prelude(line, filename, args,
+                                     guess=guess_error,
+                                     create=True)
 
         try:
             self.verbosef("os.mkdir({:s},0{:o})\n", filename, mode)
@@ -916,8 +962,25 @@ class test_context:
     #
     ###########################################################################
     def readlink(self, filename, **args):
+        # Guess the error that should be produced with terminal slashes added
+        def guess_error(dentry, has_ts, dentry2, has_ts2):
+            if not has_ts:
+                return None
+            if dentry.is_negative():
+                return errno.ENOENT
+            if dentry.is_sym():
+                if dentry.is_dir_or_sym_to_dir():
+                    return errno.EINVAL
+                if dentry.is_neg_or_sym_to_neg():
+                    return errno.ENOENT
+                return errno.ENOTDIR
+            if dentry.is_reg_or_sym_to_reg():
+                return errno.ENOTDIR
+            return None
+
         line = "readlink " + filename
-        dentry = self.vfs_op_prelude(line, filename, args, no_follow=True, expect_sym=True)
+        dentry = self.vfs_op_prelude(line, filename, args, no_follow=True,
+                                     guess=guess_error)
 
         try:
             self.verbose("os.readlink(", filename, ")\n")
@@ -935,10 +998,30 @@ class test_context:
     #
     ###########################################################################
     def rename(self, filename, filename2, **args):
+        # Guess the error that should be produced with terminal slashes added
+        def guess_error(dentry, has_ts, dentry2, has_ts2):
+            if not has_ts and not has_ts2:
+                return None
+            if dentry.is_dir():
+                return None
+            if dentry.is_negative():
+                return errno.ENOENT
+            if dentry.is_sym() or dentry.is_reg_or_sym_to_reg():
+                return errno.ENOTDIR
+            if dentry2.is_negative():
+                return errno.EISDIR
+            if dentry2.is_sym():
+                return errno.ENOTDIR
+            if dentry2.is_reg_or_sym_to_reg():
+                return errno.EISDIR
+            return None
+
         line = "rename " + filename + " " + filename2
-        (dentry, dentry2) = self.vfs_op_prelude(line, filename, args, filename2,
-                                                tslash_ok=True, no_follow=True,
-                                                create=True)
+        (dentry, dentry2) = self.vfs_op_prelude(
+            line, filename, args, filename2,
+            no_follow=True,
+            guess=guess_error,
+            create=True)
 
         try:
             self.verbosef("os.rename({:s},{:s})\n", filename, filename2)
@@ -952,7 +1035,7 @@ class test_context:
                                 hardlink_to=dentry)
         except OSError as oe:
             self.vfs_op_error(oe, filename, dentry, args)
-            self.vfs_op_error(oe, filename2, dentry2, args)
+            self.vfs_op_error(oe, filename2, dentry2, args, create=True)
 
     ###########################################################################
     #
@@ -960,8 +1043,19 @@ class test_context:
     #
     ###########################################################################
     def rmdir(self, filename, **args):
+        # Guess the error that should be produced with terminal slashes added
+        def guess_error(dentry, has_ts, dentry2, has_ts2):
+            if not has_ts:
+                return None
+            if dentry.is_dir():
+                return None
+            if not dentry.is_negative():
+                return errno.ENOTDIR
+            return None
+
         line = "rmdir " + filename
-        dentry = self.vfs_op_prelude(line, filename, args, tslash_ok=True, no_follow=True)
+        dentry = self.vfs_op_prelude(line, filename, args, no_follow=True,
+                                     guess=guess_error)
 
         try:
             self.verbosef("os.rmdir({:s})\n", filename)
@@ -978,7 +1072,7 @@ class test_context:
     ###########################################################################
     def truncate(self, filename, size, **args):
         line = "truncate " + filename + " " + str(size)
-        dentry = self.vfs_op_prelude(line, filename, args)
+        dentry = self.vfs_op_prelude(line, filename, args, guess=self.guess1_error)
 
         try:
             self.verbose("os.truncate(", filename, ",", size, ")\n")
@@ -994,7 +1088,8 @@ class test_context:
     ###########################################################################
     def unlink(self, filename, **args):
         line = "unlink " + filename
-        dentry = self.vfs_op_prelude(line, filename, args, no_follow=True)
+        dentry = self.vfs_op_prelude(line, filename, args, no_follow=True,
+                                     guess=self.guess1_error)
 
         try:
             self.verbosef("os.unlink({:s})\n", filename)
@@ -1016,7 +1111,8 @@ class test_context:
             follow = False
         if "follow" in args:
             follow = True
-        dentry = self.vfs_op_prelude(line, filename, args, no_follow=(not follow))
+        dentry = self.vfs_op_prelude(line, filename, args, no_follow=(not follow),
+                                     guess=self.guess1_error)
 
         try:
             self.verbosef("os.utime({:s},follow_symlinks={:d})\n", filename, follow)
