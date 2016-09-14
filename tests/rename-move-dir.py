@@ -14,7 +14,7 @@ def subtest_1(ctx):
     d = d + ctx.termslash()
     d2 = ctx.non_empty_dir() + ctx.termslash()
 
-    ctx.rename(d, d2 + n, xerr=EXDEV)
-    ctx.rename(d, d2 + n, err=ENOENT, xerr=EXDEV)
-    ctx.open_dir(d2 + n, ro=1, xerr=ENOENT)
-    ctx.open_dir(d, ro=1, err=ENOENT, xerr=None)
+    ctx.rename(d, d2 + n)
+    ctx.rename(d, d2 + n, err=ENOENT)
+    ctx.open_dir(d2 + n, ro=1)
+    ctx.open_dir(d, ro=1, err=ENOENT)

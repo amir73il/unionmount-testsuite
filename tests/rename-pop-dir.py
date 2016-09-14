@@ -12,9 +12,9 @@ def subtest_1(ctx):
     d = ctx.non_empty_dir() + ctx.termslash()
     d2 = ctx.no_dir() + ctx.termslash()
 
-    ctx.rename(d, d2, xerr=EXDEV)
-    ctx.rename(d, d2, err=ENOENT, xerr=EXDEV)
-    ctx.rename(d2, d, xerr=ENOENT)
+    ctx.rename(d, d2)
+    ctx.rename(d, d2, err=ENOENT)
+    ctx.rename(d2, d)
     ctx.rename(d2, d, err=ENOENT)
     ctx.open_dir(d, ro=1)
     ctx.open_dir(d2, ro=1, err=ENOENT)
@@ -25,9 +25,9 @@ def subtest_2(ctx):
     d = ctx.non_empty_dir() + ctx.termslash()
     d2 = ctx.no_dir() + ctx.termslash()
 
-    ctx.rename(d, d2, xerr=EXDEV)
-    ctx.rmdir(d, err=ENOENT, xerr=ENOTEMPTY)
-    ctx.rename(d2, d, xerr=ENOENT)
+    ctx.rename(d, d2)
+    ctx.rmdir(d, err=ENOENT)
+    ctx.rename(d2, d)
     ctx.rename(d2, d, err=ENOENT)
     ctx.open_dir(d, ro=1)
     ctx.rmdir(d, err=ENOTEMPTY)
@@ -40,9 +40,9 @@ def subtest_3(ctx):
     d = ctx.non_empty_dir() + ctx.termslash()
     d2 = ctx.no_dir() + ctx.termslash()
 
-    ctx.rename(d, d2, xerr=EXDEV)
-    ctx.unlink(d, err=ENOENT, xerr=EISDIR)
-    ctx.rename(d2, d, xerr=ENOENT)
+    ctx.rename(d, d2)
+    ctx.unlink(d, err=ENOENT)
+    ctx.rename(d2, d)
     ctx.rename(d2, d, err=ENOENT)
     ctx.open_dir(d, ro=1)
     ctx.unlink(d, err=EISDIR)
@@ -56,9 +56,9 @@ def subtest_4(ctx):
     d2 = ctx.no_dir() + ctx.termslash()
 
     ctx.rmdir(d, err=ENOTEMPTY)
-    ctx.rename(d, d2, xerr=EXDEV)
-    ctx.rmdir(d, err=ENOENT, xerr=ENOTEMPTY)
-    ctx.rmdir(d2, err=ENOTEMPTY, xerr=ENOENT)
+    ctx.rename(d, d2)
+    ctx.rmdir(d, err=ENOENT)
+    ctx.rmdir(d2, err=ENOTEMPTY)
 
 # Unlink a directory and rename old name
 def subtest_5(ctx):
@@ -67,9 +67,9 @@ def subtest_5(ctx):
     d2 = ctx.no_dir() + ctx.termslash()
 
     ctx.unlink(d, err=EISDIR)
-    ctx.rename(d, d2, xerr=EXDEV)
-    ctx.unlink(d, err=ENOENT, xerr=EISDIR)
-    ctx.rmdir(d2, err=ENOTEMPTY, xerr=ENOENT)
+    ctx.rename(d, d2)
+    ctx.unlink(d, err=ENOENT)
+    ctx.rmdir(d2, err=ENOTEMPTY)
 
 # Rename a directory twice
 def subtest_6(ctx):
@@ -78,13 +78,13 @@ def subtest_6(ctx):
     d2 = ctx.no_dir() + ctx.termslash()
     d3 = ctx.no_dir() + "x" + ctx.termslash()
 
-    ctx.rename(d, d2, xerr=EXDEV)
-    ctx.rename(d, d2, err=ENOENT, xerr=EXDEV)
-    ctx.rename(d2, d3, xerr=ENOENT)
-    ctx.rename(d2, d3, err=ENOENT, xerr=ENOENT)
-    ctx.open_dir(d, ro=1, err=ENOENT, xerr=None)
+    ctx.rename(d, d2)
+    ctx.rename(d, d2, err=ENOENT)
+    ctx.rename(d2, d3)
+    ctx.rename(d2, d3, err=ENOENT)
+    ctx.open_dir(d, ro=1, err=ENOENT)
     ctx.open_dir(d2, ro=1, err=ENOENT)
-    ctx.open_dir(d3, ro=1, xerr=ENOENT)
+    ctx.open_dir(d3, ro=1)
 
 # Rename a directory over another
 def subtest_7(ctx):
@@ -92,8 +92,8 @@ def subtest_7(ctx):
     d = ctx.non_empty_dir() + ctx.termslash()
     d2 = ctx.empty_dir() + ctx.termslash()
 
-    ctx.rename(d, d2, xerr=EXDEV)
-    ctx.open_dir(d, ro=1, err=ENOENT, xerr=None)
+    ctx.rename(d, d2)
+    ctx.open_dir(d, ro=1, err=ENOENT)
     ctx.open_dir(d2, ro=1)
 
 # Rename a directory over itself
