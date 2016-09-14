@@ -88,7 +88,7 @@ def subtest_6(ctx):
 
 # Rename a directory over another
 def subtest_7(ctx):
-    """Rename dir over another populated dir"""
+    """Rename populated dir over another empty dir"""
     d = ctx.non_empty_dir() + ctx.termslash()
     d2 = ctx.empty_dir() + ctx.termslash()
 
