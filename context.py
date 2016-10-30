@@ -21,6 +21,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 """
 
 from tool_box import TestError
+from remount_union import remount_union
 import sys, os, errno
 
 class inode:
@@ -183,7 +184,10 @@ class test_context:
         self.__root = dentry("/", inode("d"), root=True)
         self.__cwd = None
         self.__filenr = 99
+        self.__layers_nr = 0
+        self.__lower_layers = None
         self.__lower_fs = None
+        self.__upper_layer = None
         self.__upper_fs = None
         self.__upper_dir_fs = None
         self.__verbose = cfg.is_verbose()
@@ -260,6 +264,25 @@ class test_context:
             self.__upper_dir_fs = self.__upper_fs
         else:
             self.__upper_dir_fs = self.get_dev_id(dirpath)
+
+    def note_upper_layer(self, path):
+        self.__upper_layer = path
+
+    def note_lower_layers(self, lowerlayers):
+        self.__lower_layers = lowerlayers
+
+    def lower_layers(self):
+        return self.__lower_layers
+
+    def upper_layer(self):
+        return self.__upper_layer
+
+    def layers_nr(self):
+        return self.__layers_nr
+
+    def next_layer(self):
+        self.__layers_nr += 1
+        return str(self.__layers_nr)
 
     def upper_fs(self):
         return self.__upper_fs
@@ -953,6 +976,8 @@ class test_context:
             self.verbosef("os.mkdir({:s},0{:o})\n", filename, mode)
             os.mkdir(filename, mode)
             self.vfs_op_success(filename, dentry, args, filetype="d", create=True)
+            # rotate upper after create directory
+            remount_union(self)
         except OSError as oe:
             self.vfs_op_error(oe, filename, dentry, args, create=True)
 
@@ -1033,6 +1058,9 @@ class test_context:
             self.vfs_op_success(filename, dentry, args)
             self.vfs_op_success(filename2, dentry2, args, create=True, filetype=filetype,
                                 hardlink_to=dentry)
+            if dentry.is_dir():
+                # rotate upper after rename directory
+                remount_union(self)
         except OSError as oe:
             self.vfs_op_error(oe, filename, dentry, args)
             self.vfs_op_error(oe, filename2, dentry2, args, create=True)

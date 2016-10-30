@@ -23,11 +23,14 @@ def mount_union(ctx):
         lower_mntroot = cfg.lower_mntroot()
         upper_mntroot = cfg.upper_mntroot()
         system("mount -t tmpfs upper_layer " + upper_mntroot)
-        upperdir = upper_mntroot + "/upper"
+        lowerlayers = lower_mntroot
+        upperdir = upper_mntroot + "/" + ctx.next_layer()
         workdir = upper_mntroot + "/work"
         os.mkdir(upperdir)
         os.mkdir(workdir)
         system("setfattr -n trusted.overlay.features -v redirect_dir " + upperdir)
         system("mount -t overlay overlay " + union_mntroot +
-               " -olowerdir=" + lower_mntroot + ",upperdir=" + upperdir + ",workdir=" + workdir)
+               " -olowerdir=" + lowerlayers + ",upperdir=" + upperdir + ",workdir=" + workdir)
         ctx.note_upper_fs(upper_mntroot, testdir)
+        ctx.note_lower_layers(lowerlayers)
+        ctx.note_upper_layer(upperdir)
