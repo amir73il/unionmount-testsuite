@@ -236,10 +236,10 @@ for test in tests:
         check_not_tainted()
 
         # Make sure that all dentries and inodes are correctly released
-        #unmount_union(ctx)
+        unmount_union(ctx)
         del ctx
 
 # Leave the union mounted for further playing
 ctx = test_context(cfg)
-#set_up(ctx)
-#mount_union(ctx)
+set_up(ctx)
+mount_union(ctx)
