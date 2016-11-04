@@ -197,9 +197,11 @@ else:
 
 for test in tests:
     for ts in termslash_list:
+        msg = cfg.progname() + test_what + "--ts=" + ts + " " + test
         print("***");
-        print("***", cfg.progname(), test_what, "--ts=" + ts, test);
+        print("***", msg);
         print("***");
+        write_file("/dev/kmsg", msg);
 
         ctx = test_context(cfg, ts == "1")
 

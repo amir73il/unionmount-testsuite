@@ -20,7 +20,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 """
 
-from tool_box import TestError
+from tool_box import *
 from remount_union import remount_union
 import sys, os, errno
 
@@ -298,7 +298,9 @@ class test_context:
         ix = source.rfind("/")
         if ix >= 0:
             source = source[ix + 1:]
-        self.output("TEST ", source, ":", nr, ": ", name, "\n")
+        msg="TEST " + source + ":" + str(nr) + ": " + name + "\n"
+        self.output(msg)
+        write_file("/dev/kmsg", msg);
         self.__filenr += 1
 
     # Increment the test fileset number

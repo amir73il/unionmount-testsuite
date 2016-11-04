@@ -27,6 +27,11 @@ def read_file(path):
     del fd
     return data
 
+def write_file(path, data):
+    fd = open(path, "w")
+    fd.write(data)
+    del fd
+
 #
 # Check for taint (kernel warnings and oopses)
 #
