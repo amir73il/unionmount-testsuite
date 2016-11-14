@@ -8,7 +8,7 @@ from errno import *
 
 # Rename an empty directory and rename it back again
 def subtest_1(ctx):
-    """Rename empty dir and rename back"""
+    """Rename new empty dir and rename back"""
     d = ctx.empty_dir() + "-new" + ctx.termslash()
     d2 = ctx.no_dir() + ctx.termslash()
 
@@ -22,7 +22,7 @@ def subtest_1(ctx):
 
 # Rename an empty directory and remove old name
 def subtest_2(ctx):
-    """Rename empty dir and remove old name"""
+    """Rename new empty dir and remove old name"""
     d = ctx.empty_dir() + "-new" + ctx.termslash()
     d2 = ctx.no_dir() + ctx.termslash()
 
@@ -39,7 +39,7 @@ def subtest_2(ctx):
 
 # Rename an empty directory and unlink old name
 def subtest_3(ctx):
-    """Rename empty dir and unlink old name"""
+    """Rename new empty dir and unlink old name"""
     d = ctx.empty_dir() + "-new" + ctx.termslash()
     d2 = ctx.no_dir() + ctx.termslash()
 
@@ -55,7 +55,7 @@ def subtest_3(ctx):
 
 # Remove a directory and rename old name
 def subtest_4(ctx):
-    """Remove dir and rename old name"""
+    """Remove new empty dir and rename old name"""
     d = ctx.empty_dir() + "-new" + ctx.termslash()
     d2 = ctx.no_dir() + ctx.termslash()
 
@@ -67,7 +67,7 @@ def subtest_4(ctx):
 
 # Unlink a directory and rename old name
 def subtest_5(ctx):
-    """Unlink dir and rename old name"""
+    """Unlink new empty dir and rename old name"""
     d = ctx.empty_dir() + "-new" + ctx.termslash()
     d2 = ctx.no_dir() + ctx.termslash()
 
@@ -79,7 +79,7 @@ def subtest_5(ctx):
 
 # Rename an empty directory twice
 def subtest_6(ctx):
-    """Rename empty dir twice"""
+    """Rename new empty dir twice"""
     d = ctx.empty_dir() + "-new" + ctx.termslash()
     d2 = ctx.no_dir() + ctx.termslash()
     d3 = ctx.no_dir() + "x" + ctx.termslash()
@@ -95,7 +95,7 @@ def subtest_6(ctx):
 
 # Rename an empty directory over another
 def subtest_7(ctx):
-    """Rename empty dir over another populated dir"""
+    """Rename new empty dir over another populated dir"""
     d = ctx.empty_dir() + "-new" + ctx.termslash()
     d2 = ctx.non_empty_dir() + ctx.termslash()
 
@@ -106,7 +106,7 @@ def subtest_7(ctx):
 
 # Rename an empty directory over itself
 def subtest_8(ctx):
-    """Rename empty dir over itself"""
+    """Rename new empty dir over itself"""
     d = ctx.empty_dir() + "-new" + ctx.termslash()
 
     ctx.mkdir(d, 0o755)
@@ -115,7 +115,7 @@ def subtest_8(ctx):
 
 # Rename an empty directory over a file
 def subtest_9(ctx):
-    """Rename empty dir over a file"""
+    """Rename new empty dir over a file"""
     d = ctx.empty_dir() + "-new" + ctx.termslash()
     f = ctx.reg_file() + ctx.termslash()
     f2 = ctx.non_empty_dir() + "/a" + ctx.termslash()
@@ -127,7 +127,7 @@ def subtest_9(ctx):
 
 # Rename an empty directory over the parent dir
 def subtest_10(ctx):
-    """Rename empty dir over parent dir"""
+    """Rename new empty dir over parent dir"""
     d = ctx.empty_dir() + "-new" + ctx.termslash()
     d2 = ctx.config().testdir()
 
@@ -137,7 +137,7 @@ def subtest_10(ctx):
 
 # Rename an empty directory over an empty lower dir
 def subtest_11(ctx):
-    """Rename empty dir over empty lower dir"""
+    """Rename new empty dir over empty lower dir"""
     d = ctx.empty_dir() + "-new" + ctx.termslash()
     d2 = ctx.empty_dir() + ctx.termslash()
 
@@ -147,7 +147,7 @@ def subtest_11(ctx):
 
 # Rename an empty directory over a populated lower dir
 def subtest_12(ctx):
-    """Rename empty dir over populated lower dir"""
+    """Rename new empty dir over populated lower dir"""
     d = ctx.empty_dir() + "-new" + ctx.termslash()
     d2 = ctx.non_empty_dir() + ctx.termslash()
 
@@ -159,7 +159,7 @@ def subtest_12(ctx):
 
 # Rename an empty directory over a removed empty lower dir
 def subtest_11(ctx):
-    """Rename empty dir over removed empty lower dir"""
+    """Rename new empty dir over removed empty lower dir"""
     d = ctx.empty_dir() + "-new" + ctx.termslash()
     d2 = ctx.empty_dir() + ctx.termslash()
 
@@ -170,7 +170,7 @@ def subtest_11(ctx):
 
 # Rename an empty directory over a removed populated lower dir
 def subtest_12(ctx):
-    """Rename empty dir over removed populated lower dir"""
+    """Rename new empty dir over removed populated lower dir"""
     d = ctx.empty_dir() + "-new" + ctx.termslash()
     d2 = ctx.non_empty_dir() + ctx.termslash()
 

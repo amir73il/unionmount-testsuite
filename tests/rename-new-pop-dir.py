@@ -70,7 +70,7 @@ def subtest_4(ctx):
 
 # Unlink a directory and rename old name
 def subtest_5(ctx):
-    """Unlink dir and rename old name"""
+    """Unlink new dir and rename old name"""
     d = ctx.non_empty_dir() + "-new" + ctx.termslash()
     d2 = ctx.no_dir() + ctx.termslash()
 
