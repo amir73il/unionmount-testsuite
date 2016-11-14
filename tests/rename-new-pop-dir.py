@@ -20,6 +20,7 @@ def subtest_1(ctx):
     ctx.rename(d2, d, err=ENOENT)
     ctx.open_dir(d, ro=1)
     ctx.open_dir(d2, ro=1, err=ENOENT)
+    ctx.open_file(d + "/a", ro=1, read="aaaa")
 
 # Rename a new directory and remove old name
 def subtest_2(ctx):
@@ -37,6 +38,7 @@ def subtest_2(ctx):
     ctx.rmdir(d, err=ENOTEMPTY)
     ctx.open_dir(d, ro=1)
     ctx.open_dir(d2, ro=1, err=ENOENT)
+    ctx.open_file(d + "/a", ro=1, read="aaaa")
 
 # Rename a new directory and unlink old name
 def subtest_3(ctx):
@@ -54,6 +56,7 @@ def subtest_3(ctx):
     ctx.unlink(d, err=EISDIR)
     ctx.open_dir(d, ro=1)
     ctx.open_dir(d2, ro=1, err=ENOENT)
+    ctx.open_file(d + "/a", ro=1, read="aaaa")
 
 # Remove a directory and rename old name
 def subtest_4(ctx):
@@ -67,6 +70,7 @@ def subtest_4(ctx):
     ctx.rename(d, d2)
     ctx.rmdir(d, err=ENOENT)
     ctx.rmdir(d2, err=ENOTEMPTY)
+    ctx.open_file(d2 + "/a", ro=1, read="aaaa")
 
 # Unlink a directory and rename old name
 def subtest_5(ctx):
@@ -80,6 +84,7 @@ def subtest_5(ctx):
     ctx.rename(d, d2)
     ctx.unlink(d, err=ENOENT)
     ctx.rmdir(d2, err=ENOTEMPTY)
+    ctx.open_file(d2 + "/a", ro=1, read="aaaa")
 
 # Rename a new directory twice
 def subtest_6(ctx):
@@ -97,6 +102,7 @@ def subtest_6(ctx):
     ctx.open_dir(d, ro=1, err=ENOENT)
     ctx.open_dir(d2, ro=1, err=ENOENT)
     ctx.open_dir(d3, ro=1)
+    ctx.open_file(d3 + "/a", ro=1, read="aaaa")
 
 # Rename a new directory over another
 def subtest_7(ctx):
@@ -109,6 +115,7 @@ def subtest_7(ctx):
     ctx.rename(d, d2)
     ctx.open_dir(d, ro=1, err=ENOENT)
     ctx.open_dir(d2, ro=1)
+    ctx.open_file(d2 + "/a", ro=1, read="aaaa")
 
 # Rename a new directory over itself
 def subtest_8(ctx):
@@ -119,6 +126,7 @@ def subtest_8(ctx):
     ctx.open_file(d + "/a", wo=1, crt=1, write="aaaa")
     ctx.rename(d, d)
     ctx.open_dir(d, ro=1)
+    ctx.open_file(d + "/a", ro=1, read="aaaa")
 
 # Rename a new directory over a file within that dir
 def subtest_9(ctx):
@@ -132,6 +140,7 @@ def subtest_9(ctx):
     ctx.rename(d, f, err=ENOTDIR)
     ctx.rename(d, f2, err=EINVAL)
     ctx.open_dir(d, ro=1)
+    ctx.open_file(d + "/a", ro=1, read="aaaa")
 
 # Rename a new directory over a file within another dir
 def subtest_10(ctx):
@@ -143,6 +152,7 @@ def subtest_10(ctx):
     ctx.open_file(d + "/a", wo=1, crt=1, write="aaaa")
     ctx.rename(d, f, err=ENOTDIR)
     ctx.open_dir(d, ro=1)
+    ctx.open_file(d + "/a", ro=1, read="aaaa")
 
 # Rename a new directory over the parent dir
 def subtest_11(ctx):
@@ -154,6 +164,7 @@ def subtest_11(ctx):
     ctx.open_file(d + "/a", wo=1, crt=1, write="aaaa")
     ctx.rename(d, d2, err=ENOTEMPTY)
     ctx.open_dir(d, ro=1)
+    ctx.open_file(d + "/a", ro=1, read="aaaa")
 
 # Rename a new directory over a unioned dir
 def subtest_12(ctx):
@@ -165,6 +176,7 @@ def subtest_12(ctx):
     ctx.open_file(d + "/a", wo=1, crt=1, write="aaaa")
     ctx.rename(d, d2, err=ENOTEMPTY)
     ctx.open_dir(d, ro=1)
+    ctx.open_file(d + "/a", ro=1, read="aaaa")
 
 # Rename a new directory over a removed empty lower dir
 def subtest_13(ctx):
