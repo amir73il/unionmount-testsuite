@@ -14,8 +14,8 @@ def show_format(why):
     if why:
         print(why)
     print("Format:")
-    print("\t", sys.argv[0], "<--um|--ov|--no> [--ts=[01]] [-v] [<test-name>+]")
-    print("\t", sys.argv[0], "<--um|--ov|--no> --set-up")
+    print("\t", sys.argv[0], "<--no|--um|--ov[=<maxlayers>]> [--ts=[01]] [-v] [<test-name>+]")
+    print("\t", sys.argv[0], "<--no|--um|--ov> --set-up")
     print("\t", sys.argv[0], "--open-file <file> [-acdertvw] [-W <data>] [-R <data>] [-B] [-E <err>]")
     print("\t", sys.argv[0], "--<fsop> <file> [<args>*] [-aLlv] [-R <content>] [-B] [-E <err>]")
     sys.exit(2)
@@ -88,12 +88,20 @@ except:
 # Work out the test parameters
 #
 ###############################################################################
+maxlayers=0
+remount=False
 if args[0] == "--um":
     cfg.set_testing_unionmount()
 elif args[0] == "--ov":
     cfg.set_testing_overlayfs()
 elif args[0] == "--no":
     cfg.set_testing_none()
+elif args[0].startswith("--ov="):
+    cfg.set_testing_overlayfs()
+    s = args[0]
+    n = s[s.rfind("=")+1:]
+    maxlayers=int(n)
+    remount=True
 else:
     show_format("Invalid test type selector (--um, --ov or --no)")
 
@@ -197,13 +205,13 @@ else:
 
 for test in tests:
     for ts in termslash_list:
-        msg = cfg.progname() + test_what + "--ts=" + ts + " " + test
+        msg = cfg.progname() + " " + test_what + " --ts=" + ts + " " + test
         print("***");
         print("***", msg);
         print("***");
         write_file("/dev/kmsg", msg);
 
-        ctx = test_context(cfg, ts == "1")
+        ctx = test_context(cfg, ts == "1", False, remount, maxlayers)
 
         # Construct the union
         set_up(ctx)

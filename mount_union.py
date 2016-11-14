@@ -24,7 +24,7 @@ def mount_union(ctx):
         upper_mntroot = cfg.upper_mntroot()
         system("mount -t tmpfs upper_layer " + upper_mntroot)
         lowerlayers = lower_mntroot
-        upperdir = upper_mntroot + "/" + ctx.next_layer()
+        upperdir = upper_mntroot + "/" + ctx.curr_layer()
         workdir = upper_mntroot + "/work"
         os.mkdir(upperdir)
         os.mkdir(workdir)

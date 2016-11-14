@@ -179,12 +179,13 @@ class dentry:
 #
 ###############################################################################
 class test_context:
-    def __init__(self, cfg, termslash=False, direct_mode=False):
+    def __init__(self, cfg, termslash=False, direct_mode=False, remount=False, max_layers=0):
         self.__cfg = cfg
         self.__root = dentry("/", inode("d"), root=True)
         self.__cwd = None
         self.__filenr = 99
         self.__layers_nr = 0
+        self.__max_layers = max_layers
         self.__lower_layers = None
         self.__lower_fs = None
         self.__upper_layer = None
@@ -194,6 +195,7 @@ class test_context:
         self.__direct_mode = direct_mode
         self.__skip_layer_test = cfg.testing_none()
         self.__termslash = ""
+        self.__remount = remount
         if termslash:
             self.__termslash = "/"
 
@@ -280,7 +282,15 @@ class test_context:
     def layers_nr(self):
         return self.__layers_nr
 
+    def have_more_layers(self):
+        return self.__layers_nr < self.__max_layers
+
+    def curr_layer(self):
+        return str(self.__layers_nr)
+
     def next_layer(self):
+        if not self.have_more_layers():
+            return ""
         self.__layers_nr += 1
         return str(self.__layers_nr)
 
@@ -978,8 +988,9 @@ class test_context:
             self.verbosef("os.mkdir({:s},0{:o})\n", filename, mode)
             os.mkdir(filename, mode)
             self.vfs_op_success(filename, dentry, args, filetype="d", create=True)
-            # rotate upper after create directory
-            remount_union(self)
+            if self.__remount:
+                # remount/rotate upper after create directory
+                remount_union(self)
         except OSError as oe:
             self.vfs_op_error(oe, filename, dentry, args, create=True)
 
@@ -1060,8 +1071,8 @@ class test_context:
             self.vfs_op_success(filename, dentry, args)
             self.vfs_op_success(filename2, dentry2, args, create=True, filetype=filetype,
                                 hardlink_to=dentry)
-            if dentry.is_dir():
-                # rotate upper after rename directory
+            if dentry.is_dir() and self.__remount:
+                # remount/rotate upper after rename directory
                 remount_union(self)
         except OSError as oe:
             self.vfs_op_error(oe, filename, dentry, args)

@@ -8,10 +8,16 @@ def remount_union(ctx):
         system("umount " + cfg.union_mntroot())
         check_not_tainted()
 
-        lowerlayers = ctx.upper_layer() + ":" + ctx.lower_layers()
+        if ctx.have_more_layers():
+            lowerlayers = ctx.upper_layer() + ":" + ctx.lower_layers()
+        else:
+            lowerlayers = ctx.lower_layers()
         upper_mntroot = cfg.upper_mntroot()
-        upperdir = upper_mntroot + "/" + ctx.next_layer()
-        os.mkdir(upperdir)
+        if ctx.have_more_layers():
+            upperdir = upper_mntroot + "/" + ctx.next_layer()
+            os.mkdir(upperdir)
+        else:
+            upperdir = ctx.upper_layer()
         workdir = upper_mntroot + "/work"
         system("mount -t overlay overlay " + union_mntroot +
                " -onoatime,lowerdir=" + lowerlayers + ",upperdir=" + upperdir + ",workdir=" + workdir)
