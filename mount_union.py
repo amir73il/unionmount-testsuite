@@ -28,7 +28,6 @@ def mount_union(ctx):
         workdir = upper_mntroot + "/work"
         os.mkdir(upperdir)
         os.mkdir(workdir)
-        system("setfattr -n trusted.overlay.features -v redirect_dir " + upperdir)
         system("mount -t overlay overlay " + union_mntroot +
                " -olowerdir=" + lowerlayers + ",upperdir=" + upperdir + ",workdir=" + workdir)
         ctx.note_upper_fs(upper_mntroot, testdir)
