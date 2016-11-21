@@ -48,7 +48,8 @@ def set_up(ctx):
             pass
 
     # Create a lower layer to union over
-    system("mount -t tmpfs lower_layer " + lower_mntroot)
+    system("mount " + lower_mntroot + " 2>/dev/null"
+            " || mount -t tmpfs lower_layer " + lower_mntroot)
 
     # Systemd has weird ideas about things
     system("mount --make-private " + lower_mntroot)
@@ -56,7 +57,11 @@ def set_up(ctx):
     #
     # Create a few test files we can use in the lower layer
     #
-    os.mkdir(lowerdir)
+    try:
+        os.mkdir(lowerdir)
+    except OSError:
+        system("rm -rf " + lowerdir)
+        os.mkdir(lowerdir)
 
     pieces = testdir.split("/")
     del pieces[0]

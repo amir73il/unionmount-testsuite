@@ -22,14 +22,19 @@ def mount_union(ctx):
     else:
         lower_mntroot = cfg.lower_mntroot()
         upper_mntroot = cfg.upper_mntroot()
-        system("mount -t tmpfs upper_layer " + upper_mntroot)
-        lowerlayers = lower_mntroot
+        system("mount " + upper_mntroot + " 2>/dev/null"
+                " || mount -t tmpfs upper_layer " + upper_mntroot)
         upperdir = upper_mntroot + "/" + ctx.curr_layer()
         workdir = upper_mntroot + "/work"
-        os.mkdir(upperdir)
-        os.mkdir(workdir)
+        try:
+            os.mkdir(upperdir)
+            os.mkdir(workdir)
+        except OSError:
+            system("rm -rf " + upper_mntroot + "/*")
+            os.mkdir(upperdir)
+            os.mkdir(workdir)
         system("mount -t overlay overlay " + union_mntroot +
-               " -olowerdir=" + lowerlayers + ",upperdir=" + upperdir + ",workdir=" + workdir)
+               " -olowerdir=" + lower_mntroot + ",upperdir=" + upperdir + ",workdir=" + workdir)
         ctx.note_upper_fs(upper_mntroot, testdir)
-        ctx.note_lower_layers(lowerlayers)
+        ctx.note_lower_layers(lower_mntroot)
         ctx.note_upper_layer(upperdir)
