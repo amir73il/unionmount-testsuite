@@ -88,8 +88,8 @@ except:
 # Work out the test parameters
 #
 ###############################################################################
+remount_list = [ "" ]
 maxlayers=0
-remount=False
 if args[0] == "--um":
     cfg.set_testing_unionmount()
 elif args[0] == "--ov":
@@ -100,8 +100,8 @@ elif args[0].startswith("--ov="):
     cfg.set_testing_overlayfs()
     s = args[0]
     n = s[s.rfind("=")+1:]
+    remount_list = [ "", n ]
     maxlayers=int(n)
-    remount=True
 else:
     show_format("Invalid test type selector (--um, --ov or --no)")
 
@@ -200,17 +200,23 @@ if cfg.testing_unionmount():
     test_what = "--um"
 elif cfg.testing_overlayfs():
     test_what = "--ov"
+elif cfg.testing_snapshot():
+    test_what = "--sn"
 else:
     test_what = "--no"
 
 for test in tests:
-        msg = cfg.progname() + " " + test_what + " --ts=" + termslash + " " + test
+    for remount in remount_list:
+        test_how = test_what
+        if remount != "":
+            test_how = test_what + "=" + str(maxlayers)
+        msg = cfg.progname() + " " + test_how + " --ts=" + termslash + " " + test
         print("***");
         print("***", msg);
         print("***");
         write_file("/dev/kmsg", msg);
 
-        ctx = test_context(cfg, termslash == "1", False, remount, maxlayers)
+        ctx = test_context(cfg, termslash == "1", False, remount != "", maxlayers)
 
         # Construct the union
         set_up(ctx)
