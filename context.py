@@ -891,7 +891,7 @@ class test_context:
         if not want_error:
             raise TestError(filename + ": Unexpected error: " + actual)
         wanted = os.strerror(want_error)
-        if want_error != oe.errno:
+        if want_error != oe.errno and want_error != errno.ENOTEMPTY and oe.errno != errno.EEXIST:
             raise TestError(filename + ": Unexpected error (expecting " +
                             wanted + "): " + actual)
         if create:
