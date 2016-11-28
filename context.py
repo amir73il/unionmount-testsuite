@@ -524,10 +524,11 @@ class test_context:
         elif dentry.is_dir():
             if dev != self.upper_dir_fs():
                 raise TestError(name + ": Directory not on union layer")
-        elif dev != self.upper_fs() and self.upper_fs() != self.upper_dir_fs():
-            raise TestError(name + ": File unexpectedly on union layer")
-        elif not dentry.on_upper():
+        elif dev == self.upper_fs() and not dentry.on_upper():
             raise TestError(name + ": File unexpectedly on upper layer")
+        elif dev != self.upper_fs() and dev != self.upper_dir_fs():
+            # with stable st_dev/st_ino across copy-up file is on union
+            raise TestError(name + ": File on unexpected layer")
 
         if dentry.is_sym() and dentry not in symlinks:
             symlinks.add(dentry)
