@@ -519,7 +519,7 @@ class test_context:
         elif dev == self.lower_fs():
             if dentry.is_dir():
                 raise TestError(name + ": Directory unexpectedly on lower filesystem")
-            if dentry.on_upper():
+            if dentry.on_upper() and self.lower_fs() != self.upper_fs():
                 raise TestError(name + ": Test file not on upper filesystem")
         elif dentry.is_dir():
             if dev != self.upper_dir_fs():
