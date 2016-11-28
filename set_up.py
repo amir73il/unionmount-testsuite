@@ -41,7 +41,8 @@ def set_up(ctx):
         except RuntimeError:
             pass
         try:
-            while system("grep 'upper_layer " + cfg.upper_mntroot() + "' /proc/mounts >/dev/null" +
+            # grep filter to catch <low|upp>er_layer, in case upper is same mount source as lower
+            while system("grep 'er_layer " + cfg.upper_mntroot() + "' /proc/mounts >/dev/null" +
                          " && umount " + cfg.upper_mntroot()):
                 pass
         except RuntimeError:
