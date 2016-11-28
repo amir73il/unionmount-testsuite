@@ -29,6 +29,12 @@ def set_up(ctx):
 
     if cfg.testing_overlayfs():
         try:
+            while system("grep 'overlay " + cfg.union_mntroot() + "' /proc/mounts >/dev/null" +
+                         " && umount " + cfg.union_mntroot()):
+                pass
+        except RuntimeError:
+            pass
+        try:
             while system("grep 'lower_layer " + lower_mntroot + "' /proc/mounts >/dev/null" +
                          " && umount " + lower_mntroot):
                 pass
@@ -37,12 +43,6 @@ def set_up(ctx):
         try:
             while system("grep 'upper_layer " + cfg.upper_mntroot() + "' /proc/mounts >/dev/null" +
                          " && umount " + cfg.upper_mntroot()):
-                pass
-        except RuntimeError:
-            pass
-        try:
-            while system("grep 'overlayfs " + cfg.union_mntroot() + "' /proc/mounts >/dev/null" +
-                         " && umount " + cfg.union_mntroot()):
                 pass
         except RuntimeError:
             pass
