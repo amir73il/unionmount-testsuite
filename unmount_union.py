@@ -6,6 +6,9 @@ def unmount_union(ctx):
     check_not_tainted()
 
     if cfg.testing_overlayfs():
+        if cfg.is_samefs():
+            system("umount " + cfg.base_mntroot())
+            check_not_tainted()
         system("umount " + cfg.upper_mntroot())
         check_not_tainted()
 

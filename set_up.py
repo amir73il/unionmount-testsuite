@@ -34,23 +34,44 @@ def set_up(ctx):
                 pass
         except RuntimeError:
             pass
+
+        try:
+            while system("grep 'lower_layer " + cfg.base_mntroot() + "' /proc/mounts >/dev/null" +
+                         " && umount " + cfg.base_mntroot()):
+                pass
+        except RuntimeError:
+            pass
+
         try:
             while system("grep 'lower_layer " + lower_mntroot + "' /proc/mounts >/dev/null" +
                          " && umount " + lower_mntroot):
                 pass
         except RuntimeError:
             pass
+
         try:
-            # grep filter to catch <low|upp>er_layer, in case upper is same mount source as lower
+            # grep filter to catch <low|upp>er_layer, in case upper and lower are on same fs
             while system("grep 'er_layer " + cfg.upper_mntroot() + "' /proc/mounts >/dev/null" +
                          " && umount " + cfg.upper_mntroot()):
                 pass
         except RuntimeError:
             pass
 
-    # Create a lower layer to union over
-    system("mount " + lower_mntroot + " 2>/dev/null"
-            " || mount -t tmpfs lower_layer " + lower_mntroot)
+    if cfg.is_samefs() and cfg.testing_overlayfs():
+        # Create base fs for both lower and upper
+        base_mntroot = cfg.base_mntroot()
+        system("mount " + base_mntroot + " 2>/dev/null"
+                " || mount -t tmpfs lower_layer " + base_mntroot)
+        system("mount --make-private " + base_mntroot)
+        try:
+            os.mkdir(base_mntroot + lower_mntroot)
+        except OSError:
+            pass
+        system("mount -o bind " + base_mntroot + lower_mntroot + " " + lower_mntroot)
+    else:
+        # Create a lower layer to union over
+        system("mount " + lower_mntroot + " 2>/dev/null"
+                " || mount -t tmpfs lower_layer " + lower_mntroot)
 
     # Systemd has weird ideas about things
     system("mount --make-private " + lower_mntroot)
