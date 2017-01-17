@@ -989,7 +989,9 @@ class test_context:
             self.verbosef("os.mkdir({:s},0{:o})\n", filename, mode)
             os.mkdir(filename, mode)
             self.vfs_op_success(filename, dentry, args, filetype="d", create=True)
-            if self.__remount:
+            if "remount" not in args:
+                args["remount"] = self.__remount
+            if args["remount"]:
                 # remount/rotate upper after create directory
                 remount_union(self)
         except OSError as oe:
@@ -1072,7 +1074,9 @@ class test_context:
             self.vfs_op_success(filename, dentry, args)
             self.vfs_op_success(filename2, dentry2, args, create=True, filetype=filetype,
                                 hardlink_to=dentry)
-            if dentry.is_dir() and self.__remount:
+            if "remount" not in args:
+                args["remount"] = self.__remount and dentry.is_dir()
+            if args["remount"]:
                 # remount/rotate upper after rename directory
                 remount_union(self)
         except OSError as oe:
