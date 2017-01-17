@@ -68,3 +68,84 @@ def subtest_4(ctx):
     ctx.open_dir(d2, ro=1, err=ENOENT)
     ctx.open_dir(d3, ro=1)
     ctx.open_file(d3 + "/a", ro=1)
+
+# Move a populated dir into another and move dir inside it to another
+def subtest_5(ctx):
+    """Move populated dir into another and move subdir into another"""
+    d = ctx.non_empty_dir()
+    n = d[d.rfind("/"):]
+    d = d + ctx.termslash()
+    d2 = ctx.empty_dir() + ctx.termslash() + n
+    d2a = d2 + "/pop"
+    d3 = ctx.empty_dir() + "/pop"
+
+    ctx.rename(d, d2)
+    ctx.rename(d, d2, err=ENOENT)
+    ctx.rename(d2a, d3)
+    ctx.rename(d2a, d3, err=ENOENT)
+
+    ctx.open_dir(d, ro=1, err=ENOENT)
+    ctx.open_dir(d2, ro=1)
+    ctx.open_dir(d2a, ro=1, err=ENOENT)
+    ctx.open_dir(d3, ro=1)
+    ctx.open_file(d2 + "/a", ro=1)
+    ctx.open_file(d3 + "/b", ro=1)
+
+# Move a populated directory into another after rename self and child
+def subtest_6(ctx):
+    """Rename populated dir and child and move into another"""
+    d = ctx.non_empty_dir()
+    n = d[d.rfind("/"):]
+    d2 = d + "x" + ctx.termslash()
+    d2a = d2 + "/pop"
+    d = d + ctx.termslash()
+    da = d + "/pop"
+    db = d + "/popx"
+    d3 = ctx.empty_dir() + ctx.termslash() + n
+    d3a = d3 + "/pop"
+    d3b = d3 + "/popx"
+
+    ctx.rename(da, db, remount=False)
+    ctx.rename(da, db, err=ENOENT)
+    ctx.rename(d, d2)
+    ctx.rename(d, d2, err=ENOENT)
+    ctx.rename(d2, d3)
+    ctx.rename(d2, d3, err=ENOENT)
+    ctx.open_dir(d, ro=1, err=ENOENT)
+    ctx.open_dir(d2, ro=1, err=ENOENT)
+    ctx.open_dir(d3, ro=1)
+    ctx.open_dir(d3a, ro=1, err=ENOENT)
+    ctx.open_dir(d3b, ro=1)
+    ctx.open_file(d3 + "/a", ro=1)
+    ctx.open_file(d3b + "/b", ro=1)
+
+# Move a populated directory into another after rename self and parent
+def subtest_7(ctx):
+    """Rename populated dir and parent and move into another"""
+    d = ctx.non_empty_dir()
+    n = d[d.rfind("/"):]
+    d2 = d + "x" + ctx.termslash()
+    d2a = d2 + "/pop"
+    d2b = d2 + "/popx"
+    d = d + ctx.termslash()
+    da = d + "/pop"
+    db = d + "/popx"
+    d3 = ctx.empty_dir() + ctx.termslash()
+    d3a = d3 + "/pop"
+    d3b = d3 + "/popx"
+
+    ctx.rename(da, db, remount=False)
+    ctx.rename(da, db, err=ENOENT)
+    ctx.rename(d, d2)
+    ctx.rename(d, d2, err=ENOENT)
+    ctx.rename(d2b, d3b)
+    ctx.rename(d2b, d3b, err=ENOENT)
+    ctx.open_dir(d, ro=1, err=ENOENT)
+    ctx.open_dir(d2, ro=1)
+    ctx.open_dir(d2a, ro=1, err=ENOENT)
+    ctx.open_dir(d2b, ro=1, err=ENOENT)
+    ctx.open_dir(d3, ro=1)
+    ctx.open_dir(d3a, ro=1, err=ENOENT)
+    ctx.open_dir(d3b, ro=1)
+    ctx.open_file(d2 + "/a", ro=1)
+    ctx.open_file(d3b + "/b", ro=1)
