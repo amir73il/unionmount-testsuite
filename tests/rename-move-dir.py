@@ -149,3 +149,54 @@ def subtest_7(ctx):
     ctx.open_dir(d3b, ro=1)
     ctx.open_file(d2 + "/a", ro=1)
     ctx.open_file(d3b + "/b", ro=1)
+
+# Move a new empty directory into an empty lower dir
+def subtest_8(ctx):
+    """Move new empty dir into empty lower"""
+    d = ctx.empty_dir() + "-new" + ctx.termslash()
+    d2 = ctx.empty_dir() + "/new" + ctx.termslash()
+
+    ctx.mkdir(d, 0o755)
+    ctx.rename(d, d2)
+    ctx.open_dir(d, ro=1, err=ENOENT)
+    ctx.open_dir(d2, ro=1)
+
+# Move a new empty directory into lower ancestor
+def subtest_9(ctx):
+    """Move new empty dir into lower ancestor"""
+    d = ctx.empty_dir() + "/new" + ctx.termslash()
+    d2 = ctx.no_dir() + ctx.termslash()
+
+    ctx.mkdir(d, 0o755)
+    ctx.rename(d, d2)
+    ctx.open_dir(d, ro=1, err=ENOENT)
+    ctx.open_dir(d2, ro=1)
+
+# Move a new directory leaf into lower ancestor
+def subtest_10(ctx):
+    """Move new dir leaf into lower ancestor"""
+    p = ctx.empty_dir() + "/newp"
+    d = p + "/new" + ctx.termslash()
+    d2 = ctx.no_dir() + ctx.termslash()
+
+    ctx.mkdir(p, 0o755)
+    ctx.mkdir(d, 0o755)
+    ctx.rename(d, d2)
+    ctx.open_dir(d, ro=1, err=ENOENT)
+    ctx.open_dir(d2, ro=1)
+
+# Move a new directory branch into lower ancestor
+def subtest_11(ctx):
+    """Move new dir branch into lower ancestor"""
+    p = ctx.empty_dir() + "/newp"
+    d = p + "/new" + ctx.termslash()
+    n = ctx.no_dir()
+    d2 = n + ctx.termslash()
+
+    ctx.mkdir(p, 0o755)
+    ctx.mkdir(d, 0o755)
+    ctx.rename(p, d2)
+    ctx.open_dir(p, ro=1, err=ENOENT)
+    ctx.open_dir(d, ro=1, err=ENOENT)
+    ctx.open_dir(d2, ro=1)
+    ctx.open_dir(n + "/new", ro=1)
