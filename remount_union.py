@@ -1,6 +1,6 @@
 from tool_box import *
 
-def remount_union(ctx):
+def remount_union(ctx, rotate_upper=False):
     cfg = ctx.config()
     union_mntroot = cfg.union_mntroot()
 
@@ -8,12 +8,12 @@ def remount_union(ctx):
         system("umount " + cfg.union_mntroot())
         check_not_tainted()
 
-        if ctx.have_more_layers():
+        if rotate_upper and ctx.have_more_layers():
             lowerlayers = ctx.upper_layer() + ":" + ctx.lower_layers()
         else:
             lowerlayers = ctx.lower_layers()
         upper_mntroot = cfg.upper_mntroot()
-        if ctx.have_more_layers():
+        if rotate_upper and ctx.have_more_layers():
             upperdir = upper_mntroot + "/" + ctx.next_layer()
             os.mkdir(upperdir)
         else:

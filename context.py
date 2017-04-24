@@ -991,7 +991,7 @@ class test_context:
                 args["remount"] = self.__remount
             if args["remount"]:
                 # remount/rotate upper after create directory
-                remount_union(self)
+                remount_union(self, rotate_upper=True)
         except OSError as oe:
             self.vfs_op_error(oe, filename, dentry, args, create=True)
 
@@ -1076,7 +1076,7 @@ class test_context:
                 args["remount"] = self.__remount and dentry.is_dir()
             if args["remount"]:
                 # remount/rotate upper after rename directory
-                remount_union(self)
+                remount_union(self, rotate_upper=True)
         except OSError as oe:
             self.vfs_op_error(oe, filename, dentry, args)
             self.vfs_op_error(oe, filename2, dentry2, args, create=True)
