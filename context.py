@@ -972,6 +972,8 @@ class test_context:
 
         try:
             self.verbosef("os.link({:s},{:s})\n", filename, filename2)
+            ino = self.get_file_ino(filename)
+            layer = self.curr_layer()
             os.link(filename, filename2, follow_symlinks=follow_symlinks)
             dentry.copied_up()
             self.vfs_op_success(filename, dentry, args, copy_up=True)
@@ -982,6 +984,9 @@ class test_context:
             if args["remount"]:
                 # remount after link
                 remount_union(self)
+            # Check that ino has not changed through copy up, link and mount cycle
+            self.check_ino(filename, ino, layer)
+            self.check_ino(filename2, ino, layer)
         except OSError as oe:
             self.vfs_op_error(oe, filename, dentry, args)
             self.vfs_op_error(oe, filename2, dentry2, args, create=True)
