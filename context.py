@@ -964,6 +964,11 @@ class test_context:
             self.vfs_op_success(filename, dentry, args, copy_up=True)
             self.vfs_op_success(filename2, dentry2, args, create=True, filetype=dentry.filetype(),
                                 hardlink_to=dentry)
+            if "remount" not in args:
+                args["remount"] = self.__remount
+            if args["remount"]:
+                # remount after link
+                remount_union(self)
         except OSError as oe:
             self.vfs_op_error(oe, filename, dentry, args)
             self.vfs_op_error(oe, filename2, dentry2, args, create=True)
@@ -1073,9 +1078,9 @@ class test_context:
             self.vfs_op_success(filename2, dentry2, args, create=True, filetype=filetype,
                                 hardlink_to=dentry)
             if "remount" not in args:
-                args["remount"] = self.__remount and dentry.is_dir()
+                args["remount"] = self.__remount
             if args["remount"]:
-                # remount/rotate upper after rename directory
+                # remount/rotate upper after rename
                 remount_union(self, rotate_upper=True)
         except OSError as oe:
             self.vfs_op_error(oe, filename, dentry, args)
