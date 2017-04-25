@@ -6,6 +6,7 @@ def remount_union(ctx, rotate_upper=False):
 
     if cfg.testing_overlayfs():
         system("umount " + cfg.union_mntroot())
+        system("echo 3 > /proc/sys/vm/drop_caches")
         check_not_tainted()
 
         if rotate_upper and ctx.have_more_layers():
