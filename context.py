@@ -230,18 +230,17 @@ class test_context:
     def errorf(self, formatstr, *args):
         error(formatstr.format(*args))
 
-    def get_dev_id(self, path):
-        if path.endswith("/"):
-            path = path[:len(path) - 1]
-        self.verbose("os.lstat(", path, ")\n")
-        st = os.lstat(path)
-        return st.st_dev
-
     def lstat_file(self, path):
         if path.endswith("/"):
             path = path[:len(path) - 1]
         self.verbose("os.lstat(", path, ")\n")
         return os.lstat(path)
+
+    def get_dev_id(self, path):
+        return self.lstat_file(path).st_dev
+
+    def get_file_ino(self, path):
+        return self.lstat_file(path).st_ino
 
     def get_file_size(self, path):
         return self.lstat_file(path).st_size
@@ -491,6 +490,20 @@ class test_context:
         self.rmtree_aux(target)
         parent.unlink_child(target)
         self.check_layer(filename)
+
+    # Check that ino has not changed due to copy up or mount cycle
+    def check_ino(self, filename, ino, layer):
+        # skip the check if lower and upper are not on samefs
+        if not self.config().is_samefs():
+            return
+        # skip the check if upper was rotated to lower
+        if layer != self.curr_layer():
+            return
+        # compare ino before copy up / mount cycle to current ino
+        ino2 = self.get_file_ino(filename)
+        if ino != ino2:
+            raise TestError(filename + ": inode number wrong (got " +
+                            str(ino2) + ", want " + str(ino) + ")")
 
     ###########################################################################
     #
@@ -1070,6 +1083,8 @@ class test_context:
         try:
             self.verbosef("os.rename({:s},{:s})\n", filename, filename2)
             filetype = dentry.filetype()
+            ino = self.get_file_ino(filename)
+            layer = self.curr_layer()
             os.rename(filename, filename2)
             if dentry != dentry2:
                 dentry.copied_up()
@@ -1082,6 +1097,8 @@ class test_context:
             if args["remount"]:
                 # remount/rotate upper after rename
                 remount_union(self, rotate_upper=True)
+            # Check that ino has not changed through copy up, rename and mount cycle
+            self.check_ino(filename2, ino, layer)
         except OSError as oe:
             self.vfs_op_error(oe, filename, dentry, args)
             self.vfs_op_error(oe, filename2, dentry2, args, create=True)
