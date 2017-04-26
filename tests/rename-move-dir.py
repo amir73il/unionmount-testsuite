@@ -200,3 +200,19 @@ def subtest_11(ctx):
     ctx.open_dir(d, ro=1, err=ENOENT)
     ctx.open_dir(d2, ro=1)
     ctx.open_dir(n + "/new", ro=1)
+
+# Move a populated directory into a new dir
+def subtest_12(ctx):
+    """Move populated dir into a new dir"""
+    d = ctx.non_empty_dir()
+    n = d[d.rfind("/"):]
+    d = d + ctx.termslash()
+    p = ctx.empty_dir() + "/new" + ctx.termslash()
+    d2 = p + n + ctx.termslash()
+
+    ctx.mkdir(p, 0o755)
+    ctx.rename(d, d2)
+    ctx.rename(d, d2, err=ENOENT)
+    ctx.open_dir(d2, ro=1)
+    ctx.open_dir(d, ro=1, err=ENOENT)
+    ctx.open_file(d2 + "/a", ro=1)
