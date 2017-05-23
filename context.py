@@ -496,11 +496,11 @@ class test_context:
         self.check_layer(filename)
 
     # Check that ino has not changed due to copy up or mount cycle
-    def check_ino(self, filename, ino, layer):
+    def check_ino(self, filename, dentry, ino, layer):
         if not self.config().is_verify():
             return
-        # skip the check if lower and upper are not on samefs
-        if not self.config().is_samefs():
+        # skip the persistent ino check for directory if lower and upper are not on samefs
+        if not self.config().is_samefs() and dentry.is_dir() and self.__remount:
             return
         # skip the check if upper was rotated to lower
         if layer != self.curr_layer():
@@ -993,8 +993,8 @@ class test_context:
                 # remount after link
                 remount_union(self)
             # Check that ino has not changed through copy up, link and mount cycle
-            self.check_ino(filename, ino, layer)
-            self.check_ino(filename2, ino, layer)
+            self.check_ino(filename, dentry, ino, layer)
+            self.check_ino(filename2, dentry2, ino, layer)
         except OSError as oe:
             self.vfs_op_error(oe, filename, dentry, args)
             self.vfs_op_error(oe, filename2, dentry2, args, create=True)
@@ -1111,7 +1111,7 @@ class test_context:
                 # remount/rotate upper after rename
                 remount_union(self, rotate_upper=True)
             # Check that ino has not changed through copy up, rename and mount cycle
-            self.check_ino(filename2, ino, layer)
+            self.check_ino(filename2, dentry2, ino, layer)
         except OSError as oe:
             self.vfs_op_error(oe, filename, dentry, args)
             self.vfs_op_error(oe, filename2, dentry2, args, create=True)
