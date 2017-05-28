@@ -900,8 +900,10 @@ class test_context:
             os.setegid(0)
         actual = os.strerror(oe.errno)
         want_error = args["err"]
-        if not want_error:
+        if not want_error and oe.errno != errno.EXDEV:
             raise TestError(filename + ": Unexpected error: " + actual)
+        if want_error != oe.errno and oe.errno == errno.EXDEV:
+            raise TestError(filename + ": Unexpected error: " + actual + "; Run tests with --xdev to skip dir rename tests")
         wanted = os.strerror(want_error)
         if want_error != oe.errno and want_error != errno.ENOTEMPTY and oe.errno != errno.EEXIST:
             raise TestError(filename + ": Unexpected error (expecting " +

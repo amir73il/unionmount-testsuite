@@ -14,7 +14,7 @@ def show_format(why):
     if why:
         print(why)
     print("Format:")
-    print("\t", sys.argv[0], "<--no|--um|--ov[=<maxlayers>]> [--samefs] [--ts=<0|1>] [-v] [<test-name>+]")
+    print("\t", sys.argv[0], "<--no|--um|--ov[=<maxlayers>]> [--samefs] [--xdev] [--ts=<0|1>] [-v] [<test-name>+]")
     print("\t", sys.argv[0], "<--no|--um|--ov> [--samefs] --set-up")
     print("\t", sys.argv[0], "--open-file <file> [-acdertvw] [-W <data>] [-R <data>] [-B] [-E <err>]")
     print("\t", sys.argv[0], "--<fsop> <file> [<args>*] [-aLlv] [-R <content>] [-B] [-E <err>]")
@@ -120,6 +120,9 @@ if len(args) > 0 and args[0] == "--set-up":
     mount_union(ctx)
     sys.exit(0)
 
+# Assume kernel version >= v4.10 with OVERLAYFS_REDIRECT_DIR enabled
+# Otherwise, tests should be run with --xdev to skip non-new dir rename tests
+redirect_dir = True
 
 termslash = "0"
 while len(args) > 0 and args[0].startswith("-"):
@@ -129,6 +132,8 @@ while len(args) > 0 and args[0].startswith("-"):
         termslash = "0"
     elif args[0] == "--ts=1":
         termslash = "1"
+    elif args[0] == "--xdev":
+        redirect_dir = False
     else:
         show_format("Invalid flag " + args[0])
     args = args[1:]
@@ -181,11 +186,8 @@ tests = [
     "hard-link-sym",
     "unlink",
     "rename-file",
-    "rename-empty-dir",
     "rename-new-dir",
-    "rename-pop-dir",
     "rename-new-pop-dir",
-    "rename-move-dir",
     "rename-mass",
     "rename-mass-2",
     "rename-mass-3",
@@ -195,6 +197,16 @@ tests = [
     "rename-mass-sym",
     "impermissible"
     ]
+
+# For backward compat with kernel version < v4.10 or with
+# OVERLAYFS_REDIRECT_DIR disabled, when tests are run with --xdev flag,
+# skip the non-new dir rename tests
+if redirect_dir:
+    tests += [
+        "rename-empty-dir",
+        "rename-pop-dir",
+        "rename-move-dir",
+        ]
 
 if len(args) > 0:
     tests = args
