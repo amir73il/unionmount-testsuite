@@ -120,9 +120,10 @@ if len(args) > 0 and args[0] == "--set-up":
     mount_union(ctx)
     sys.exit(0)
 
-# Assume kernel version >= v4.10 with OVERLAYFS_REDIRECT_DIR enabled
-# Otherwise, tests should be run with --xdev to skip non-new dir rename tests
-redirect_dir = True
+# Overlayfs feature redirect_dir is enabled by default with kernel version >= v4.10
+# and with config OVERLAYFS_REDIRECT_DIR=y.
+# Otherwise, overlayfs tests should skip rename tests that would result in EXDEV
+rename_exdev = cfg.testing_overlayfs() and not check_bool_modparam("redirect_dir")
 
 termslash = "0"
 while len(args) > 0 and args[0].startswith("-"):
@@ -133,7 +134,7 @@ while len(args) > 0 and args[0].startswith("-"):
     elif args[0] == "--ts=1":
         termslash = "1"
     elif args[0] == "--xdev":
-        redirect_dir = False
+        rename_exdev = True
     else:
         show_format("Invalid flag " + args[0])
     args = args[1:]
@@ -198,10 +199,9 @@ tests = [
     "impermissible"
     ]
 
-# For backward compat with kernel version < v4.10 or with
-# OVERLAYFS_REDIRECT_DIR disabled, when tests are run with --xdev flag,
-# skip the non-new dir rename tests
-if redirect_dir:
+# For backward compat with kernel version < v4.10 and with config
+# OVERLAYFS_REDIRECT_DIR=n, skip rename tests that would result in EXDEV
+if not rename_exdev:
     tests += [
         "rename-empty-dir",
         "rename-pop-dir",

@@ -40,3 +40,18 @@ def check_not_tainted():
     taint = read_file("/proc/sys/kernel/tainted")
     if taint != current_taint:
         raise RuntimeError("TAINTED " + current_taint + " -> ", taint)
+
+#
+# Check if boolean module param is enabled
+#
+def check_bool_modparam(param):
+    # If overlay is a module, make sure it is loaded before checking its params
+    try:
+        system("modprobe overlay")
+    except RuntimeError:
+        pass
+    try:
+        value = read_file("/sys/module/overlay/parameters/" + param)
+    except RuntimeError:
+        value = ""
+    return value.startswith("Y")
