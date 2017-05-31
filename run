@@ -134,7 +134,8 @@ while len(args) > 0 and args[0].startswith("-"):
     elif args[0] == "--ts=1":
         termslash = "1"
     elif args[0] == "--xdev":
-        rename_exdev = True
+        # Skip the dir rename tests
+        rename_exdev = None
     else:
         show_format("Invalid flag " + args[0])
     args = args[1:]
@@ -200,8 +201,13 @@ tests = [
     ]
 
 # For backward compat with kernel version < v4.10 and with config
-# OVERLAYFS_REDIRECT_DIR=n, skip rename tests that would result in EXDEV
-if not rename_exdev:
+# OVERLAYFS_REDIRECT_DIR=n, run an alternative test to verify EXDEV behavior.
+# When run with flag --xdev, skip rename tests that could result in EXDEV.
+if rename_exdev:
+    tests += [
+        "rename-exdev",
+        ]
+elif rename_exdev != None:
     tests += [
         "rename-empty-dir",
         "rename-pop-dir",
