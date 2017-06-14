@@ -9,17 +9,18 @@ def remount_union(ctx, rotate_upper=False):
         system("echo 3 > /proc/sys/vm/drop_caches")
         check_not_tainted()
 
-        if rotate_upper and ctx.have_more_layers():
-            lowerlayers = ctx.upper_layer() + ":" + ctx.lower_layers()
-        else:
-            lowerlayers = ctx.lower_layers()
         upper_mntroot = cfg.upper_mntroot()
         if rotate_upper and ctx.have_more_layers():
+            lowerlayers = ctx.upper_layer() + ":" + ctx.lower_layers()
             upperdir = upper_mntroot + "/" + ctx.next_layer()
+            workdir = upper_mntroot + "/work" + ctx.curr_layer()
             os.mkdir(upperdir)
+            os.mkdir(workdir)
         else:
+            lowerlayers = ctx.lower_layers()
             upperdir = ctx.upper_layer()
-        workdir = upper_mntroot + "/work"
+            workdir = upper_mntroot + "/work" + ctx.curr_layer()
+
         mnt = union_mntroot
         cmd = "mount -t overlay overlay " + mnt + " -onoatime,lowerdir=" + lowerlayers + ",upperdir=" + upperdir + ",workdir=" + workdir
         system(cmd)

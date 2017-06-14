@@ -34,7 +34,7 @@ def mount_union(ctx):
             system("mount " + upper_mntroot + " 2>/dev/null"
                     " || mount -t tmpfs upper_layer " + upper_mntroot)
         upperdir = upper_mntroot + "/" + ctx.curr_layer()
-        workdir = upper_mntroot + "/work"
+        workdir = upper_mntroot + "/work" + ctx.curr_layer()
         try:
             os.mkdir(upperdir)
             os.mkdir(workdir)
