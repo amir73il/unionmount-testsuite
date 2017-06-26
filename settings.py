@@ -31,6 +31,7 @@ class config:
         self.__upper_mntroot = None
         self.__union_mntroot = None
         self.__verbose = False
+        self.__verify = False
         self.__samefs = False
 
     def progname(self):
@@ -77,6 +78,10 @@ class config:
         self.__verbose = to
     def is_verbose(self):
         return self.__verbose
+    def set_verify(self, to=True):
+        self.__verify = to
+    def is_verify(self):
+        return self.__verify
     def set_samefs(self, to=True):
         self.__samefs = to
     def is_samefs(self):

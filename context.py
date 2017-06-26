@@ -497,6 +497,8 @@ class test_context:
 
     # Check that ino has not changed due to copy up or mount cycle
     def check_ino(self, filename, ino, layer):
+        if not self.config().is_verify():
+            return
         # skip the check if lower and upper are not on samefs
         if not self.config().is_samefs():
             return
