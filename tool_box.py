@@ -1,7 +1,7 @@
 #
 # Tools for test scripts
 #
-import os
+import os, sys
 
 class ArgumentError(Exception):
     def __init__(self, msg):
@@ -14,6 +14,10 @@ class TestError(Exception):
         self.__msg = msg
     def __str__(self):
         return self.__msg
+
+def exit_error(msg):
+    print(msg, file=sys.stderr)
+    sys.exit(1)
 
 def system(command):
     ret = os.system(command)
