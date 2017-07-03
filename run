@@ -235,7 +235,8 @@ for test in tests:
         print("***");
         print("***", msg);
         print("***");
-        write_file("/dev/kmsg", msg);
+        if cfg.is_verbose():
+            write_kmsg(msg);
 
         ctx = test_context(cfg, termslash == "1", False, remount != "", maxlayers)
 

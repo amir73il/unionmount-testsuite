@@ -205,6 +205,9 @@ class test_context:
     def direct_mode(self):
         return self.__direct_mode
 
+    def is_verbose(self):
+        return self.__verbose
+
     def verbose(self, *args):
         if self.__verbose:
             for i in args:
@@ -309,7 +312,8 @@ class test_context:
             source = source[ix + 1:]
         msg="TEST " + source + ":" + str(nr) + ": " + name + "\n"
         self.output(msg)
-        write_file("/dev/kmsg", msg);
+        if self.is_verbose():
+            write_kmsg(msg);
         self.__filenr += 1
 
     # Increment the test fileset number

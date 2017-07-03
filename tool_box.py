@@ -32,6 +32,9 @@ def write_file(path, data):
     fd.write(data)
     del fd
 
+def write_kmsg(data):
+    write_file("/dev/kmsg", data);
+
 #
 # Check for taint (kernel warnings and oopses)
 #
@@ -47,7 +50,7 @@ def check_not_tainted():
 def check_bool_modparam(param):
     # If overlay is a module, make sure it is loaded before checking its params
     try:
-        system("modprobe overlay")
+        system("modprobe overlay 2>/dev/null")
     except RuntimeError:
         pass
     try:
