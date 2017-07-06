@@ -43,6 +43,10 @@ def remount_union(ctx, rotate_upper=False, cycle_mount=False):
             curr_snapshot = snapshot_mntroot + "/" + ctx.curr_layer()
             if rotate_upper:
                 os.mkdir(curr_snapshot)
+                if cfg.is_verify():
+                    os.mkdir(cfg.backup_mntroot() + "/full/" + ctx.curr_layer())
+                    # Create a backup copy of lower layer for comparing with snapshotat the end of the test run
+                    system("cp -a " + lower_mntroot + "/a " + cfg.backup_mntroot() + "/full/" + ctx.curr_layer() + "/")
 
             if rotate_upper or cycle_mount:
                 # This is the latest snapshot of lower_mntroot:

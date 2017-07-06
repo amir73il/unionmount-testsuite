@@ -292,6 +292,15 @@ for test in tests:
         except TestError as te:
             exit_error(str(te))
 
+        if cfg.testing_snapshot() and cfg.is_verify():
+            # verify snapshots integrity
+            try:
+                system("diff -qr --no-dereference " + cfg.backup_mntroot() + "/full " + cfg.snapshot_mntroot() + " 1>&2")
+                remount_union(ctx, cycle_mount=True)
+                system("diff -qr --no-dereference " + cfg.backup_mntroot() + "/full " + cfg.snapshot_mntroot() + " 1>&2")
+            except RuntimeError:
+                exit_error("snapshot integrity failed: " + msg)
+
         # Stop if the kernel is now tainted
         check_not_tainted()
 
