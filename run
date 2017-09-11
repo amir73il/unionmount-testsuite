@@ -14,7 +14,7 @@ def show_format(why):
     if why:
         print(why)
     print("Format:")
-    print("\t", sys.argv[0], "<--no|--um|--sn=0|--ov[=<maxlayers>]> [--samefs|--squashfs] [--xdev] [--verify] [--ts=<0|1>] [-v] [<test-name>+]")
+    print("\t", sys.argv[0], "<--no|--um|--<sn|ov>[=<maxlayers>]> [--samefs|--squashfs] [--xdev] [--verify] [--ts=<0|1>] [-v] [<test-name>+]")
     print("\t", sys.argv[0], "<--no|--um|--sn|--ov> [--samefs|--squashfs] [-s|--set-up]")
     print("\t", sys.argv[0], "--open-file <file> [-acdertvw] [-W <data>] [-R <data>] [-B] [-E <err>]")
     print("\t", sys.argv[0], "--<fsop> <file> [<args>*] [-aLlv] [-R <content>] [-B] [-E <err>]")
@@ -102,9 +102,12 @@ elif args[0].startswith("--ov="):
     maxlayers=int(n)
 elif args[0] == "--sn":
     cfg.set_testing_snapshot()
-elif args[0] == "--sn=0":
+elif args[0].startswith("--sn="):
     cfg.set_testing_snapshot()
-    remount_list = [ "0", "" ]
+    s = args[0]
+    n = s[s.rfind("=")+1:]
+    remount_list = [ n, "" ]
+    maxlayers=int(n)
 else:
     show_format("Invalid test type selector (--um, --ov, --sn or --no)")
 

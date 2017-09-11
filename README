@@ -6,7 +6,15 @@ To run these tests:
 
      If testing overlayfs, do:
 
-	./run --ov
+	./run --ov[=N]
+
+     Where N is the max number of layers to recycle
+
+     If testing overlayfs snapshots, do:
+
+	./run --sn[=N]
+
+     Where N is the max number of snapshots to recycle
 
      To run the tests without any unioning, do:
 

@@ -7,11 +7,12 @@ def remount_union(ctx, rotate_upper=False):
     snapshot_mntroot = cfg.snapshot_mntroot()
 
     if cfg.testing_snapshot():
-        system("umount " + snapshot_mntroot)
+        # Unmount old snapshots
+        try:
+            system("umount " + cfg.snapshot_mntroot() + "/*/ 2>/dev/null")
+        except RuntimeError:
+            pass
         check_not_tainted()
-        mnt = snapshot_mntroot
-    else:
-        mnt = union_mntroot
 
     if cfg.testing_overlayfs() or cfg.testing_snapshot():
         system("umount " + cfg.union_mntroot())
@@ -20,23 +21,47 @@ def remount_union(ctx, rotate_upper=False):
 
         upper_mntroot = cfg.upper_mntroot()
         if rotate_upper and ctx.have_more_layers():
-            lowerlayers = ctx.upper_layer() + ":" + ctx.lower_layers()
+            # current upper is added to head of overlay mid layers
+            mid_layers = ctx.upper_layer() + ":" + ctx.mid_layers()
             upperdir = upper_mntroot + "/" + ctx.next_layer()
             workdir = upper_mntroot + "/work" + ctx.curr_layer()
             os.mkdir(upperdir)
             os.mkdir(workdir)
         else:
-            lowerlayers = ctx.lower_layers()
+            mid_layers = ctx.mid_layers()
             upperdir = ctx.upper_layer()
             workdir = upper_mntroot + "/work" + ctx.curr_layer()
 
         mntopt = " -orw"
-        cmd = "mount -t overlay overlay " + mnt + mntopt + ",lowerdir=" + lowerlayers + ",upperdir=" + upperdir + ",workdir=" + workdir
-        system(cmd)
-        if cfg.is_verbose():
-            write_kmsg(cmd);
         if cfg.testing_snapshot():
+            curr_snapshot = snapshot_mntroot + "/" + ctx.curr_layer()
+            try:
+                os.mkdir(curr_snapshot)
+            except OSError:
+                pass
+
+            # This is the latest snapshot of lower_mntroot:
+            cmd = "mount -t overlay overlay " + curr_snapshot + mntopt + ",lowerdir=" + lower_mntroot + ",upperdir=" + upperdir + ",workdir=" + workdir
+            system(cmd)
+            if cfg.is_verbose():
+                write_kmsg(cmd);
+            # This is the snapshot mount where tests are run
             system("mount -t snapshot snapshot " + union_mntroot +
-                    " -oupperdir=" + lower_mntroot + ",snapshot=" + snapshot_mntroot)
-        ctx.note_lower_layers(lowerlayers)
+                    " -oupperdir=" + lower_mntroot + ",snapshot=" + curr_snapshot)
+            # Remount latest snapshot readonly
+            system("mount " + curr_snapshot + " -oremount,ro")
+            mid_layers = ""
+            # Mount old snapshots
+            for i in range(ctx.layers_nr() - 1, -1, -1):
+                mid_layers = upper_mntroot + "/" + str(i) + ":" + mid_layers
+                cmd = "mount -t overlay overlay " + snapshot_mntroot + "/" + str(i) + "/" + " -oro,lowerdir=" + mid_layers + curr_snapshot
+                system(cmd)
+                if cfg.is_verbose():
+                    write_kmsg(cmd);
+        else:
+            cmd = "mount -t overlay overlay " + union_mntroot + mntopt + ",lowerdir=" + mid_layers + lower_mntroot + ",upperdir=" + upperdir + ",workdir=" + workdir
+            system(cmd)
+            if cfg.is_verbose():
+                write_kmsg(cmd);
+        ctx.note_mid_layers(mid_layers)
         ctx.note_upper_layer(upperdir)
