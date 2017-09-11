@@ -13,6 +13,7 @@ def mount_union(ctx):
     else:
         lower_mntroot = cfg.lower_mntroot()
         upper_mntroot = cfg.upper_mntroot()
+        snapshot_mntroot = cfg.snapshot_mntroot()
         if cfg.is_samefs():
             base_mntroot = cfg.base_mntroot()
             system("mount -o remount,rw " + base_mntroot)
@@ -38,8 +39,22 @@ def mount_union(ctx):
         os.mkdir(upperdir)
         os.mkdir(workdir)
 
+        if cfg.testing_snapshot():
+            system("mount -o remount,rw " + lower_mntroot)
+            mnt = snapshot_mntroot
+        else:
+            mnt = union_mntroot
         mntopt = " -orw" + cfg.mntopts()
-        system("mount -t " + cfg.fstype() + " " + cfg.fsname() + " " + union_mntroot + mntopt + ",lowerdir=" + lower_mntroot + ",upperdir=" + upperdir + ",workdir=" + workdir)
-        ctx.note_upper_fs(upper_mntroot, testdir)
+        system("mount -t " + cfg.fstype() + " " + cfg.fsname() + " " + mnt + mntopt +
+               ",lowerdir=" + lower_mntroot + ",upperdir=" + upperdir + ",workdir=" + workdir)
+        if cfg.testing_snapshot():
+            snapmntopt = " -onoatime"
+            # --sn --samefs means start with nosnapshot setup until first recycle
+            if not cfg.is_samefs():
+                snapmntopt += ",snapshot=" + snapshot_mntroot
+            system("mount -t snapshot " + lower_mntroot + " " + union_mntroot + snapmntopt)
+            ctx.note_upper_fs(lower_mntroot, testdir)
+        else:
+            ctx.note_upper_fs(upper_mntroot, testdir)
         ctx.note_lower_layers(lower_mntroot)
         ctx.note_upper_layer(upperdir)

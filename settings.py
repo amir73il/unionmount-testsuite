@@ -24,11 +24,13 @@ class config:
     def __init__(self, progname):
         self.__progname = progname
         self.__testing_overlayfs = False
+        self.__testing_snapshot = False
         self.__testing_none = False
         self.__base_mntroot = None
         self.__lower_mntroot = None
         self.__upper_mntroot = None
         self.__union_mntroot = None
+        self.__snapshot_mntroot = None
         self.__verbose = False
         self.__verify = False
         self.__maxfs = 0
@@ -47,6 +49,8 @@ class config:
         return self.__testing_none
     def testing_overlayfs(self):
         return self.__testing_overlayfs
+    def testing_snapshot(self):
+        return self.__testing_snapshot
 
     def set_testing_none(self):
         self.__lower_mntroot = "/lower"
@@ -60,6 +64,15 @@ class config:
         self.__union_mntroot = "/mnt"
         self.__testing_overlayfs = True
 
+    def set_testing_snapshot(self):
+        self.__base_mntroot = "/base"
+        self.__lower_mntroot = "/lower"
+        self.__upper_mntroot = "/upper"
+        self.__union_mntroot = "/mnt"
+        self.__snapshot_mntroot = "/snapshot"
+        self.__testing_snapshot = True
+        self.__maxfs = -1
+
     def base_mntroot(self):
         return self.__base_mntroot
     def lower_mntroot(self):
@@ -68,6 +81,8 @@ class config:
         return self.__upper_mntroot
     def union_mntroot(self):
         return self.__union_mntroot
+    def snapshot_mntroot(self):
+        return self.__snapshot_mntroot
     def lowerdir(self):
         return self.__lower_mntroot + "/a"
     def lowerimg(self):

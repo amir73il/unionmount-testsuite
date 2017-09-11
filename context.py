@@ -213,7 +213,7 @@ class test_context:
         self.__verbose = cfg.is_verbose()
         self.__direct_mode = direct_mode
         self.__skip_layer_test = cfg.testing_none()
-        self.__same_dev = cfg.is_fusefs() or cfg.is_samefs() or cfg.is_xino()
+        self.__same_dev = cfg.is_fusefs() or cfg.is_samefs() or cfg.is_xino() or cfg.testing_snapshot()
         self.__termslash = ""
         self.__recycle = recycle
         if termslash:

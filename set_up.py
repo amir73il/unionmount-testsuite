@@ -33,10 +33,20 @@ def set_up(ctx):
         except RuntimeError:
             pass
 
-    if cfg.testing_overlayfs():
+    mnt = cfg.union_mntroot()
+    if cfg.testing_snapshot():
+        mnt = cfg.snapshot_mntroot()
         try:
-            while system("grep -q '" + cfg.fsname() + " " + cfg.union_mntroot() + "' /proc/mounts" +
+            while system("grep -q '" + cfg.union_mntroot() + " snapshot' /proc/mounts" +
                          " && umount " + cfg.union_mntroot()):
+                pass
+        except RuntimeError:
+            pass
+
+    if cfg.testing_overlayfs() or cfg.testing_snapshot():
+        try:
+            while system("grep -q '" + cfg.fsname() + " " + mnt + "' /proc/mounts" +
+                         " && umount " + mnt):
                 pass
         except RuntimeError:
             pass
@@ -72,7 +82,14 @@ def set_up(ctx):
         except RuntimeError:
             pass
 
-    if cfg.is_samefs() and cfg.testing_overlayfs():
+    if cfg.is_samefs():
+        try:
+            while system("grep -q 'lower_layer " + cfg.base_mntroot() + "' /proc/mounts" +
+                         " && umount " + cfg.base_mntroot()):
+                pass
+        except RuntimeError:
+            pass
+
         # Create base fs for both lower and upper
         base_mntroot = cfg.base_mntroot()
         system("mount " + base_mntroot + " 2>/dev/null"

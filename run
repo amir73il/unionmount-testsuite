@@ -16,6 +16,7 @@ def show_format(why):
     print("Format:")
     print("\t", sys.argv[0], "<--no|--ov[=<maxlayers>]> [--fuse=<subtype>] [--samefs|--maxfs=<maxfs>|--squashfs] [--xdev] [--meta] [--verify] [--ts=<0|1>] [-v] [<test-name>+]")
     print("\t", sys.argv[0], "<--no|--ov> [--fuse=<subtype>] [--samefs|--squashfs] [-s|--set-up]")
+    print("\t", sys.argv[0], "--sn[=0] [-s|--set-up|--verify]")
     print("\t", sys.argv[0], "--open-file <file> [-acdertvw] [-W <data>] [-R <data>] [-B] [-E <err>]")
     print("\t", sys.argv[0], "--<fsop> <file> [<args>*] [-aLlv] [-R <content>] [-B] [-E <err>]")
     sys.exit(2)
@@ -88,20 +89,28 @@ except:
 ###############################################################################
 recycle_list = [ "" ]
 maxlayers = 0
+test_what = args[0]
 if args[0] == "--no":
     cfg.set_testing_none()
 elif args[0] == "--ov":
     cfg.set_testing_overlayfs()
 elif args[0].startswith("--ov="):
     cfg.set_testing_overlayfs()
+    test_what = "--ov"
     s = args[0]
     n = s[s.rfind("=")+1:]
     recycle_list = [ n, "" ]
     maxlayers = int(n)
     if maxlayers < 0:
         show_format("Invalid value for maxlayers >= 0")
+elif args[0] == "--sn":
+    cfg.set_testing_snapshot()
+elif args[0] == "--sn=0":
+    cfg.set_testing_snapshot()
+    test_what = "--sn"
+    recycle_list = [ "0", "" ]
 else:
-    show_format("Invalid test type selector (--ov or --no)")
+    show_format("Invalid test type selector (--ov, --sn or --no)")
 args = args[1:]
 
 if len(args) > 0 and args[0].startswith("--fuse="):
@@ -112,12 +121,11 @@ if len(args) > 0 and args[0].startswith("--fuse="):
     cfg.set_fusefs(t)
     args = args[1:]
 
-if cfg.testing_none():
-    index = None
-    xino_auto = None
-    redirect_dir = None
-    metacopy = None
-elif cfg.is_fusefs():
+index = None
+xino_auto = None
+redirect_dir = None
+metacopy = None
+if cfg.is_fusefs():
     # Don't check kernel module params for FUSE test and assume the following
     # defaults, because user can disable redirect_dir with --xdev and user can
     # enable index and xino with --verify
@@ -276,11 +284,6 @@ else:
 
 if len(args) > 0:
     tests = args
-
-if cfg.testing_overlayfs():
-    test_what = "--ov"
-else:
-    test_what = "--no"
 
 for test in tests:
     for recycle in recycle_list:

@@ -3,8 +3,17 @@ from tool_box import *
 def remount_union(ctx, rotate_upper=False):
     cfg = ctx.config()
     union_mntroot = cfg.union_mntroot()
+    lower_mntroot = cfg.lower_mntroot()
+    snapshot_mntroot = cfg.snapshot_mntroot()
 
-    if cfg.testing_overlayfs():
+    if cfg.testing_snapshot():
+        system("umount " + snapshot_mntroot)
+        check_not_tainted()
+        mnt = snapshot_mntroot
+    else:
+        mnt = union_mntroot
+
+    if cfg.testing_overlayfs() or cfg.testing_snapshot():
         system("umount " + cfg.union_mntroot())
         system("echo 3 > /proc/sys/vm/drop_caches")
         check_not_tainted()
@@ -27,12 +36,14 @@ def remount_union(ctx, rotate_upper=False):
             upperdir = layer_mntroot + "/u"
             workdir = layer_mntroot + "/w"
 
-        mnt = union_mntroot
         mntopt = " -orw" + cfg.mntopts()
         cmd = "mount -t " + cfg.fstype() + " " + cfg.fsname() + " " + mnt + mntopt + ",lowerdir=" + lowerlayers + ",upperdir=" + upperdir + ",workdir=" + workdir
         system(cmd)
         if cfg.is_verbose():
             write_kmsg(cmd);
+        if cfg.testing_snapshot():
+            system("mount -t snapshot " + lower_mntroot + " " + union_mntroot +
+                    " -onoatime,snapshot=" + snapshot_mntroot)
         ctx.note_upper_fs(upper_mntroot, cfg.testdir())
         ctx.note_lower_layers(lowerlayers)
         ctx.note_upper_layer(upperdir)
