@@ -14,7 +14,7 @@ def show_format(why):
     if why:
         print(why)
     print("Format:")
-    print("\t", sys.argv[0], "<--no|--um|--<sn|ov>[=<maxlayers>]> [--samefs|--squashfs] [--xdev] [--verify] [--ts=<0|1>] [-v] [<test-name>+]")
+    print("\t", sys.argv[0], "<--no|--um|--<sn|ov>[=<maxlayers>]> [--samefs|--squashfs] [--xdev] [--verify] [<--recycle|--remount>] [--ts=<0|1>] [-v] [<test-name>+]")
     print("\t", sys.argv[0], "<--no|--um|--sn|--ov> [--samefs|--squashfs] [-s|--set-up]")
     print("\t", sys.argv[0], "--open-file <file> [-acdertvw] [-W <data>] [-R <data>] [-B] [-E <err>]")
     print("\t", sys.argv[0], "--<fsop> <file> [<args>*] [-aLlv] [-R <content>] [-B] [-E <err>]")
@@ -86,7 +86,8 @@ except:
 # Work out the test parameters
 #
 ###############################################################################
-remount_list = [ "" ]
+recycle_list = [ False ]
+remount = False
 maxlayers=0
 if args[0] == "--um":
     cfg.set_testing_unionmount()
@@ -98,15 +99,17 @@ elif args[0].startswith("--ov="):
     cfg.set_testing_overlayfs()
     s = args[0]
     n = s[s.rfind("=")+1:]
-    remount_list = [ n, "" ]
+    recycle_list = [ True, False ]
     maxlayers=int(n)
 elif args[0] == "--sn":
     cfg.set_testing_snapshot()
+    remount = True
 elif args[0].startswith("--sn="):
     cfg.set_testing_snapshot()
     s = args[0]
     n = s[s.rfind("=")+1:]
-    remount_list = [ n, "" ]
+    recycle_list = [ True, False ]
+    remount = True
     maxlayers=int(n)
 else:
     show_format("Invalid test type selector (--um, --ov, --sn or --no)")
@@ -147,6 +150,12 @@ while len(args) > 0 and args[0].startswith("-"):
         rename_exdev = None
     elif args[0] == "--verify":
         cfg.set_verify()
+    elif args[0] == "--remount":
+        recycle_list = [ True ]
+        remount = True
+    elif args[0] == "--recycle":
+        recycle_list = [ True ]
+        remount = False
     else:
         show_format("Invalid flag " + args[0])
     args = args[1:]
@@ -242,9 +251,9 @@ else:
     test_what = "--no"
 
 for test in tests:
-    for remount in remount_list:
+    for recycle in recycle_list:
         test_how = test_what
-        if remount != "":
+        if recycle:
             test_how = test_what + "=" + str(maxlayers)
         msg = cfg.progname() + " " + test_how + " --ts=" + termslash + " " + test
         print("***");
@@ -253,7 +262,7 @@ for test in tests:
         if cfg.is_verbose():
             write_kmsg(msg);
 
-        ctx = test_context(cfg, termslash == "1", False, remount != "", maxlayers)
+        ctx = test_context(cfg, termslash == "1", False, recycle, remount, maxlayers)
 
         # Construct the union
         set_up(ctx)

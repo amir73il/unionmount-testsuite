@@ -179,7 +179,7 @@ class dentry:
 #
 ###############################################################################
 class test_context:
-    def __init__(self, cfg, termslash=False, direct_mode=False, remount=False, max_layers=0):
+    def __init__(self, cfg, termslash=False, direct_mode=False, recycle=False, remount=False, max_layers=0):
         self.__cfg = cfg
         self.__root = dentry("/", inode("d"), root=True)
         self.__cwd = None
@@ -195,6 +195,7 @@ class test_context:
         self.__direct_mode = direct_mode
         self.__skip_layer_test = cfg.testing_none()
         self.__termslash = ""
+        self.__recycle = recycle
         self.__remount = remount
         if termslash:
             self.__termslash = "/"
@@ -366,6 +367,13 @@ class test_context:
     def termslash(self):
         return self.__termslash
 
+    # Recycle layers on mkdir/rename dir
+    def recycle(self):
+        return self.__recycle
+    # Remount snapshot or umount/mount
+    def remount(self):
+        return self.__remount
+
     ###########################################################################
     #
     # File state cache
@@ -500,7 +508,7 @@ class test_context:
         if not self.config().is_verify():
             return
         # skip the persistent ino check for directory if lower and upper are not on samefs
-        if not self.config().is_samefs() and dentry.is_dir() and self.__remount:
+        if not self.config().is_samefs() and dentry.is_dir() and self.__recycle:
             return
         # skip the check if upper was rotated to lower
         if layer != self.curr_layer():
@@ -1013,9 +1021,9 @@ class test_context:
             self.vfs_op_success(filename, dentry, args, copy_up=True)
             self.vfs_op_success(filename2, dentry2, args, create=True, filetype=dentry.filetype(),
                                 hardlink_to=dentry)
-            if "remount" not in args:
-                args["remount"] = self.__remount
-            if args["remount"]:
+            if "recycle" not in args:
+                args["recycle"] = self.__recycle
+            if args["recycle"]:
                 # remount after link
                 remount_union(self)
             # Check that ino has not changed through copy up, link and mount cycle
@@ -1044,9 +1052,9 @@ class test_context:
             self.verbosef("os.mkdir({:s},0{:o})\n", filename, mode)
             os.mkdir(filename, mode)
             self.vfs_op_success(filename, dentry, args, filetype="d", create=True)
-            if "remount" not in args:
-                args["remount"] = self.__remount
-            if args["remount"]:
+            if "recycle" not in args:
+                args["recycle"] = self.__recycle
+            if args["recycle"]:
                 # remount/rotate upper after create directory
                 remount_union(self, rotate_upper=True)
         except OSError as oe:
@@ -1131,9 +1139,9 @@ class test_context:
             self.vfs_op_success(filename, dentry, args)
             self.vfs_op_success(filename2, dentry2, args, create=True, filetype=filetype,
                                 hardlink_to=dentry)
-            if "remount" not in args:
-                args["remount"] = self.__remount
-            if args["remount"]:
+            if "recycle" not in args:
+                args["recycle"] = self.__recycle
+            if args["recycle"]:
                 # remount/rotate upper after rename
                 remount_union(self, rotate_upper=True)
             # Check that ino has not changed through copy up, rename and mount cycle
