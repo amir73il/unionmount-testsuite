@@ -33,6 +33,7 @@ class config:
         self.__verbose = False
         self.__verify = False
         self.__samefs = False
+        self.__squashfs = False
 
     def progname(self):
         return self.__progname
@@ -71,6 +72,8 @@ class config:
         return self.__union_mntroot
     def lowerdir(self):
         return self.__lower_mntroot + "/a"
+    def lowerimg(self):
+        return self.__lower_mntroot + "/a.img"
     def testdir(self):
         return self.__union_mntroot + "/a"
 
@@ -86,3 +89,7 @@ class config:
         self.__samefs = to
     def is_samefs(self):
         return self.__samefs
+    def set_squashfs(self, to=True):
+        self.__squashfs = to
+    def is_squashfs(self):
+        return self.__squashfs

@@ -14,8 +14,8 @@ def show_format(why):
     if why:
         print(why)
     print("Format:")
-    print("\t", sys.argv[0], "<--no|--um|--ov[=<maxlayers>]> [--samefs] [--xdev] [--verify] [--ts=<0|1>] [-v] [<test-name>+]")
-    print("\t", sys.argv[0], "<--no|--um|--ov> [--samefs] [-s|--set-up]")
+    print("\t", sys.argv[0], "<--no|--um|--ov[=<maxlayers>]> [--samefs|--squashfs] [--xdev] [--verify] [--ts=<0|1>] [-v] [<test-name>+]")
+    print("\t", sys.argv[0], "<--no|--um|--ov> [--samefs|--squashfs] [-s|--set-up]")
     print("\t", sys.argv[0], "--open-file <file> [-acdertvw] [-W <data>] [-R <data>] [-B] [-E <err>]")
     print("\t", sys.argv[0], "--<fsop> <file> [<args>*] [-aLlv] [-R <content>] [-B] [-E <err>]")
     sys.exit(2)
@@ -104,8 +104,11 @@ else:
     show_format("Invalid test type selector (--um, --ov or --no)")
 
 args = args[1:]
-if len(args) > 0 and args[0] == "--samefs":
-    cfg.set_samefs()
+if len(args) > 0 and ( args[0] == "--samefs" or args[0] == "--squashfs" ):
+    if args[0] == "--samefs":
+        cfg.set_samefs()
+    elif args[0] == "--squashfs":
+        cfg.set_squashfs()
     args = args[1:]
 
 # We might be being asked to just set up and then leave without doing

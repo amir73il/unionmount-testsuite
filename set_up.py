@@ -13,6 +13,7 @@ def set_up(ctx):
     cfg = ctx.config()
     lower_mntroot = cfg.lower_mntroot()
     lowerdir = cfg.lowerdir()
+    lowerimg = cfg.lowerimg()
     testdir = cfg.testdir()
 
     os.sync()
@@ -157,6 +158,11 @@ def set_up(ctx):
         # Non-existent dir
         ctx.record_file("no_dir" + si, None)
 
-    # The mount has to be read-only for us to make use of it
-    system("mount -o remount,ro " + lower_mntroot)
+    if cfg.is_squashfs():
+        system("mksquashfs " + lowerdir + " " + lowerimg + " -keep-as-directory > /dev/null");
+        system("mount -o loop,ro " + lowerimg + " " + lower_mntroot)
+        system("mount --make-private " + lower_mntroot)
+    else:
+        # The mount has to be read-only for us to make use of it
+        system("mount -o remount,ro " + lower_mntroot)
     ctx.note_lower_fs(lowerdir)
