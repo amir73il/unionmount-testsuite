@@ -5,7 +5,11 @@ def unmount_union(ctx):
     system("umount " + cfg.union_mntroot())
     check_not_tainted()
 
-    if cfg.testing_overlayfs():
+    if cfg.testing_snapshot():
+        system("umount " + cfg.snapshot_mntroot())
+        check_not_tainted()
+
+    if cfg.testing_overlayfs() or cfg.testing_snapshot():
         if cfg.is_samefs():
             system("umount " + cfg.base_mntroot())
             check_not_tainted()
