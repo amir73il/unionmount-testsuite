@@ -82,12 +82,27 @@ def remount_union(ctx, rotate_upper=False, cycle_mount=False):
             if rotate_upper or cycle_mount:
                 # Remount latest snapshot readonly
                 system("mount " + curr_snapshot + " -oremount,ro")
-                mid_layers = ""
+                oldmntopt = " -o ro"
+                lower_layers = curr_snapshot
+                fix_redirect = True
                 # Mount old snapshots, possibly pushing the rotated previous snapshot into stack
                 for i in range(ctx.layers_nr() - 1, -1, -1):
-                    mid_layers = upper_mntroot + "/" + str(i) + ":" + mid_layers
-                    cmd = ("mount -t overlay overlay " + snapshot_mntroot + "/" + str(i) + "/" +
-                           " -oro,lowerdir=" + mid_layers + curr_snapshot)
+                    oldupper = upper_mntroot + "/" + str(i) + "/u"
+                    oldwork = upper_mntroot + "/" + str(i) + "/w"
+                    if fix_redirect:
+                        # Before merging oldupper with a new lower (curr_snapshot), we need to
+                        # remove the "origin" xattr of old lower, otherwise mount will fail (-ESTALE)
+                        # and mount with nfs_export=nested, otherwise merge dir origin fh
+                        # verification will fail.
+                        os.removexattr(oldupper, "trusted.overlay.origin")
+                        mntopt = mntopt + ",nfs_export=nested"
+                        cmd = ("mount -t overlay overlay " + snapshot_mntroot + "/" + str(i) + "/" + mntopt +
+                               ",lowerdir=" + lower_layers + ",upperdir=" + oldupper + ",workdir=" + oldwork)
+                    lower_layers = oldupper + ":" + lower_layers
+                    if not fix_redirect:
+                        cmd = ("mount -t overlay overlay " + snapshot_mntroot + "/" + str(i) + "/" + oldmntopt +
+                               ",lowerdir=" + lower_layers)
+                    fix_redirect = False
                     system(cmd)
                     if cfg.is_verbose():
                         write_kmsg(cmd);
