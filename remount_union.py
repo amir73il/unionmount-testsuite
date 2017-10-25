@@ -71,11 +71,19 @@ def remount_union(ctx, rotate_upper=False, cycle_mount=False):
             if rotate_upper or cycle_mount:
                 # Remount latest snapshot readonly
                 system("mount " + curr_snapshot + " -oremount,ro")
-                mid_layers = ""
+                oldmntopt = " -o ro"
+                lower_layers = curr_snapshot
+                verify_dir = True
                 # Mount old snapshots, possibly pushing the rotated previous snapshot into stack
                 for i in range(ctx.layers_nr() - 1, -1, -1):
-                    mid_layers = upper_mntroot + "/" + str(i) + ":" + mid_layers
-                    cmd = "mount -t overlay overlay " + snapshot_mntroot + "/" + str(i) + "/" + " -oro,lowerdir=" + mid_layers + curr_snapshot
+                    oldupper = upper_mntroot + "/" + str(i)
+                    oldwork = upper_mntroot + "/work" + str(i)
+                    if verify_dir:
+                        cmd = "mount -t overlay overlay " + snapshot_mntroot + "/" + str(i) + "/" + mntopt + ",lowerdir=" + lower_layers + ",upperdir=" + oldupper + ",workdir=" + oldwork
+                    lower_layers = oldupper + ":" + lower_layers
+                    if not verify_dir:
+                        cmd = "mount -t overlay overlay " + snapshot_mntroot + "/" + str(i) + "/" + oldmntopt + ",lowerdir=" + lower_layers
+                    verify_dir = False
                     system(cmd)
                     if cfg.is_verbose():
                         write_kmsg(cmd);
