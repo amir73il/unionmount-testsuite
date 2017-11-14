@@ -191,6 +191,7 @@ tests = [
     "hard-link-sym",
     "unlink",
     "rename-file",
+    "rename-hard-link",
     "rename-new-dir",
     "rename-new-pop-dir",
     "rename-mass",
@@ -212,6 +213,7 @@ if rename_exdev:
         ]
 elif rename_exdev != None:
     tests += [
+        "rename-dir",
         "rename-empty-dir",
         "rename-pop-dir",
         "rename-move-dir",
