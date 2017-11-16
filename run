@@ -186,6 +186,8 @@ tests = [
     "readlink",
     "mkdir",
     "rmdir",
+    "rmtree",
+    "rmtree-new",
     "hard-link",
     "hard-link-dir",
     "hard-link-sym",
