@@ -59,6 +59,6 @@ def check_bool_modparam(param):
         pass
     try:
         value = read_file("/sys/module/overlay/parameters/" + param)
-    except RuntimeError:
+    except FileNotFoundError:
         value = ""
     return value.startswith("Y")
