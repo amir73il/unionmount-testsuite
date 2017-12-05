@@ -265,3 +265,18 @@ def subtest_18(ctx):
     ctx.open_dir(d2, ro=1)
     ctx.open_file(d + "/pop/b", ro=1, read="aaaa")
     ctx.open_file(d2 + "/pop/b", ro=1, read=":aaa:bbb:ccc")
+
+# Rename a new directory over an emptied populated lower dir
+def subtest_19(ctx):
+    """Rename new dir over an emptied lower dir"""
+    d = ctx.non_empty_dir() + "-new" + ctx.termslash()
+    d2 = ctx.non_empty_dir() + "/pop" + ctx.termslash()
+
+    ctx.mkdir(d, 0o755)
+    ctx.open_file(d + "/a", wo=1, crt=1, write="aaaa")
+    ctx.rmdir(d2 + "/c")
+    ctx.unlink(d2 + "/b")
+    ctx.rename(d, d2)
+    ctx.open_dir(d2, ro=1)
+    ctx.open_file(d2 + "/a", ro=1, read="aaaa")
+    ctx.open_file(d2 + "/b", ro=1, err=ENOENT)
