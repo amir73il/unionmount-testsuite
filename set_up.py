@@ -16,7 +16,7 @@ def set_up(ctx):
     lowerimg = cfg.lowerimg()
     testdir = cfg.testdir()
 
-    os.sync()
+    system("sync");
 
     # Discard anything already mounted on the mountpoint to avoid contamination
     # as unionmount tries to collect all the mounts located there into the

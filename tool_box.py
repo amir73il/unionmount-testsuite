@@ -16,7 +16,7 @@ class TestError(Exception):
         return self.__msg
 
 def exit_error(msg):
-    print(msg, file=sys.stderr)
+    sys.stderr.write(msg)
     sys.exit(1)
 
 def system(command):
@@ -59,6 +59,6 @@ def check_bool_modparam(param):
         pass
     try:
         value = read_file("/sys/module/overlay/parameters/" + param)
-    except FileNotFoundError:
+    except IOError:
         value = ""
     return value.startswith("Y")
