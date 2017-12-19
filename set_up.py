@@ -63,19 +63,15 @@ def set_up(ctx):
         base_mntroot = cfg.base_mntroot()
         system("mount " + base_mntroot + " 2>/dev/null"
                 " || mount -t tmpfs lower_layer " + base_mntroot)
-        system("mount --make-private " + base_mntroot)
         try:
-            os.mkdir(base_mntroot + lower_mntroot)
+            os.mkdir(base_mntroot + "/lower")
         except OSError:
             pass
-        system("mount -o bind " + base_mntroot + lower_mntroot + " " + lower_mntroot)
+        system("mount -o bind " + base_mntroot + "/lower " + lower_mntroot)
     else:
         # Create a lower layer to union over
         system("mount " + lower_mntroot + " 2>/dev/null"
                 " || mount -t tmpfs lower_layer " + lower_mntroot)
-
-    # Systemd has weird ideas about things
-    system("mount --make-private " + lower_mntroot)
 
     #
     # Create a few test files we can use in the lower layer
@@ -161,7 +157,6 @@ def set_up(ctx):
     if cfg.is_squashfs():
         system("mksquashfs " + lowerdir + " " + lowerimg + " -keep-as-directory > /dev/null");
         system("mount -o loop,ro " + lowerimg + " " + lower_mntroot)
-        system("mount --make-private " + lower_mntroot)
     else:
         # The mount has to be read-only for us to make use of it
         system("mount -o remount,ro " + lower_mntroot)

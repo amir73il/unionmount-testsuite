@@ -26,10 +26,10 @@ def mount_union(ctx):
             base_mntroot = cfg.base_mntroot()
             system("mount -o remount,rw " + base_mntroot)
             try:
-                os.mkdir(base_mntroot + upper_mntroot)
+                os.mkdir(base_mntroot + "/upper")
             except OSError:
                 pass
-            system("mount -o bind " + base_mntroot + upper_mntroot + " " + upper_mntroot)
+            system("mount -o bind " + base_mntroot + "/upper " + upper_mntroot)
         else:
             system("mount " + upper_mntroot + " 2>/dev/null"
                     " || mount -t tmpfs upper_layer " + upper_mntroot)

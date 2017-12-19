@@ -26,6 +26,7 @@ class config:
         self.__testing_unionmount = False
         self.__testing_overlayfs = False
         self.__testing_none = False
+        self.__test_root = None
         self.__base_mntroot = None
         self.__lower_mntroot = None
         self.__upper_mntroot = None
@@ -56,10 +57,11 @@ class config:
         self.__testing_unionmount = True
 
     def set_testing_overlayfs(self):
-        self.__base_mntroot = "/base"
-        self.__lower_mntroot = "/lower"
-        self.__upper_mntroot = "/upper"
-        self.__union_mntroot = "/mnt"
+        self.__test_root = "/var/vol"
+        self.__base_mntroot = self.__test_root + "/base"
+        self.__lower_mntroot = self.__test_root + "/lower"
+        self.__upper_mntroot = self.__test_root + "/upper"
+        self.__union_mntroot = self.__test_root + "/mnt"
         self.__testing_overlayfs = True
 
     def base_mntroot(self):
