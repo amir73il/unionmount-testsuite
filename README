@@ -13,6 +13,28 @@ To run these tests:
 	./run --no
 
      To just set up the environment and exit without doing any tests,
-     add the --set-up flag, eg:
+     add the -s flag, e.g.:
 
-	./run --ov --set-up
+	./run --ov -s
+
+     To run overlayfs tests with all layers on the same underlying fs,
+     add the --samefs flag, e.g.:
+
+	./run --ov --samefs
+
+     To run overlayfs tests with lower layer on a squashfs image,
+     add the --squashfs flag, e.g.:
+
+	./run --ov --squashfs
+
+     To run overlayfs tests with up to N middle layers, do:
+
+	./run --ov=<N>
+
+     The run will start with two layers and during some tests, upper layer
+     will be rotated to the top of the lower layer stack and a new upper
+     layer will be created.
+
+
+For more advanced overlayfs test options and more examples, see:
+     https://github.com/amir73il/overlayfs/wiki/Overlayfs-testing
