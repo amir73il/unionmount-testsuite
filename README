@@ -16,3 +16,17 @@ To run these tests:
      add the --set-up flag, eg:
 
 	./run --ov --set-up
+
+     To run overlayfs tests with all layers on the same underlying fs,
+     add the --samefs flag, eg:
+
+	./run --ov --samefs
+
+     To run overlayfs tests with lower layer on a squashfs image,
+     add the --squashfs flag, eg:
+
+	./run --ov --squashfs
+
+
+For more advanced overlayfs test options and examples, see:
+     https://github.com/amir73il/overlayfs/wiki/Overlayfs-testing
