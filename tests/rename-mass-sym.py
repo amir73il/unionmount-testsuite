@@ -100,7 +100,7 @@ def subtest_5(ctx):
             n = (n + 1) % (ring_size - 1)
 
 # Delete the previously mass-renamed symlinks
-def subtest_3(ctx):
+def subtest_6(ctx):
     """Unlink mass renamed symlinks"""
     base = ctx.direct_dir_sym()[:-3]
 
