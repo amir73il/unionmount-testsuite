@@ -263,7 +263,7 @@ for test in tests:
                 if type(subtest) != types.FunctionType:
                     continue
                 subtests.append((inspect.getfile(subtest),
-                                 inspect.getsourcelines(subtest)[1],
+                                 1,
                                  subtest.__doc__,
                                  subtest))
 
