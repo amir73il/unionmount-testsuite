@@ -16,6 +16,7 @@ def set_up(ctx):
     lowerimg = cfg.lowerimg()
     testdir = cfg.testdir()
 
+    os.umask(022);
     system("sync");
 
     # Discard anything already mounted on the mountpoint to avoid contamination
