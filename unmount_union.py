@@ -4,6 +4,9 @@ def unmount_union(ctx):
     cfg = ctx.config()
     system("umount " + cfg.union_mntroot())
     check_not_tainted()
+    system("exportfs -vu *:/share")
+    system("umount /share")
+    check_not_tainted()
 
     if cfg.testing_overlayfs():
         if cfg.is_samefs():

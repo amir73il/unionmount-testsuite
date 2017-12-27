@@ -30,8 +30,15 @@ def set_up(ctx):
 
     if cfg.testing_overlayfs():
         try:
-            while system("grep 'overlay " + cfg.union_mntroot() + "' /proc/mounts >/dev/null" +
+            while system("grep '/share " + cfg.union_mntroot() + " nfs' /proc/mounts >/dev/null" +
                          " && umount " + cfg.union_mntroot()):
+                pass
+        except RuntimeError:
+            pass
+
+        try:
+            while system("grep 'overlay /share' /proc/mounts >/dev/null" +
+                         " && exportfs -vu *:/share && umount /share"):
                 pass
         except RuntimeError:
             pass

@@ -61,6 +61,7 @@ class config:
         self.__upper_mntroot = "/upper"
         self.__union_mntroot = "/mnt"
         self.__testing_overlayfs = True
+        self.__skip_layer_test = True
 
     def base_mntroot(self):
         return self.__base_mntroot

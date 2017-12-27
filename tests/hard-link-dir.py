@@ -32,7 +32,7 @@ def subtest_3(ctx):
     d = ctx.non_empty_dir() + ctx.termslash()
     d2 = ctx.empty_dir() + ctx.termslash()
 
-    ctx.link(d, d2, err=EEXIST)
+    ctx.link(d, d2, err=EPERM)
     ctx.open_dir(d, ro=1)
     ctx.open_dir(d2, ro=1)
 
@@ -42,7 +42,7 @@ def subtest_4(ctx):
     d = ctx.non_empty_dir() + ctx.termslash()
     f = ctx.reg_file() + ctx.termslash()
 
-    ctx.link(d, f, err=EEXIST)
+    ctx.link(d, f, err=EPERM)
     ctx.open_dir(d, ro=1)
     ctx.open_file(f, ro=1, read=":xxx:yyy:zzz")
 
@@ -51,7 +51,7 @@ def subtest_5(ctx):
     """Hard link dir over itself"""
     d = ctx.non_empty_dir() + ctx.termslash()
 
-    ctx.link(d, d, err=EEXIST)
+    ctx.link(d, d, err=EPERM)
     ctx.open_dir(d, ro=1)
 
 # Hard link a directory over its parent
@@ -60,7 +60,7 @@ def subtest_6(ctx):
     d = ctx.non_empty_dir() + "/pop" + ctx.termslash()
     d2 = ctx.non_empty_dir() + ctx.termslash()
 
-    ctx.link(d, d2, err=EEXIST)
+    ctx.link(d, d2, err=EPERM)
     ctx.open_dir(d, ro=1)
     ctx.open_dir(d2, ro=1)
 

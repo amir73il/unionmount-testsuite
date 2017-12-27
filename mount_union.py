@@ -42,8 +42,10 @@ def mount_union(ctx):
             system("rm -rf " + upper_mntroot + "/*")
             os.mkdir(upperdir)
             os.mkdir(workdir)
-        system("mount -t overlay overlay " + union_mntroot +
+        system("mount -t overlay overlay " + "/share" +
                " -olowerdir=" + lower_mntroot + ",upperdir=" + upperdir + ",workdir=" + workdir)
+        system("exportfs -va")
+        system("mount -t nfs localhost:/share " + union_mntroot)
         ctx.note_upper_fs(upper_mntroot, testdir)
         ctx.note_lower_layers(lower_mntroot)
         ctx.note_upper_layer(upperdir)
