@@ -50,6 +50,9 @@ def remount_union(ctx, rotate_upper=False, cycle_mount=False):
 
             if rotate_upper or cycle_mount:
                 mntopt = mntopt + ",nfs_export=on,redirect_dir=origin"
+                if not cfg.is_verify():
+                    # don't copy data to snapshot when not verifying snapshot content
+                    mntopt = mntopt + ",consistent_fd"
                 # This is the latest snapshot of lower_mntroot:
                 cmd = "mount -t overlay overlay " + curr_snapshot + mntopt + ",lowerdir=" + lower_mntroot + ",upperdir=" + upperdir + ",workdir=" + workdir
                 system(cmd)
