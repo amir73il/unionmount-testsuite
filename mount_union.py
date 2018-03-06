@@ -44,7 +44,7 @@ def mount_union(ctx):
             os.mkdir(upperdir)
             os.mkdir(workdir)
 
-        mntopt = " -orw"
+        mntopt = " -orw,migrate"
         if cfg.testing_snapshot():
             curr_snapshot = snapshot_mntroot + "/" + ctx.curr_layer()
             try:

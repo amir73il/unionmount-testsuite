@@ -117,7 +117,7 @@ def set_up(ctx):
         ctx.record_file(path, "d")
     ctx.set_cwd(testdir)
 
-    for i in range(100, 130):
+    for i in range(100, 10130):
         si = str(i)
 
         # Under the test directory, we create a bunch of regular files
