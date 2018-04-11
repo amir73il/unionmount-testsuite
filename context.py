@@ -496,20 +496,23 @@ class test_context:
         self.check_layer(filename)
 
     # Check that ino has not changed due to copy up or mount cycle
-    def check_ino(self, filename, dentry, ino, layer):
-        if not self.config().is_verify():
-            return
-        # skip the persistent ino check for directory if lower and upper are not on samefs
+    def check_dev_ino(self, filename, dentry, dev, ino, layer):
+        # Skip the persistent ino check for directory if lower and upper are not on samefs
         if not self.config().is_samefs() and dentry.is_dir() and self.__remount:
             return
-        # skip the check if upper was rotated to lower
+        # Skip the check if upper was rotated to lower
         if layer != self.curr_layer():
             return
-        # compare ino before copy up / mount cycle to current ino
+        # Compare st_dev/st_ino before copy up / mount cycle to current st_dev/st_ino
         ino2 = self.get_file_ino(filename)
-        if ino != ino2:
-            raise TestError(filename + ": inode number wrong (got " +
-                            str(ino2) + ", want " + str(ino) + ")")
+        dev2 = self.get_dev_id(filename)
+        if ino != ino2 or dev != dev2:
+            if dev2 != self.upper_dir_fs() and dev2 != self.upper_fs():
+                raise TestError(filename + ": inode number changed on copy up, but not on upper/union layer")
+            if self.config().is_verify():
+                raise TestError(filename + ": inode number/layer changed on copy up (got " +
+                                str(dev2) + ":" + str(ino2) + ", was " +
+                                str(dev) + ":" + str(ino) + ")")
 
     ###########################################################################
     #
@@ -1006,6 +1009,7 @@ class test_context:
 
         try:
             self.verbosef("os.link({:s},{:s})\n", filename, filename2)
+            dev = self.get_dev_id(filename)
             ino = self.get_file_ino(filename)
             layer = self.curr_layer()
             os.link(filename, filename2, follow_symlinks=follow_symlinks)
@@ -1019,8 +1023,8 @@ class test_context:
                 # remount after link
                 remount_union(self)
             # Check that ino has not changed through copy up, link and mount cycle
-            self.check_ino(filename, dentry, ino, layer)
-            self.check_ino(filename2, dentry2, ino, layer)
+            self.check_dev_ino(filename, dentry, dev, ino, layer)
+            self.check_dev_ino(filename2, dentry2, dev, ino, layer)
         except OSError as oe:
             self.vfs_op_error(oe, filename, dentry, args)
             self.vfs_op_error(oe, filename2, dentry2, args, create=True)
@@ -1122,6 +1126,7 @@ class test_context:
         try:
             self.verbosef("os.rename({:s},{:s})\n", filename, filename2)
             filetype = dentry.filetype()
+            dev = self.get_dev_id(filename)
             ino = self.get_file_ino(filename)
             layer = self.curr_layer()
             os.rename(filename, filename2)
@@ -1137,7 +1142,7 @@ class test_context:
                 # remount/rotate upper after rename
                 remount_union(self, rotate_upper=True)
             # Check that ino has not changed through copy up, rename and mount cycle
-            self.check_ino(filename2, dentry2, ino, layer)
+            self.check_dev_ino(filename2, dentry2, dev, ino, layer)
         except OSError as oe:
             self.vfs_op_error(oe, filename, dentry, args)
             self.vfs_op_error(oe, filename2, dentry2, args, create=True)
