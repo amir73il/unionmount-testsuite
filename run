@@ -228,8 +228,6 @@ if cfg.testing_unionmount():
     test_what = "--um"
 elif cfg.testing_overlayfs():
     test_what = "--ov"
-elif cfg.testing_snapshot():
-    test_what = "--sn"
 else:
     test_what = "--no"
 
