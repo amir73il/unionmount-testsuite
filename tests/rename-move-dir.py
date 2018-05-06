@@ -105,7 +105,7 @@ def subtest_6(ctx):
     d3a = d3 + "/pop"
     d3b = d3 + "/popx"
 
-    ctx.rename(da, db, remount=False)
+    ctx.rename(da, db, recycle=False)
     ctx.rename(da, db, err=ENOENT)
     ctx.rename(d, d2)
     ctx.rename(d, d2, err=ENOENT)
@@ -134,7 +134,7 @@ def subtest_7(ctx):
     d3a = d3 + "/pop"
     d3b = d3 + "/popx"
 
-    ctx.rename(da, db, remount=False)
+    ctx.rename(da, db, recycle=False)
     ctx.rename(da, db, err=ENOENT)
     ctx.rename(d, d2)
     ctx.rename(d, d2, err=ENOENT)

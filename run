@@ -86,7 +86,7 @@ except:
 # Work out the test parameters
 #
 ###############################################################################
-remount_list = [ "" ]
+recycle_list = [ "" ]
 maxlayers = 0
 if args[0] == "--um":
     cfg.set_testing_unionmount()
@@ -98,7 +98,7 @@ elif args[0].startswith("--ov="):
     cfg.set_testing_overlayfs()
     s = args[0]
     n = s[s.rfind("=")+1:]
-    remount_list = [ n, "" ]
+    recycle_list = [ n, "" ]
     maxlayers = int(n)
     if maxlayers < 0:
         show_format("Invalid value for maxlayers >= 0")
@@ -259,9 +259,9 @@ else:
     test_what = "--no"
 
 for test in tests:
-    for remount in remount_list:
+    for recycle in recycle_list:
         test_how = test_what
-        if remount != "":
+        if recycle != "":
             test_how = test_what + "=" + str(maxlayers)
         if cfg.testing_overlayfs():
             if maxfs > 0:
@@ -275,7 +275,7 @@ for test in tests:
         if cfg.is_verbose():
             write_kmsg(msg);
 
-        ctx = test_context(cfg, termslash == "1", False, remount != "", maxlayers)
+        ctx = test_context(cfg, termslash == "1", False, recycle != "", maxlayers)
 
         # Construct the union
         set_up(ctx)

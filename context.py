@@ -179,7 +179,7 @@ class dentry:
 #
 ###############################################################################
 class test_context:
-    def __init__(self, cfg, termslash=False, direct_mode=False, remount=False, max_layers=0):
+    def __init__(self, cfg, termslash=False, direct_mode=False, recycle=False, max_layers=0):
         self.__cfg = cfg
         self.__root = dentry("/", inode("d"), root=True)
         self.__cwd = None
@@ -195,7 +195,7 @@ class test_context:
         self.__direct_mode = direct_mode
         self.__skip_layer_test = cfg.testing_none()
         self.__termslash = ""
-        self.__remount = remount
+        self.__recycle = recycle
         if termslash:
             self.__termslash = "/"
 
@@ -505,7 +505,7 @@ class test_context:
     # Check that ino has not changed due to copy up or mount cycle
     def check_dev_ino(self, filename, dentry, dev, ino, layer):
         # Skip the persistent ino check for directory if lower and upper are not on samefs
-        if not self.config().is_samefs() and not self.config().is_xino() and dentry.is_dir() and self.__remount:
+        if not self.config().is_samefs() and not self.config().is_xino() and dentry.is_dir() and self.__recycle:
             return
         # Skip the check if upper was rotated to lower
         if layer != self.curr_layer():
@@ -1024,10 +1024,10 @@ class test_context:
             self.vfs_op_success(filename, dentry, args, copy_up=True)
             self.vfs_op_success(filename2, dentry2, args, create=True, filetype=dentry.filetype(),
                                 hardlink_to=dentry)
-            if "remount" not in args:
-                args["remount"] = self.__remount
-            if args["remount"]:
-                # remount after link
+            if "recycle" not in args:
+                args["recycle"] = self.__recycle
+            if args["recycle"]:
+                # Cycle mount after link
                 remount_union(self)
             # Check that ino has not changed through copy up, link and mount cycle
             self.check_dev_ino(filename, dentry, dev, ino, layer)
@@ -1055,10 +1055,10 @@ class test_context:
             self.verbosef("os.mkdir({:s},0{:o})\n", filename, mode)
             os.mkdir(filename, mode)
             self.vfs_op_success(filename, dentry, args, filetype="d", create=True)
-            if "remount" not in args:
-                args["remount"] = self.__remount
-            if args["remount"]:
-                # remount/rotate upper after create directory
+            if "recycle" not in args:
+                args["recycle"] = self.__recycle
+            if args["recycle"]:
+                # Cycle mount and possibly rotate upper after create directory
                 remount_union(self, rotate_upper=True)
         except OSError as oe:
             self.vfs_op_error(oe, filename, dentry, args, create=True)
@@ -1143,10 +1143,10 @@ class test_context:
             self.vfs_op_success(filename, dentry, args)
             self.vfs_op_success(filename2, dentry2, args, create=True, filetype=filetype,
                                 hardlink_to=dentry)
-            if "remount" not in args:
-                args["remount"] = self.__remount
-            if args["remount"]:
-                # remount/rotate upper after rename
+            if "recycle" not in args:
+                args["recycle"] = self.__recycle
+            if args["recycle"]:
+                # Cycle mount and possibly rotate upper after rename
                 remount_union(self, rotate_upper=True)
             # Check that ino has not changed through copy up, rename and mount cycle
             self.check_dev_ino(filename2, dentry2, dev, ino, layer)
