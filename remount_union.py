@@ -26,5 +26,6 @@ def remount_union(ctx, rotate_upper=False):
         system(cmd)
         if cfg.is_verbose():
             write_kmsg(cmd);
+        ctx.note_upper_fs(upper_mntroot, cfg.testdir())
         ctx.note_lower_layers(lowerlayers)
         ctx.note_upper_layer(upperdir)
