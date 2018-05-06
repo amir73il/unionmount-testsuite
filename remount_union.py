@@ -28,7 +28,8 @@ def remount_union(ctx, rotate_upper=False):
             workdir = layer_mntroot + "/w"
 
         mnt = union_mntroot
-        cmd = "mount -t overlay overlay " + mnt + " -onoatime,lowerdir=" + lowerlayers + ",upperdir=" + upperdir + ",workdir=" + workdir
+        mntopt = " -orw" + cfg.mntopts()
+        cmd = "mount -t overlay overlay " + mnt + mntopt + ",lowerdir=" + lowerlayers + ",upperdir=" + upperdir + ",workdir=" + workdir
         system(cmd)
         if cfg.is_verbose():
             write_kmsg(cmd);

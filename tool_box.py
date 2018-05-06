@@ -51,6 +51,8 @@ def check_not_tainted():
 #
 # Check if boolean module param is enabled
 #
+# Return None is module param does not exist
+#
 def check_bool_modparam(param):
     # If overlay is a module, make sure it is loaded before checking its params
     try:
@@ -60,5 +62,5 @@ def check_bool_modparam(param):
     try:
         value = read_file("/sys/module/overlay/parameters/" + param)
     except FileNotFoundError:
-        value = ""
+        return None
     return value.startswith("Y")

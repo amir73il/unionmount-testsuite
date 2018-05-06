@@ -505,7 +505,7 @@ class test_context:
     # Check that ino has not changed due to copy up or mount cycle
     def check_dev_ino(self, filename, dentry, dev, ino, layer):
         # Skip the persistent ino check for directory if lower and upper are not on samefs
-        if not self.config().is_samefs() and dentry.is_dir() and self.__remount:
+        if not self.config().is_samefs() and not self.config().is_xino() and dentry.is_dir() and self.__remount:
             return
         # Skip the check if upper was rotated to lower
         if layer != self.curr_layer():
@@ -549,9 +549,9 @@ class test_context:
             # Directory inodes are always on overlay st_dev
             if dev != self.upper_dir_fs():
                 raise TestError(name + ": Directory not on union layer")
-        elif self.config().is_samefs():
-            # With samefs setup, files are on overlay st_dev if st_ino is constant
-            # on copy up and on real st_dev if st_ino is not constant.
+        elif self.config().is_samefs() or self.config().is_xino():
+            # With samefs or xino setup, files are on overlay st_dev if st_ino is
+            # constant on copy up and on real st_dev if st_ino is not constant.
             # --verify verifies constant st_ino, so it implies overlay st_dev check.
             # Without --verify, we allow for both options.
             if dev == self.upper_dir_fs():

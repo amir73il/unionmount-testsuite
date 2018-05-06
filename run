@@ -105,6 +105,10 @@ elif args[0].startswith("--ov="):
 else:
     show_format("Invalid test type selector (--um, --ov or --no)")
 
+xino_auto = None
+if cfg.testing_overlayfs():
+    xino_auto = check_bool_modparam("xino_auto")
+
 # maxfs 0 means one upper fs and one lower fs
 maxfs = 0
 args = args[1:]
@@ -151,6 +155,9 @@ while len(args) > 0 and args[0].startswith("-"):
         rename_exdev = None
     elif args[0] == "--verify":
         cfg.set_verify()
+        if not xino_auto is None and not cfg.is_samefs():
+            cfg.set_xino()
+            cfg.add_mntopt("xino=on")
     else:
         show_format("Invalid flag " + args[0])
     args = args[1:]

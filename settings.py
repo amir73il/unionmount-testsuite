@@ -34,6 +34,8 @@ class config:
         self.__verify = False
         self.__maxfs = 0
         self.__squashfs = False
+        self.__xino = False
+        self.__mntopts = ""
 
     def progname(self):
         return self.__progname
@@ -95,3 +97,14 @@ class config:
         self.__squashfs = to
     def is_squashfs(self):
         return self.__squashfs
+    def set_xino(self, to=True):
+        self.__xino = to
+    def is_xino(self):
+        return self.__xino
+
+    def add_mntopt(self, opt):
+        self.__mntopts += "," + opt
+    def set_mntopts(self, opts):
+        self.__mntopts = opts
+    def mntopts(self):
+        return self.__mntopts
