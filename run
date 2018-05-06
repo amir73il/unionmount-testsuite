@@ -106,8 +106,15 @@ else:
     show_format("Invalid test type selector (--um, --ov or --no)")
 
 xino_auto = None
+redirect_dir = None
 if cfg.testing_overlayfs():
     xino_auto = check_bool_modparam("xino_auto")
+    redirect_dir = check_bool_modparam("redirect_dir")
+    # Overlayfs feature "redirect_dir" can be enabled with kernel version >= v4.10.
+    # Otherwise, overlayfs tests should skip rename tests that would result in EXDEV.
+    if redirect_dir is False:
+        cfg.add_mntopt("redirect_dir=on")
+        redirect_dir = True
 
 # maxfs 0 means one upper fs and one lower fs
 maxfs = 0
@@ -137,11 +144,6 @@ if len(args) > 0 and ( args[0] == "-s" or args[0] == "--set-up" ):
     mount_union(ctx)
     sys.exit(0)
 
-# Overlayfs feature redirect_dir is enabled by default with kernel version >= v4.10
-# and with config OVERLAYFS_REDIRECT_DIR=y.
-# Otherwise, overlayfs tests should skip rename tests that would result in EXDEV
-rename_exdev = cfg.testing_overlayfs() and not check_bool_modparam("redirect_dir")
-
 termslash = "0"
 while len(args) > 0 and args[0].startswith("-"):
     if args[0] == "-v":
@@ -151,8 +153,10 @@ while len(args) > 0 and args[0].startswith("-"):
     elif args[0] == "--ts=1":
         termslash = "1"
     elif args[0] == "--xdev":
-        # Skip the dir rename tests
-        rename_exdev = None
+        # Disable "redirect_dir" and skip dir rename tests
+        if redirect_dir is True:
+            cfg.add_mntopt("redirect_dir=off")
+            redirect_dir = False
     elif args[0] == "--verify":
         cfg.set_verify()
         if not xino_auto is None and not cfg.is_samefs():
@@ -225,14 +229,14 @@ tests = [
     "impermissible"
     ]
 
-# For backward compat with kernel version < v4.10 and with config
-# OVERLAYFS_REDIRECT_DIR=n, run an alternative test to verify EXDEV behavior.
-# When run with flag --xdev, skip rename tests that could result in EXDEV.
-if rename_exdev:
+# For backward compat with kernel version < v4.10 or with flag --xdev,
+# run an alternative test to verify EXDEV behavior. Otherwise, run all
+# directory rename tests.
+if redirect_dir is False:
     tests += [
         "rename-exdev",
         ]
-elif rename_exdev != None:
+else:
     tests += [
         "rename-dir",
         "rename-empty-dir",
