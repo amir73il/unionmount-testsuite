@@ -20,21 +20,21 @@ def set_up(ctx):
 
     if cfg.testing_overlayfs():
         try:
-            while system("grep 'overlay " + cfg.union_mntroot() + "' /proc/mounts >/dev/null" +
+            while system("grep -q 'overlay " + cfg.union_mntroot() + "' /proc/mounts" +
                          " && umount " + cfg.union_mntroot()):
                 pass
         except RuntimeError:
             pass
 
         try:
-            while system("grep 'lower_layer " + cfg.base_mntroot() + "' /proc/mounts >/dev/null" +
+            while system("grep -q 'lower_layer " + cfg.base_mntroot() + "' /proc/mounts" +
                          " && umount " + cfg.base_mntroot()):
                 pass
         except RuntimeError:
             pass
 
         try:
-            while system("grep 'lower_layer " + lower_mntroot + "' /proc/mounts >/dev/null" +
+            while system("grep -q 'lower_layer " + lower_mntroot + "' /proc/mounts" +
                          " && umount " + lower_mntroot):
                 pass
         except RuntimeError:
@@ -43,7 +43,7 @@ def set_up(ctx):
         try:
             # grep filter to catch <lower|upper|N>_layer, in case upper and lower are on same fs
             # and in case different layers are on different fs
-            while system("grep '_layer " + cfg.upper_mntroot() + "/' /proc/mounts >/dev/null" +
+            while system("grep -q '_layer " + cfg.upper_mntroot() + "/' /proc/mounts" +
                          " && umount " + cfg.upper_mntroot() + "/* 2>/dev/null"):
                 pass
         except RuntimeError:
@@ -51,7 +51,7 @@ def set_up(ctx):
 
         try:
             # grep filter to catch <low|upp>er_layer, in case upper and lower are on same fs
-            while system("grep 'er_layer " + cfg.upper_mntroot() + "' /proc/mounts >/dev/null" +
+            while system("grep -q 'er_layer " + cfg.upper_mntroot() + "' /proc/mounts" +
                          " && umount " + cfg.upper_mntroot()):
                 pass
         except RuntimeError:
