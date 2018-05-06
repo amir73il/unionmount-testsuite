@@ -18,16 +18,6 @@ def set_up(ctx):
 
     os.sync()
 
-    # Discard anything already mounted on the mountpoint to avoid contamination
-    # as unionmount tries to collect all the mounts located there into the
-    # union.
-    if cfg.testing_unionmount():
-        try:
-            while system("umount " + cfg.union_mntroot() + " >&/dev/null"):
-                pass
-        except RuntimeError:
-            pass
-
     if cfg.testing_overlayfs():
         try:
             while system("grep 'overlay " + cfg.union_mntroot() + "' /proc/mounts >/dev/null" +

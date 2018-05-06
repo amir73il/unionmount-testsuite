@@ -14,8 +14,8 @@ def show_format(why):
     if why:
         print(why)
     print("Format:")
-    print("\t", sys.argv[0], "<--no|--um|--ov[=<maxlayers>]> [--samefs|--maxfs=<maxfs>|--squashfs] [--xdev] [--verify] [--ts=<0|1>] [-v] [<test-name>+]")
-    print("\t", sys.argv[0], "<--no|--um|--ov> [--samefs|--squashfs] [-s|--set-up]")
+    print("\t", sys.argv[0], "<--no|--ov[=<maxlayers>]> [--samefs|--maxfs=<maxfs>|--squashfs] [--xdev] [--verify] [--ts=<0|1>] [-v] [<test-name>+]")
+    print("\t", sys.argv[0], "<--no|--ov> [--samefs|--squashfs] [-s|--set-up]")
     print("\t", sys.argv[0], "--open-file <file> [-acdertvw] [-W <data>] [-R <data>] [-B] [-E <err>]")
     print("\t", sys.argv[0], "--<fsop> <file> [<args>*] [-aLlv] [-R <content>] [-B] [-E <err>]")
     sys.exit(2)
@@ -88,12 +88,10 @@ except:
 ###############################################################################
 recycle_list = [ "" ]
 maxlayers = 0
-if args[0] == "--um":
-    cfg.set_testing_unionmount()
+if args[0] == "--no":
+    cfg.set_testing_none()
 elif args[0] == "--ov":
     cfg.set_testing_overlayfs()
-elif args[0] == "--no":
-    cfg.set_testing_none()
 elif args[0].startswith("--ov="):
     cfg.set_testing_overlayfs()
     s = args[0]
@@ -103,7 +101,7 @@ elif args[0].startswith("--ov="):
     if maxlayers < 0:
         show_format("Invalid value for maxlayers >= 0")
 else:
-    show_format("Invalid test type selector (--um, --ov or --no)")
+    show_format("Invalid test type selector (--ov or --no)")
 
 index = None
 xino_auto = None
@@ -251,9 +249,7 @@ else:
 if len(args) > 0:
     tests = args
 
-if cfg.testing_unionmount():
-    test_what = "--um"
-elif cfg.testing_overlayfs():
+if cfg.testing_overlayfs():
     test_what = "--ov"
 else:
     test_what = "--no"

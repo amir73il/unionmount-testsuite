@@ -1,9 +1,5 @@
 To run these tests:
 
- (1) If testing unionmount, do:
-
-	./run --um
-
      If testing overlayfs, do:
 
 	./run --ov

@@ -23,7 +23,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 class config:
     def __init__(self, progname):
         self.__progname = progname
-        self.__testing_unionmount = False
         self.__testing_overlayfs = False
         self.__testing_none = False
         self.__base_mntroot = None
@@ -42,8 +41,6 @@ class config:
 
     def testing_none(self):
         return self.__testing_none
-    def testing_unionmount(self):
-        return self.__testing_unionmount
     def testing_overlayfs(self):
         return self.__testing_overlayfs
 
@@ -51,11 +48,6 @@ class config:
         self.__lower_mntroot = "/lower"
         self.__union_mntroot = "/mnt"
         self.__testing_none = True
-
-    def set_testing_unionmount(self):
-        self.__lower_mntroot = "/mnt"
-        self.__union_mntroot = "/mnt"
-        self.__testing_unionmount = True
 
     def set_testing_overlayfs(self):
         self.__base_mntroot = "/base"
