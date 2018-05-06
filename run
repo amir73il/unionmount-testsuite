@@ -105,9 +105,11 @@ elif args[0].startswith("--ov="):
 else:
     show_format("Invalid test type selector (--um, --ov or --no)")
 
+index = None
 xino_auto = None
 redirect_dir = None
 if cfg.testing_overlayfs():
+    index = check_bool_modparam("index")
     xino_auto = check_bool_modparam("xino_auto")
     redirect_dir = check_bool_modparam("redirect_dir")
     # Overlayfs feature "redirect_dir" can be enabled with kernel version >= v4.10.
@@ -162,6 +164,8 @@ while len(args) > 0 and args[0].startswith("-"):
         if not xino_auto is None and not cfg.is_samefs():
             cfg.set_xino()
             cfg.add_mntopt("xino=on")
+        if index is False:
+            cfg.add_mntopt("index=on")
     else:
         show_format("Invalid flag " + args[0])
     args = args[1:]
