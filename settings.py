@@ -32,12 +32,12 @@ class config:
         self.__union_mntroot = None
         self.__verbose = False
         self.__verify = False
-        self.__samefs = False
+        self.__maxfs = 0
         self.__squashfs = False
 
     def progname(self):
         return self.__progname
-        
+
     def testing_none(self):
         return self.__testing_none
     def testing_unionmount(self):
@@ -85,10 +85,12 @@ class config:
         self.__verify = to
     def is_verify(self):
         return self.__verify
-    def set_samefs(self, to=True):
-        self.__samefs = to
+    def set_maxfs(self, to):
+        self.__maxfs = to
+    def maxfs(self):
+        return self.__maxfs
     def is_samefs(self):
-        return self.__samefs
+        return self.__maxfs < 0
     def set_squashfs(self, to=True):
         self.__squashfs = to
     def is_squashfs(self):

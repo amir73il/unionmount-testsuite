@@ -51,6 +51,15 @@ def set_up(ctx):
             pass
 
         try:
+            # grep filter to catch <lower|upper|N>_layer, in case upper and lower are on same fs
+            # and in case different layers are on different fs
+            while system("grep '_layer " + cfg.upper_mntroot() + "/' /proc/mounts >/dev/null" +
+                         " && umount " + cfg.upper_mntroot() + "/* 2>/dev/null"):
+                pass
+        except RuntimeError:
+            pass
+
+        try:
             # grep filter to catch <low|upp>er_layer, in case upper and lower are on same fs
             while system("grep 'er_layer " + cfg.upper_mntroot() + "' /proc/mounts >/dev/null" +
                          " && umount " + cfg.upper_mntroot()):

@@ -12,14 +12,20 @@ def remount_union(ctx, rotate_upper=False):
         upper_mntroot = cfg.upper_mntroot()
         if rotate_upper and ctx.have_more_layers():
             lowerlayers = ctx.upper_layer() + ":" + ctx.lower_layers()
-            upperdir = upper_mntroot + "/" + ctx.next_layer()
-            workdir = upper_mntroot + "/work" + ctx.curr_layer()
+            layer_mntroot = upper_mntroot + "/" + ctx.next_layer()
+            upperdir = layer_mntroot + "/u"
+            workdir = layer_mntroot + "/w"
+            os.mkdir(layer_mntroot)
+            # Create unique fs for upper/N if N < maxfs
+            if ctx.have_more_fs():
+                system("mount -t tmpfs " + ctx.curr_layer() + "_layer " + layer_mntroot)
             os.mkdir(upperdir)
             os.mkdir(workdir)
         else:
             lowerlayers = ctx.lower_layers()
-            upperdir = ctx.upper_layer()
-            workdir = upper_mntroot + "/work" + ctx.curr_layer()
+            layer_mntroot = upper_mntroot + "/" + ctx.curr_layer()
+            upperdir = layer_mntroot + "/u"
+            workdir = layer_mntroot + "/w"
 
         mnt = union_mntroot
         cmd = "mount -t overlay overlay " + mnt + " -onoatime,lowerdir=" + lowerlayers + ",upperdir=" + upperdir + ",workdir=" + workdir

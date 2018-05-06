@@ -287,12 +287,19 @@ class test_context:
     def have_more_layers(self):
         return self.__layers_nr < self.__max_layers
 
+    def have_more_fs(self):
+        # /upper is same fs as /lower if maxfs < 0
+        # /upper/N are all same fs (/upper) if maxfs == 0
+        # /upper/N where N < maxfs are unique fs
+        # /upper/N where N >= maxfs are same fs (/upper)
+        return self.__layers_nr < self.config().maxfs()
+
     def curr_layer(self):
         return str(self.__layers_nr)
 
     def next_layer(self):
         if not self.have_more_layers():
-            return ""
+            return self.curr_layer()
         self.__layers_nr += 1
         return str(self.__layers_nr)
 

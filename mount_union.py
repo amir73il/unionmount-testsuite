@@ -33,17 +33,23 @@ def mount_union(ctx):
         else:
             system("mount " + upper_mntroot + " 2>/dev/null"
                     " || mount -t tmpfs upper_layer " + upper_mntroot)
-        upperdir = upper_mntroot + "/" + ctx.curr_layer()
-        workdir = upper_mntroot + "/work" + ctx.curr_layer()
+        layer_mntroot = upper_mntroot + "/" + ctx.curr_layer()
+        upperdir = layer_mntroot + "/u"
+        workdir = layer_mntroot + "/w"
         try:
-            os.mkdir(upperdir)
-            os.mkdir(workdir)
+            os.mkdir(layer_mntroot)
         except OSError:
             system("rm -rf " + upper_mntroot + "/*")
-            os.mkdir(upperdir)
-            os.mkdir(workdir)
-        system("mount -t overlay overlay " + union_mntroot +
-               " -olowerdir=" + lower_mntroot + ",upperdir=" + upperdir + ",workdir=" + workdir)
+            os.mkdir(layer_mntroot)
+        # Create unique fs for upper/0 if maxfs > 0
+        if cfg.maxfs() > 0:
+            system("mount -t tmpfs " + ctx.curr_layer() + "_layer " + layer_mntroot)
+        os.mkdir(upperdir)
+        os.mkdir(workdir)
+
+        mntopt = " -orw"
+        system("mount -t overlay overlay " + union_mntroot + mntopt +
+               ",lowerdir=" + lower_mntroot + ",upperdir=" + upperdir + ",workdir=" + workdir)
         ctx.note_upper_fs(upper_mntroot, testdir)
         ctx.note_lower_layers(lower_mntroot)
         ctx.note_upper_layer(upperdir)

@@ -35,6 +35,13 @@ To run these tests:
      will be rotated to the top of the lower layer stack and a new upper
      layer will be created.
 
+     To run overlayfs tests with up to N middle layers, M middle layers on
+     unique underlying filesystems, do:
+
+	./run --ov=<N> --maxfs=<M>
+
+     The first M rotations will create a new filesystem as the upper layer.
+
 
 For more advanced overlayfs test options and more examples, see:
      https://github.com/amir73il/overlayfs/wiki/Overlayfs-testing

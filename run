@@ -14,7 +14,7 @@ def show_format(why):
     if why:
         print(why)
     print("Format:")
-    print("\t", sys.argv[0], "<--no|--um|--ov[=<maxlayers>]> [--samefs|--squashfs] [--xdev] [--verify] [--ts=<0|1>] [-v] [<test-name>+]")
+    print("\t", sys.argv[0], "<--no|--um|--ov[=<maxlayers>]> [--samefs|--maxfs=<maxfs>|--squashfs] [--xdev] [--verify] [--ts=<0|1>] [-v] [<test-name>+]")
     print("\t", sys.argv[0], "<--no|--um|--ov> [--samefs|--squashfs] [-s|--set-up]")
     print("\t", sys.argv[0], "--open-file <file> [-acdertvw] [-W <data>] [-R <data>] [-B] [-E <err>]")
     print("\t", sys.argv[0], "--<fsop> <file> [<args>*] [-aLlv] [-R <content>] [-B] [-E <err>]")
@@ -87,7 +87,7 @@ except:
 #
 ###############################################################################
 remount_list = [ "" ]
-maxlayers=0
+maxlayers = 0
 if args[0] == "--um":
     cfg.set_testing_unionmount()
 elif args[0] == "--ov":
@@ -99,17 +99,29 @@ elif args[0].startswith("--ov="):
     s = args[0]
     n = s[s.rfind("=")+1:]
     remount_list = [ n, "" ]
-    maxlayers=int(n)
+    maxlayers = int(n)
+    if maxlayers < 0:
+        show_format("Invalid value for maxlayers >= 0")
 else:
     show_format("Invalid test type selector (--um, --ov or --no)")
 
+# maxfs 0 means one upper fs and one lower fs
+maxfs = 0
 args = args[1:]
-if len(args) > 0 and ( args[0] == "--samefs" or args[0] == "--squashfs" ):
+if len(args) > 0 and (args[0] == "--samefs" or args[0] == "--squashfs" or args[0].startswith("--maxfs=")):
     if args[0] == "--samefs":
-        cfg.set_samefs()
+        # maxfs < 0 means samefs
+        maxfs = -1
     elif args[0] == "--squashfs":
         cfg.set_squashfs()
+    elif args[0].startswith("--maxfs="):
+        s = args[0]
+        n = s[s.rfind("=")+1:]
+        maxfs = int(n)
+        if maxfs < 0:
+            show_format("Invalid value for maxfs >= 0")
     args = args[1:]
+cfg.set_maxfs(maxfs)
 
 # We might be being asked to just set up and then leave without doing
 # any further testing.
@@ -236,6 +248,11 @@ for test in tests:
         test_how = test_what
         if remount != "":
             test_how = test_what + "=" + str(maxlayers)
+        if cfg.testing_overlayfs():
+            if maxfs > 0:
+                test_how += " --maxfs=" + str(maxfs)
+            elif maxfs < 0:
+                test_how += " --samefs"
         msg = cfg.progname() + " " + test_how + " --ts=" + termslash + " " + test
         print("***");
         print("***", msg);
