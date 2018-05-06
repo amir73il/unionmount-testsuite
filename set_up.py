@@ -18,6 +18,21 @@ def set_up(ctx):
 
     os.sync()
 
+    if cfg.testing_none():
+        try:
+            while system("grep -q 'lower_layer " + cfg.union_mntroot() + "' /proc/mounts" +
+                         " && umount " + cfg.union_mntroot()):
+                pass
+        except RuntimeError:
+            pass
+
+        try:
+            while system("grep -q 'lower_layer " + lower_mntroot + "' /proc/mounts" +
+                         " && umount " + lower_mntroot):
+                pass
+        except RuntimeError:
+            pass
+
     if cfg.testing_overlayfs():
         try:
             while system("grep -q 'overlay " + cfg.union_mntroot() + "' /proc/mounts" +
