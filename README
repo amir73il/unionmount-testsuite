@@ -38,6 +38,10 @@ To run these tests:
 
      The first M rotations will create a new filesystem as the upper layer.
 
+     To run the tests using a FUSE overlay file system implementation:
+
+	./run --ov --fuse=<subfs-type>
+
 
 For more advanced overlayfs test options and more examples, see:
      https://github.com/amir73il/overlayfs/wiki/Overlayfs-testing

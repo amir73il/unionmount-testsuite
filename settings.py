@@ -35,6 +35,9 @@ class config:
         self.__squashfs = False
         self.__xino = False
         self.__mntopts = ""
+        self.__fusefs = False
+        self.__fstype = "overlay"
+        self.__fsname = "overlay"
 
     def progname(self):
         return self.__progname
@@ -100,3 +103,14 @@ class config:
         self.__mntopts = opts
     def mntopts(self):
         return self.__mntopts
+
+    def fsname(self):
+        return self.__fsname
+    def fstype(self):
+        return self.__fstype
+    def set_fusefs(self, to):
+        self.__fusefs = True
+        self.__fsname = to
+        self.__fstype = "fuse." + to
+    def is_fusefs(self):
+        return self.__fusefs

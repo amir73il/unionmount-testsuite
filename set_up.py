@@ -35,7 +35,7 @@ def set_up(ctx):
 
     if cfg.testing_overlayfs():
         try:
-            while system("grep -q 'overlay " + cfg.union_mntroot() + "' /proc/mounts" +
+            while system("grep -q '" + cfg.fsname() + " " + cfg.union_mntroot() + "' /proc/mounts" +
                          " && umount " + cfg.union_mntroot()):
                 pass
         except RuntimeError:
