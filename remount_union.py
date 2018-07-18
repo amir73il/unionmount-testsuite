@@ -29,7 +29,7 @@ def remount_union(ctx, rotate_upper=False):
 
         mnt = union_mntroot
         mntopt = " -orw" + cfg.mntopts()
-        cmd = "mount -t overlay overlay " + mnt + mntopt + ",lowerdir=" + lowerlayers + ",upperdir=" + upperdir + ",workdir=" + workdir
+        cmd = ("mount -t %s overlay " % cfg.fs()) + mnt + mntopt + ",lowerdir=" + lowerlayers + ",upperdir=" + upperdir + ",workdir=" + workdir
         system(cmd)
         if cfg.is_verbose():
             write_kmsg(cmd);
