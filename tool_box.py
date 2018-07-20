@@ -51,7 +51,7 @@ def check_not_tainted():
 #
 # Check if boolean module param is enabled
 #
-# Return None is module param does not exist
+# Return None if module param does not exist
 #
 def check_bool_modparam(param):
     # If overlay is a module, make sure it is loaded before checking its params

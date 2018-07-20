@@ -112,10 +112,11 @@ if len(args) > 0 and args[0].startswith("--fuse="):
     cfg.set_fusefs(t)
     args = args[1:]
 
-index = None
-xino_auto = None
-redirect_dir = None
-if cfg.testing_overlayfs():
+if cfg.testing_none():
+    index = None
+    xino_auto = None
+    redirect_dir = None
+elif cfg.testing_overlayfs():
     index = check_bool_modparam("index")
     xino_auto = check_bool_modparam("xino_auto")
     redirect_dir = check_bool_modparam("redirect_dir")
@@ -242,7 +243,7 @@ tests = [
 # For backward compat with kernel version < v4.10 or with flag --xdev,
 # run an alternative test to verify EXDEV behavior. Otherwise, run all
 # directory rename tests.
-if redirect_dir is False:
+if cfg.testing_overlayfs() and not redirect_dir:
     tests += [
         "rename-exdev",
         ]
