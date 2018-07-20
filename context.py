@@ -194,6 +194,7 @@ class test_context:
         self.__verbose = cfg.is_verbose()
         self.__direct_mode = direct_mode
         self.__skip_layer_test = cfg.testing_none()
+        self.__same_dev = cfg.is_fusefs() or cfg.is_samefs() or cfg.is_xino()
         self.__termslash = ""
         self.__recycle = recycle
         if termslash:
@@ -311,6 +312,9 @@ class test_context:
 
     def skip_layer_test(self):
         return self.__skip_layer_test
+
+    def same_dev(self):
+        return self.__same_dev
 
     # Display the banner beginning the test
     def begin_test(self, source, nr, name):
@@ -504,8 +508,8 @@ class test_context:
 
     # Check that ino has not changed due to copy up or mount cycle
     def check_dev_ino(self, filename, dentry, dev, ino, layer):
-        # Skip the persistent ino check for directory if lower and upper are not on samefs
-        if not self.config().is_samefs() and not self.config().is_xino() and dentry.is_dir() and self.__recycle:
+        # Skip the persistent ino check for directory if lower and upper are not using same st_dev
+        if not self.same_dev() and dentry.is_dir() and self.__recycle:
             return
         # Skip the check if upper was rotated to lower
         if layer != self.curr_layer():
@@ -549,14 +553,14 @@ class test_context:
             # Directory inodes are always on overlay st_dev
             if dev != self.upper_dir_fs():
                 raise TestError(name + ": Directory not on union layer")
-        elif self.config().is_samefs() or self.config().is_xino():
+        elif self.same_dev():
             # With samefs or xino setup, files are on overlay st_dev if st_ino is
             # constant on copy up and on real st_dev if st_ino is not constant.
             # --verify verifies constant st_ino, so it implies overlay st_dev check.
             # Without --verify, we allow for both options.
             if dev == self.upper_dir_fs():
                 pass
-            elif self.config().is_verify():
+            elif self.config().is_verify() or self.config().is_fusefs():
                 raise TestError(name + ": File not on union layer")
             elif dev != self.upper_fs():
                 raise TestError(name + ": File not on lower/upper layer")
