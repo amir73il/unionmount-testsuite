@@ -116,6 +116,13 @@ if cfg.testing_none():
     index = None
     xino_auto = None
     redirect_dir = None
+elif cfg.is_fusefs():
+    # Don't check kernel module params for FUSE test and assume the following
+    # defaults, because user can disable redirect_dir with --xdev and user can
+    # enable index and xino with --verify
+    index = False
+    xino_auto = False
+    redirect_dir = True
 elif cfg.testing_overlayfs():
     index = check_bool_modparam("index")
     xino_auto = check_bool_modparam("xino_auto")
