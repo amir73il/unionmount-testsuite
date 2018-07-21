@@ -33,9 +33,7 @@ def set_up(ctx):
         except RuntimeError:
             pass
 
-    mnt = cfg.union_mntroot()
     if cfg.testing_snapshot():
-        mnt = cfg.snapshot_mntroot()
         try:
             while system("grep -q '" + cfg.union_mntroot() + " snapshot' /proc/mounts" +
                          " && umount " + cfg.union_mntroot()):
@@ -43,21 +41,29 @@ def set_up(ctx):
         except RuntimeError:
             pass
 
+        try:
+            while system("grep -q 'overlay " + cfg.snapshot_mntroot() + "/' /proc/mounts" +
+                         " && umount " + cfg.snapshot_mntroot() + "/*/ 2>/dev/null"):
+                pass
+        except RuntimeError:
+            pass
+
+        try:
+            while system("grep -q 'backup " + cfg.backup_mntroot() + "' /proc/mounts" +
+                         " && umount " + cfg.backup_mntroot()):
+                pass
+        except RuntimeError:
+            pass
+
+    else:
+        try:
+            while system("grep -q '" + cfg.fsname() + " " + cfg.union_mntroot() + "' /proc/mounts" +
+                         " && umount " + cfg.union_mntroot()):
+                pass
+        except RuntimeError:
+            pass
+
     if cfg.testing_overlayfs() or cfg.testing_snapshot():
-        try:
-            while system("grep -q '" + cfg.fsname() + " " + mnt + "' /proc/mounts" +
-                         " && umount " + mnt):
-                pass
-        except RuntimeError:
-            pass
-
-        try:
-            while system("grep -q 'lower_layer " + cfg.base_mntroot() + "' /proc/mounts" +
-                         " && umount " + cfg.base_mntroot()):
-                pass
-        except RuntimeError:
-            pass
-
         try:
             while system("grep -q 'lower_layer " + lower_mntroot + "' /proc/mounts" +
                          " && umount " + lower_mntroot):
@@ -82,7 +88,6 @@ def set_up(ctx):
         except RuntimeError:
             pass
 
-    if cfg.is_samefs():
         try:
             while system("grep -q 'lower_layer " + cfg.base_mntroot() + "' /proc/mounts" +
                          " && umount " + cfg.base_mntroot()):
@@ -90,6 +95,7 @@ def set_up(ctx):
         except RuntimeError:
             pass
 
+    if cfg.is_samefs():
         # Create base fs for both lower and upper
         base_mntroot = cfg.base_mntroot()
         system("mount " + base_mntroot + " 2>/dev/null"
@@ -197,3 +203,11 @@ def set_up(ctx):
         # The mount has to be read-only for us to make use of it
         system("mount -o remount,ro " + lower_mntroot)
     ctx.note_lower_fs(lowerdir)
+
+    if cfg.testing_snapshot():
+        system("mount -t tmpfs backup " + cfg.backup_mntroot())
+
+        # Systemd has weird ideas about things
+        system("mount --make-private " + cfg.backup_mntroot())
+
+        os.mkdir(cfg.snapshot_mntroot())

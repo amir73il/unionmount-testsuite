@@ -42,6 +42,12 @@ To run these tests:
 
 	./run --ov --fuse=<subfs-type>
 
+     If testing overlayfs snapshots, do:
+
+	./run --sn[=N] [--verify]
+
+     Where N is the max number of snapshots.
+
 
 For more advanced overlayfs test options and more examples, see:
      https://github.com/amir73il/overlayfs/wiki/Overlayfs-testing

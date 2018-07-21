@@ -39,22 +39,29 @@ def mount_union(ctx):
         os.mkdir(upperdir)
         os.mkdir(workdir)
 
-        if cfg.testing_snapshot():
-            system("mount -o remount,rw " + lower_mntroot)
-            mnt = snapshot_mntroot
-        else:
-            mnt = union_mntroot
         mntopt = " -orw" + cfg.mntopts()
-        system("mount -t " + cfg.fstype() + " " + cfg.fsname() + " " + mnt + mntopt +
-               ",lowerdir=" + lower_mntroot + ",upperdir=" + upperdir + ",workdir=" + workdir)
         if cfg.testing_snapshot():
+            curr_snapshot = snapshot_mntroot + "/" + ctx.curr_layer()
+            try:
+                os.mkdir(curr_snapshot)
+            except OSError:
+                pass
+
+            system("mount -o remount,rw " + lower_mntroot)
+            # This is the latest snapshot of lower_mntroot:
+            system("mount -t overlay overlay " + curr_snapshot + mntopt +
+                   ",lowerdir=" + lower_mntroot + ",upperdir=" + upperdir + ",workdir=" + workdir)
+            # This is the snapshot mount where tests are run
             snapmntopt = " -onoatime"
             # --sn --samefs means start with nosnapshot setup until first recycle
             if not cfg.is_samefs():
-                snapmntopt += ",snapshot=" + snapshot_mntroot
+                snapmntopt += ",snapshot=" + curr_snapshot
             system("mount -t snapshot " + lower_mntroot + " " + union_mntroot + snapmntopt)
+            # Remount latest snapshot readonly
+            system("mount " + curr_snapshot + " -oremount,ro")
             ctx.note_upper_fs(lower_mntroot, testdir)
         else:
+            system("mount -t " + cfg.fstype() + " " + cfg.fsname() + " " + union_mntroot + mntopt +
+                   ",lowerdir=" + lower_mntroot + ",upperdir=" + upperdir + ",workdir=" + workdir)
             ctx.note_upper_fs(upper_mntroot, testdir)
-        ctx.note_lower_layers(lower_mntroot)
         ctx.note_upper_layer(upperdir)

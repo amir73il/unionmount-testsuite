@@ -6,7 +6,12 @@ def unmount_union(ctx):
     check_not_tainted()
 
     if cfg.testing_snapshot():
-        system("umount " + cfg.snapshot_mntroot())
+        try:
+            system("umount " + cfg.snapshot_mntroot() + "/*/ 2>/dev/null")
+        except RuntimeError:
+            pass
+        check_not_tainted()
+        system("umount " + cfg.backup_mntroot())
         check_not_tainted()
 
     if cfg.testing_overlayfs() or cfg.testing_snapshot():
