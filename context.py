@@ -23,6 +23,12 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 from tool_box import *
 from remount_union import remount_union
 import sys, os, errno
+from enum import IntEnum
+
+# None value is for lower
+class upper(IntEnum):
+    META=1
+    DATA=2
 
 class inode:
     def __init__(self, filetype, symlink_val=None, symlink_to=None):
@@ -47,7 +53,8 @@ class dentry:
         self.__parent = None
         self.created(inode, on_upper=on_upper)
 
-    def created(self, inode, on_upper=None):
+    # By default created objects are pure upper
+    def created(self, inode, on_upper=upper.DATA):
         self.__i = inode
         self.__failed_create = False
         self.__children = dict()
@@ -114,13 +121,14 @@ class dentry:
     def did_create_fail(self):
         return self.__failed_create
 
-    def copied_up(self):
-        self.__upper = True
+    def copied_up(self, copy_up=upper.META):
+        if not self.__upper or self.__upper < copy_up:
+            self.__upper = copy_up
 
     def replace_with(self, src):
         old_parent = src.parent()
         new_parent = self.parent()
-        miss = dentry(src.__name, None, on_upper = True)
+        miss = dentry(src.__name, None, on_upper = src.__upper)
         old_parent.unlink_child(src)
         old_parent.add_child(miss)
         src.__name = self.__name
@@ -129,6 +137,9 @@ class dentry:
 
     def on_upper(self):
         return self.__upper
+
+    def data_on_upper(self):
+        return self.__upper == upper.DATA
 
     def layer(self):
         if self.on_upper():
@@ -462,7 +473,7 @@ class test_context:
         return self.pathwalk_one(cursor, filename.rstrip("/"), args)
 
     # Record a file's type ("r", "s", "d", None) and symlink target record
-    def record_file(self, filename, filetype, symlink_val=None, symlink_to=None, on_upper=False):
+    def record_file(self, filename, filetype, symlink_val=None, symlink_to=None, on_upper=None):
         if filetype == None:
             i = None
         else:
@@ -572,7 +583,8 @@ class test_context:
             if dev == self.upper_dir_fs():
                 raise TestError(name + ": File unexpectedly on union layer")
             elif dev == self.upper_fs():
-                if not dentry.on_upper():
+                # Only pure upper may have upper fs st_dev
+                if not dentry.data_on_upper():
                     raise TestError(name + ": File unexpectedly on upper layer")
             elif self.config().is_verify():
                 if dev == self.lower_fs():
@@ -625,15 +637,15 @@ class test_context:
             line += " -a"
             wr = True
 
-        copy_up = False
+        copy_up = None
         if rd and wr:
             flags |= os.O_RDWR
-            copy_up = True
+            copy_up = upper.DATA
         elif rd:
             flags |= os.O_RDONLY
         else:
             flags |= os.O_WRONLY
-            copy_up = True
+            copy_up = upper.DATA
 
         create = False
         if "dir" in args:
@@ -649,7 +661,7 @@ class test_context:
         if "tr" in args:
             line += " -t"
             flags |= os.O_TRUNC
-            copy_up = True
+            copy_up = upper.DATA
 
         mode = 0
         if "mode" in args:
@@ -723,10 +735,10 @@ class test_context:
                 if dentry.is_negative():
                     if not create:
                         raise TestError(filename + ": File was created without O_CREAT")
-                    dentry.created(inode("f"), on_upper=True)
+                    dentry.created(inode("f"))
                 else:
                     if copy_up:
-                        dentry.copied_up()
+                        dentry.copied_up(copy_up)
         except OSError as oe:
             if "as_bin" in args:
                 self.verbosef("os.seteuid(0)")
@@ -909,7 +921,7 @@ class test_context:
             return dentry
 
     # Determine how to handle success
-    def vfs_op_success(self, filename, dentry, args, filetype="f", create=False, copy_up=False,
+    def vfs_op_success(self, filename, dentry, args, filetype="f", create=False, copy_up=None,
                        hardlink_to=None):
         if "as_bin" in args:
             self.verbosef("os.seteuid(0)")
@@ -934,7 +946,7 @@ class test_context:
                 dentry.created(hardlink_to.inode(), on_upper = hardlink_to.on_upper())
         else:
             if copy_up:
-                dentry.copied_up()
+                dentry.copied_up(copy_up)
         self.check_layer(filename)
 
     # Determine how to handle an error
@@ -970,7 +982,7 @@ class test_context:
         try:
             self.verbosef("os.chmod({:s},0{:o})\n", filename, mode)
             os.chmod(filename, mode, follow_symlinks=("no_follow" in args))
-            self.vfs_op_success(filename, dentry, args, copy_up=True)
+            self.vfs_op_success(filename, dentry, args, copy_up=upper.META)
         except OSError as oe:
             self.vfs_op_error(oe, filename, dentry, args)
 
@@ -1025,7 +1037,7 @@ class test_context:
             layer = self.curr_layer()
             os.link(filename, filename2, follow_symlinks=follow_symlinks)
             dentry.copied_up()
-            self.vfs_op_success(filename, dentry, args, copy_up=True)
+            self.vfs_op_success(filename, dentry, args, copy_up=upper.META)
             self.vfs_op_success(filename2, dentry2, args, create=True, filetype=dentry.filetype(),
                                 hardlink_to=dentry)
             recycle = self.__recycle
@@ -1200,7 +1212,7 @@ class test_context:
         try:
             self.verbose("os.truncate(", filename, ",", size, ")\n")
             os.truncate(filename, size)
-            self.vfs_op_success(filename, dentry, args, copy_up=True)
+            self.vfs_op_success(filename, dentry, args, copy_up=upper.DATA)
         except OSError as oe:
             self.vfs_op_error(oe, filename, dentry, args)
 
@@ -1240,6 +1252,6 @@ class test_context:
         try:
             self.verbosef("os.utime({:s},follow_symlinks={:d})\n", filename, follow)
             os.utime(filename, follow_symlinks=follow)
-            self.vfs_op_success(filename, dentry, args, copy_up=True)
+            self.vfs_op_success(filename, dentry, args, copy_up=upper.META)
         except OSError as oe:
             self.vfs_op_error(oe, filename, dentry, args)
