@@ -52,7 +52,7 @@ class dentry:
         self.__failed_create = False
         self.__children = dict()
         self.__is_dir = inode and inode.filetype() == "d"
-        self.__upper = on_upper or not inode or inode.filetype() == "d"
+        self.__upper = on_upper
         self.__rename_exdev = not on_upper
 
     def failed_to_create(self):
