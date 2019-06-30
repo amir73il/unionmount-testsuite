@@ -931,7 +931,7 @@ class test_context:
             if not hardlink_to:
                 dentry.created(inode(filetype))
             else:
-                dentry.created(hardlink_to, on_upper = dentry.on_upper())
+                dentry.created(hardlink_to.inode(), on_upper = hardlink_to.on_upper())
         else:
             if copy_up:
                 dentry.copied_up()
