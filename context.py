@@ -23,6 +23,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 from tool_box import *
 from remount_union import remount_union
 import sys, os, errno
+from stat import *
 from enum import IntEnum
 
 # None value is for lower
@@ -149,6 +150,9 @@ class dentry:
     def is_dir(self):
         return self.__is_dir
 
+    def is_reg(self):
+        return self.__i.filetype() == "r"
+
     def is_sym(self):
         return self.__i and self.__i.filetype() == "s"
 
@@ -251,6 +255,10 @@ class test_context:
         self.verbose("os.lstat(", path, ")\n")
         return os.lstat(path)
 
+    def is_whiteout(self, path):
+        st = self.lstat_file(path)
+        return S_ISCHR(st.st_mode) and st.st_rdev == 0
+
     def get_dev_id(self, path):
         return self.lstat_file(path).st_dev
 
@@ -259,6 +267,9 @@ class test_context:
 
     def get_file_size(self, path):
         return self.lstat_file(path).st_size
+
+    def get_file_blocks(self, path):
+        return self.lstat_file(path).st_blocks
 
     def get_file_atime(self, path):
         return self.lstat_file(path).st_atime
@@ -341,6 +352,21 @@ class test_context:
     # Increment the test fileset number
     def incr_filenr(self):
         self.__filenr += 1
+
+    # Get path relative to basedir
+    # Returns None if basedir is not a prefix of path
+    def rel_path(self, path, basedir):
+        l = len(basedir)
+        if len(path) < l or path[:l] != basedir:
+            return None
+        return path[l:]
+
+    # Get upper path from union path
+    def upper_path(self, path):
+        relpath = self.rel_path(path, self.config().union_mntroot())
+        if relpath is None:
+            raise TestError(path + ": not on union mount")
+        return self.__upper_layer + relpath
 
     # Get various filenames
     def gen_filename(self, name):
@@ -536,6 +562,36 @@ class test_context:
                                 str(dev2) + ":" + str(ino2) + ", was " +
                                 str(dev) + ":" + str(ino) + ")")
 
+    # Check that file/data was/not copied up as expected
+    def check_copy_up(self, filename, dentry, blocks):
+        upper_path = self.upper_path(filename)
+        try:
+            upper_blocks = self.get_file_blocks(upper_path)
+        except (FileNotFoundError, NotADirectoryError):
+            if dentry.on_upper():
+                raise TestError(upper_path + ": Upper file is missing")
+            return
+
+        if not dentry.on_upper():
+            # Directory could have been copied up recursively and we didn't mark it's dentry on_upper
+            if dentry.is_dir() or self.is_whiteout(upper_path):
+                return
+            raise TestError(upper_path + ": Upper file unexpectedly found")
+
+        if not dentry.is_reg():
+            return
+
+        # Wanted to compare upper_blocks to block, but that test fails sometimes
+        # on xfs because st_blocks can be observed larger than actual blocks for
+        # a brief time after copy up, because of delalloc blocks on the inode
+        # beyond EOF due to speculative preallocation. And sometimes the value
+        # of st_blocks from first stat() did not match the value from second stat()
+        if bool(upper_blocks) != bool(blocks):
+            raise TestError(upper_path +
+                    ": Upper file blocks missmatch (" +
+                    str(upper_blocks) + " != " + str(blocks) + ")")
+
+
     ###########################################################################
     #
     # Layer check operation
@@ -549,6 +605,7 @@ class test_context:
         name = dentry.filename()
         try:
             dev = self.get_dev_id(name)
+            blocks = self.get_file_blocks(name)
         except (FileNotFoundError, NotADirectoryError):
             if not dentry.is_negative():
                 raise TestError(name + ": File is missing")
@@ -559,8 +616,12 @@ class test_context:
 
         #self.output("- check_layer ", dentry.filename(), " -", dentry.layer(), " # ", dev, "\n")
         if self.skip_layer_test():
-            pass
-        elif dentry.is_dir():
+            return
+
+        if self.config().is_verify():
+            self.check_copy_up(name, dentry, blocks)
+
+        if dentry.is_dir():
             # Directory inodes are always on overlay st_dev
             if dev != self.upper_dir_fs():
                 raise TestError(name + ": Directory not on union layer")
