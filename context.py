@@ -585,12 +585,20 @@ class test_context:
         if not dentry.is_reg():
             return
 
+        # Metacopy should have st_blocks coming from lowerdata, so upper blocks
+        # should be zero. This check may give false positives with metacopy=on
+        # and upper file whose st_blocks > 0 when xattrs are not stored in inode
+        if self.config().is_metacopy() and not dentry.data_on_upper(layer):
+            if upper_blocks != 0:
+                raise TestError(upper_path +
+                        ": Metacopy file blocks non-zero (" +
+                        str(upper_blocks) + ")")
         # Wanted to compare upper_blocks to block, but that test fails sometimes
         # on xfs because st_blocks can be observed larger than actual blocks for
         # a brief time after copy up, because of delalloc blocks on the inode
         # beyond EOF due to speculative preallocation. And sometimes the value
         # of st_blocks from first stat() did not match the value from second stat()
-        if bool(upper_blocks) != bool(blocks):
+        elif bool(upper_blocks) != bool(blocks):
             raise TestError(upper_path +
                     ": Upper file blocks missmatch (" +
                     str(upper_blocks) + " != " + str(blocks) + ")")

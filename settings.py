@@ -33,6 +33,7 @@ class config:
         self.__verify = False
         self.__maxfs = 0
         self.__squashfs = False
+        self.__metacopy = False
         self.__xino = False
         self.__mntopts = ""
         self.__fusefs = False
@@ -96,6 +97,10 @@ class config:
         self.__xino = to
     def is_xino(self):
         return self.__xino
+    def set_metacopy(self, to=True):
+        self.__metacopy = to
+    def is_metacopy(self):
+        return self.__metacopy
 
     def add_mntopt(self, opt):
         self.__mntopts += "," + opt

@@ -14,7 +14,7 @@ def show_format(why):
     if why:
         print(why)
     print("Format:")
-    print("\t", sys.argv[0], "<--no|--ov[=<maxlayers>]> [--fuse=<subtype>] [--samefs|--maxfs=<maxfs>|--squashfs] [--xdev] [--verify] [--ts=<0|1>] [-v] [<test-name>+]")
+    print("\t", sys.argv[0], "<--no|--ov[=<maxlayers>]> [--fuse=<subtype>] [--samefs|--maxfs=<maxfs>|--squashfs] [--xdev] [--meta] [--verify] [--ts=<0|1>] [-v] [<test-name>+]")
     print("\t", sys.argv[0], "<--no|--ov> [--fuse=<subtype>] [--samefs|--squashfs] [-s|--set-up]")
     print("\t", sys.argv[0], "--open-file <file> [-acdertvw] [-W <data>] [-R <data>] [-B] [-E <err>]")
     print("\t", sys.argv[0], "--<fsop> <file> [<args>*] [-aLlv] [-R <content>] [-B] [-E <err>]")
@@ -116,6 +116,7 @@ if cfg.testing_none():
     index = None
     xino_auto = None
     redirect_dir = None
+    metacopy = None
 elif cfg.is_fusefs():
     # Don't check kernel module params for FUSE test and assume the following
     # defaults, because user can disable redirect_dir with --xdev and user can
@@ -123,6 +124,7 @@ elif cfg.is_fusefs():
     index = False
     xino_auto = False
     redirect_dir = True
+    metacopy = False
 elif cfg.testing_overlayfs():
     index = check_bool_modparam("index")
     xino_auto = check_bool_modparam("xino_auto")
@@ -132,6 +134,10 @@ elif cfg.testing_overlayfs():
     if redirect_dir is False:
         cfg.add_mntopt("redirect_dir=on")
         redirect_dir = True
+    # metacopy can be enabled with kernel version >= v4.19
+    metacopy = check_bool_modparam("metacopy")
+    if metacopy is True:
+        cfg.set_metacopy()
 
 # maxfs 0 means one upper fs and one lower fs
 maxfs = 0
@@ -173,6 +179,12 @@ while len(args) > 0 and args[0].startswith("-"):
         if redirect_dir is True:
             cfg.add_mntopt("redirect_dir=off")
             redirect_dir = False
+    elif args[0] == "--meta":
+        if metacopy is None:
+            print("metacopy not supported - ignoring --meta")
+        else:
+            cfg.add_mntopt("metacopy=on")
+            cfg.set_metacopy()
     elif args[0] == "--verify":
         cfg.set_verify()
         if not xino_auto is None and not cfg.is_samefs():
