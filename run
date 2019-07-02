@@ -16,7 +16,7 @@ def show_format(why):
     print("Format:")
     print("\t", sys.argv[0], "<--no|--ov[=<maxlayers>]> [--fuse=<subtype>] [--samefs|--maxfs=<maxfs>|--squashfs] [--xdev] [--meta] [--verify] [--ts=<0|1>] [-v] [<test-name>+]")
     print("\t", sys.argv[0], "<--no|--ov> [--fuse=<subtype>] [--samefs|--squashfs] [-s|--set-up]")
-    print("\t", sys.argv[0], "--sn[=<maxlayers>] [--samefs] [-s|--set-up|--verify] [<--recycle|--remount>]")
+    print("\t", sys.argv[0], "--sn[=<maxlayers>] [--samefs] [-s|--set-up|--verify] [<--recycle|--remount>] [--meta]")
     print("\t", sys.argv[0], "--open-file <file> [-acdertvw] [-W <data>] [-R <data>] [-B] [-E <err>]")
     print("\t", sys.argv[0], "--<fsop> <file> [<args>*] [-aLlv] [-R <content>] [-B] [-E <err>]")
     sys.exit(2)
@@ -148,6 +148,8 @@ elif cfg.testing_overlayfs():
     if redirect_dir is False:
         cfg.add_mntopt("redirect_dir=on")
         redirect_dir = True
+
+if cfg.testing_overlayfs() or cfg.testing_snapshot():
     # metacopy can be enabled with kernel version >= v4.19
     metacopy = check_bool_modparam("metacopy")
     if metacopy is True:
@@ -197,6 +199,7 @@ while len(args) > 0 and args[0].startswith("-"):
         if metacopy is None:
             print("metacopy not supported - ignoring --meta")
         else:
+            metacopy = True
             cfg.add_mntopt("metacopy=on")
             cfg.set_metacopy()
     elif args[0] == "--verify":
@@ -346,15 +349,27 @@ for test in tests:
 
         if cfg.testing_snapshot() and cfg.is_verify() and ctx.have_backup():
             differ = False
+            filter = ""
+            # Upper layer of metacopy snapshot must not contain regular files.
+            # Allow files to differ from metacopy snapshot to backup
+            # and to be only in backup, but they cannot be only in snapshot
+            # because newly created files/dirs should be whited out in metacopy snapshot.
+            if metacopy:
+                try:
+                    system("find " + cfg.upper_mntroot() + " -type f | grep '' ; test $? -ne 0")
+                except RuntimeError:
+                    exit_error("Files unexpectedly found in metacopy snapshot")
+                filter = " | grep 'Only in " + cfg.snapshot_mntroot() + "' ; test $? -ne 0"
+
             # verify snapshots integrity with warm and cold dcache
             try:
-                system("diff -qr --no-dereference " + cfg.backup_mntroot() + "/full " + cfg.snapshot_mntroot() + " 1>&2")
+                system("diff -qr --no-dereference " + cfg.backup_mntroot() + "/full " + cfg.snapshot_mntroot() + filter)
             except RuntimeError:
                 print("snapshot integrity (warm cache) failed: " + msg, file=sys.stderr)
                 differ = True
             remount_union(ctx, cycle_mount=True)
             try:
-                system("diff -qr --no-dereference " + cfg.backup_mntroot() + "/full " + cfg.snapshot_mntroot() + " 1>&2")
+                system("diff -qr --no-dereference " + cfg.backup_mntroot() + "/full " + cfg.snapshot_mntroot() + filter)
             except RuntimeError:
                 print("snapshot integrity (cold cache) failed: " + msg, file=sys.stderr)
                 differ = True

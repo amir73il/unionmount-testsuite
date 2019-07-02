@@ -62,7 +62,8 @@ def remount_union(ctx, rotate_upper=False, cycle_mount=False):
                 ctx.make_backup()
 
             if rotate_upper or cycle_mount:
-                mntopt = mntopt + ",index=on,nfs_export=on,redirect_dir=origin"
+                # nfs_export=on required metacopy=off
+                mntopt = mntopt + ",index=on,metacopy=off,nfs_export=on,redirect_dir=origin"
                 # This is the latest snapshot of lower_mntroot:
                 cmd = ("mount -t overlay overlay " + curr_snapshot + mntopt +
                        ",lowerdir=" + lower_mntroot + ",upperdir=" + upperdir + ",workdir=" + workdir)
@@ -73,6 +74,9 @@ def remount_union(ctx, rotate_upper=False, cycle_mount=False):
             # This is the snapshot mount where tests are run
             if cycle_mount:
                 snapmntopt = " -onoatime,snapshot=" + curr_snapshot
+                if cfg.is_metacopy():
+                    # don't copy files to snapshot only directories
+                    snapmntopt = snapmntopt + ",metacopy=on"
                 system("mount -t snapshot " + lower_mntroot + " " + union_mntroot + snapmntopt)
             else:
                 # Remount snapshot mount ro/rw to use the new curr_snapshot
