@@ -49,17 +49,18 @@ class inode:
         return self.__symlink_to
 
 class dentry:
-    def __init__(self, name, inode=None, root=False, on_upper=None):
+    def __init__(self, name, inode=None, root=False, layer=None, on_upper=None):
         self.__name = name
         self.__parent = None
-        self.created(inode, on_upper=on_upper)
+        self.created(inode, layer, on_upper)
 
     # By default created objects are pure upper
-    def created(self, inode, on_upper=upper.DATA):
+    def created(self, inode, layer, on_upper=upper.DATA):
         self.__i = inode
         self.__failed_create = False
         self.__children = dict()
         self.__is_dir = inode and inode.filetype() == "d"
+        self.__layer = layer
         self.__upper = on_upper
         self.__rename_exdev = not on_upper
 
@@ -122,29 +123,32 @@ class dentry:
     def did_create_fail(self):
         return self.__failed_create
 
-    def copied_up(self, copy_up=upper.META):
-        if not self.__upper or self.__upper < copy_up:
+    def copied_up(self, layer, copy_up=upper.META):
+        if not self.__upper or layer != self.__layer or self.__upper < copy_up:
+            self.__layer = layer
             self.__upper = copy_up
 
     def replace_with(self, src):
         old_parent = src.parent()
         new_parent = self.parent()
-        miss = dentry(src.__name, None, on_upper = src.__upper)
+        miss = dentry(src.__name, None, layer = src.__layer, on_upper = src.__upper)
         old_parent.unlink_child(src)
         old_parent.add_child(miss)
         src.__name = self.__name
         new_parent.unlink_child(self)
         new_parent.add_child(src)
 
-    def on_upper(self):
+    def on_upper(self, layer):
+        if self.__layer != layer:
+            return None
         return self.__upper
 
-    def data_on_upper(self):
-        return self.__upper == upper.DATA
+    def data_on_upper(self, layer):
+        return self.__layer == layer and self.__upper == upper.DATA
 
     def layer(self):
-        if self.on_upper():
-            return "upper"
+        if self.__upper:
+            return "upper/" + str(self.__layer)
         return "lower"
 
     def is_dir(self):
@@ -499,13 +503,13 @@ class test_context:
         return self.pathwalk_one(cursor, filename.rstrip("/"), args)
 
     # Record a file's type ("r", "s", "d", None) and symlink target record
-    def record_file(self, filename, filetype, symlink_val=None, symlink_to=None, on_upper=None):
+    def record_file(self, filename, filetype, symlink_val=None, symlink_to=None, layer=None, on_upper=None):
         if filetype == None:
             i = None
         else:
             i = inode(filetype, symlink_val, symlink_to)
         (parent, dentry) = self.pathwalk(filename, missing_ok=True)
-        dentry.created(i, on_upper)
+        dentry.created(i, layer, on_upper)
         return dentry
 
     # Change base directory
@@ -549,7 +553,7 @@ class test_context:
         if not self.same_dev() and dentry.is_dir() and recycle:
             return
         # Skip the check if upper was rotated to lower
-        if layer != self.curr_layer():
+        if layer != self.layers_nr():
             return
         # Compare st_dev/st_ino before copy up / mount cycle to current st_dev/st_ino
         ino2 = self.get_file_ino(filename)
@@ -563,16 +567,16 @@ class test_context:
                                 str(dev) + ":" + str(ino) + ")")
 
     # Check that file/data was/not copied up as expected
-    def check_copy_up(self, filename, dentry, blocks):
+    def check_copy_up(self, filename, dentry, layer, blocks):
         upper_path = self.upper_path(filename)
         try:
             upper_blocks = self.get_file_blocks(upper_path)
         except (FileNotFoundError, NotADirectoryError):
-            if dentry.on_upper():
+            if dentry.on_upper(layer):
                 raise TestError(upper_path + ": Upper file is missing")
             return
 
-        if not dentry.on_upper():
+        if not dentry.on_upper(layer):
             # Directory could have been copied up recursively and we didn't mark it's dentry on_upper
             if dentry.is_dir() or self.is_whiteout(upper_path):
                 return
@@ -618,8 +622,9 @@ class test_context:
         if self.skip_layer_test():
             return
 
+        layer = self.layers_nr()
         if self.config().is_verify():
-            self.check_copy_up(name, dentry, blocks)
+            self.check_copy_up(name, dentry, layer, blocks)
 
         if dentry.is_dir():
             # Directory inodes are always on overlay st_dev
@@ -645,7 +650,7 @@ class test_context:
                 raise TestError(name + ": File unexpectedly on union layer")
             elif dev == self.upper_fs():
                 # Only pure upper may have upper fs st_dev
-                if not dentry.data_on_upper():
+                if not dentry.data_on_upper(layer):
                     raise TestError(name + ": File unexpectedly on upper layer")
             elif self.config().is_verify():
                 if dev == self.lower_fs():
@@ -698,6 +703,7 @@ class test_context:
             line += " -a"
             wr = True
 
+        layer = self.layers_nr()
         copy_up = None
         if rd and wr:
             flags |= os.O_RDWR
@@ -796,10 +802,10 @@ class test_context:
                 if dentry.is_negative():
                     if not create:
                         raise TestError(filename + ": File was created without O_CREAT")
-                    dentry.created(inode("f"))
+                    dentry.created(inode("f"), layer)
                 else:
                     if copy_up:
-                        dentry.copied_up(copy_up)
+                        dentry.copied_up(layer, copy_up)
         except OSError as oe:
             if "as_bin" in args:
                 self.verbosef("os.seteuid(0)")
@@ -993,6 +999,7 @@ class test_context:
         if want_error:
             raise TestError(filename + ": Expected error (" +
                             os.strerror(want_error) + ") was not produced")
+        layer = self.layers_nr()
         if dentry.is_negative():
             if not create:
                 if filetype == "d":
@@ -1002,12 +1009,12 @@ class test_context:
                 else:
                     raise TestError(filename + ": File was created unexpectedly")
             if not hardlink_to:
-                dentry.created(inode(filetype))
+                dentry.created(inode(filetype), layer)
             else:
-                dentry.created(hardlink_to.inode(), on_upper = hardlink_to.on_upper())
+                dentry.created(hardlink_to.inode(), layer, on_upper = hardlink_to.on_upper(layer))
         else:
             if copy_up:
-                dentry.copied_up(copy_up)
+                dentry.copied_up(layer, copy_up)
         self.check_layer(filename)
 
     # Determine how to handle an error
@@ -1095,9 +1102,9 @@ class test_context:
             self.verbosef("os.link({:s},{:s})\n", filename, filename2)
             dev = self.get_dev_id(filename)
             ino = self.get_file_ino(filename)
-            layer = self.curr_layer()
+            layer = self.layers_nr()
             os.link(filename, filename2, follow_symlinks=follow_symlinks)
-            dentry.copied_up()
+            dentry.copied_up(layer)
             self.vfs_op_success(filename, dentry, args, copy_up=upper.META)
             self.vfs_op_success(filename2, dentry2, args, create=True, filetype=dentry.filetype(),
                                 hardlink_to=dentry)
@@ -1213,10 +1220,10 @@ class test_context:
             filetype = dentry.filetype()
             dev = self.get_dev_id(filename)
             ino = self.get_file_ino(filename)
-            layer = self.curr_layer()
+            layer = self.layers_nr()
             os.rename(filename, filename2)
             if dentry != dentry2:
-                dentry.copied_up()
+                dentry.copied_up(layer)
                 dentry2.replace_with(dentry)
             self.vfs_op_success(filename, dentry, args)
             self.vfs_op_success(filename2, dentry2, args, create=True, filetype=filetype,
