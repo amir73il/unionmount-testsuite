@@ -9,7 +9,7 @@ def remount_union(ctx, rotate_upper=False, cycle_mount=False):
 
     if not ctx.have_more_layers():
         rotate_upper = False
-    # --sn --samefs means start with nosnapshot setup until first recycle
+    # --sn=N --samefs means start with nosnapshot setup until first recycle
     # so don't add a new layer on first recycle
     elif cfg.testing_snapshot() and cfg.is_samefs() and ctx.mid_layers() is None:
         rotate_upper = False
@@ -55,7 +55,6 @@ def remount_union(ctx, rotate_upper=False, cycle_mount=False):
             curr_snapshot = snapshot_mntroot + "/" + ctx.curr_layer()
             if rotate_upper:
                 os.mkdir(curr_snapshot)
-
             if rotate_upper or cycle_mount:
                 # This is the latest snapshot of lower_mntroot:
                 cmd = ("mount -t overlay overlay " + curr_snapshot + mntopt +

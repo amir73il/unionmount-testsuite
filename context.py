@@ -217,6 +217,9 @@ class test_context:
         self.__termslash = ""
         self.__recycle = recycle
         self.__remount = remount
+        # --sn=N --samefs means start with nosnapshot setup until first recycle
+        if cfg.is_samefs() and remount and recycle:
+            self.__layers_nr = -1
         if termslash:
             self.__termslash = "/"
 
@@ -323,12 +326,19 @@ class test_context:
         return self.__layers_nr < self.config().maxfs()
 
     def curr_layer(self):
-        return str(self.__layers_nr)
+        layer = self.__layers_nr
+        if layer < 0:
+            layer = 0
+        return str(layer)
 
     def next_layer(self):
         if not self.have_more_layers():
             return self.curr_layer()
-        self.__layers_nr += 1
+        layer = self.__layers_nr
+        if layer < 0:
+            self.__layers_nr = 1
+        else:
+            self.__layers_nr = layer + 1
         return str(self.__layers_nr)
 
     def upper_fs(self):

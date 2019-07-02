@@ -53,8 +53,8 @@ def mount_union(ctx):
                    ",lowerdir=" + lower_mntroot + ",upperdir=" + upperdir + ",workdir=" + workdir)
             # This is the snapshot mount where tests are run
             snapmntopt = " -onoatime"
-            # --sn --samefs means start with nosnapshot setup until first recycle
-            if not cfg.is_samefs():
+            # --sn=N --samefs means start with nosnapshot setup until first recycle
+            if ctx.layers_nr() >= 0:
                 snapmntopt += ",snapshot=" + curr_snapshot
             system("mount -t snapshot " + lower_mntroot + " " + union_mntroot + snapmntopt)
             # Remount latest snapshot readonly
