@@ -402,6 +402,13 @@ class test_context:
             raise TestError(path + ": not on union mount")
         return self.__upper_layer + relpath
 
+    # Get current snapshot path from snapshot mount path
+    def snapshot_path(self, path):
+        relpath = self.rel_path(path, self.config().union_mntroot())
+        if not relpath:
+            raise TestError(path + ": not on snapshot mount")
+        return self.config().snapshot_mntroot() + "/" + self.curr_layer() + relpath
+
     # Get various filenames
     def gen_filename(self, name):
         return "{:s}/{:s}{:d}".format(self.config().testdir(), name, self.__filenr)
@@ -615,6 +622,26 @@ class test_context:
 
     # Check that file/data was/not copied up as expected
     def check_copy_up(self, filename, dentry, layer, blocks):
+        if self.config().testing_snapshot():
+            if layer < 0:
+                # First snapshot wasn't created yet
+                return
+
+            # Check if file is visible in snapshot (i.e. not a new file)
+            # If it is then it should be copied to snapshot, because the
+            # snapshot mount file was modified.
+            ovl_path = self.snapshot_path(filename)
+            try:
+                blocks = self.get_file_blocks(ovl_path)
+            except (FileNotFoundError, NotADirectoryError):
+                # New file or new tree whiteout out in snapshot?
+                return
+
+            # For metacopy snapshot check that parent is copied to snapshot
+            if self.config().is_metacopy():
+                dentry = dentry.parent()
+                filename = dentry.filename()
+
         upper_path = self.upper_path(filename)
         try:
             upper_blocks = self.get_file_blocks(upper_path)
