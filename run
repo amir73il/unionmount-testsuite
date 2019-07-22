@@ -322,6 +322,10 @@ for test in tests:
         # Construct the union
         set_up(ctx)
         mount_union(ctx)
+        #os.setregid(1, 1)
+        #os.setreuid(1, 1)
+        os.setegid(1)
+        os.seteuid(1)
         os.sync()
 
         # Run a test script
@@ -346,6 +350,9 @@ for test in tests:
 
         except TestError as te:
             exit_error(str(te))
+
+        os.setegid(0)
+        os.seteuid(0)
 
         if cfg.testing_snapshot() and cfg.is_verify() and ctx.have_backup():
             differ = False

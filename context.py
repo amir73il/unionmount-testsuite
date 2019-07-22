@@ -218,6 +218,7 @@ class test_context:
         self.__recycle = recycle
         self.__remount = remount
         self.__have_backup = False
+        self.__as_bin = True
         # --sn=N --samefs means start with nosnapshot setup until first recycle
         if cfg.is_samefs() and remount and recycle:
             self.__layers_nr = -1
@@ -415,6 +416,12 @@ class test_context:
     def indirect_dir_sym(self):
         return self.gen_filename("indirect_dir_sym")
     def rootfile(self):
+        if self.__as_bin:
+            self.verbosef("os.seteuid(0)")
+            os.seteuid(0)
+            self.verbosef("os.setegid(0)")
+            os.setegid(0)
+            self.__as_bin = False
         return self.gen_filename("rootfile")
 
     # Get various symlink contents
@@ -836,6 +843,8 @@ class test_context:
                 elif dentry.did_create_fail():
                     args["err"] = errno.ENOENT
 
+        if self.__as_bin:
+            args["as_bin"] = 1
         if "as_bin" in args:
             line += " -B"
 
@@ -854,7 +863,7 @@ class test_context:
                 os.seteuid(1)
             self.verbosef("os.open({:s},{:x},{:o})\n", filename, flags, mode)
             fd = os.open(filename, flags, mode)
-            if "as_bin" in args:
+            if "as_bin" in args and not self.__as_bin:
                 self.verbosef("os.seteuid(0)")
                 os.seteuid(0)
                 self.verbosef("os.setegid(0)")
@@ -871,7 +880,7 @@ class test_context:
                     if copy_up:
                         dentry.copied_up(layer, copy_up)
         except OSError as oe:
-            if "as_bin" in args:
+            if "as_bin" in args and not self.__as_bin:
                 self.verbosef("os.seteuid(0)")
                 os.seteuid(0)
                 self.verbosef("os.setegid(0)")
@@ -1030,6 +1039,8 @@ class test_context:
             line += " -A"
         if "content" in args:
             line += " -R " + args["content"]
+        if self.__as_bin:
+            args["as_bin"] = 1
         if "as_bin" in args:
             line += " -B"
         if want_error:
@@ -1054,7 +1065,9 @@ class test_context:
     # Determine how to handle success
     def vfs_op_success(self, filename, dentry, args, filetype="f", create=False, copy_up=None,
                        hardlink_to=None):
-        if "as_bin" in args:
+        if self.__as_bin:
+            args["as_bin"] = 1
+        if "as_bin" in args and not self.__as_bin:
             self.verbosef("os.seteuid(0)")
             os.seteuid(0)
             self.verbosef("os.setegid(0)")
@@ -1083,7 +1096,9 @@ class test_context:
 
     # Determine how to handle an error
     def vfs_op_error(self, oe, filename, dentry, args, create=False):
-        if "as_bin" in args:
+        if self.__as_bin:
+            args["as_bin"] = 1
+        if "as_bin" in args and not self.__as_bin:
             self.verbosef("os.seteuid(0)")
             os.seteuid(0)
             self.verbosef("os.setegid(0)")

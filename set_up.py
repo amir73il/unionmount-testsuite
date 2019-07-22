@@ -122,6 +122,7 @@ def set_up(ctx):
     except OSError:
         system("rm -rf " + lowerdir)
         os.mkdir(lowerdir)
+    os.lchown(lowerdir, 1, 1)
 
     pieces = testdir.split("/")
     del pieces[0]
@@ -185,7 +186,7 @@ def set_up(ctx):
         ctx.record_file("empty" + si, "d")
 
         # Everything above is then owned by the bin user
-        for f in [ "foo", "direct_sym", "indirect_sym", "pointless" ]:
+        for f in [ "dir", "direct_dir_sym", "indirect_dir_sym", "empty", "foo", "direct_sym", "indirect_sym", "pointless" ]:
             os.lchown(lowerdir + "/" + f + si, 1, 1)
 
         # Create some root-owned regular files also
