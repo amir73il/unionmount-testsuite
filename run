@@ -299,12 +299,16 @@ for test in tests:
         if cfg.is_verbose():
             write_kmsg(msg);
 
-        ctx = test_context(cfg, termslash == "1", False, recycle != "", maxlayers)
+        ctx = test_context(cfg, termslash == "1", False, recycle != "", maxlayers, as_bin)
 
         # Construct the union
         set_up(ctx)
         mount_union(ctx)
         os.sync()
+
+        if as_bin:
+            os.setegid(1)
+            os.seteuid(1)
 
         # Run a test script
         script = __import__("tests." + test, globals(), locals(), ['subtests'])
@@ -328,6 +332,10 @@ for test in tests:
 
         except TestError as te:
             exit_error(str(te))
+
+        if as_bin:
+            os.setegid(0)
+            os.seteuid(0)
 
         # Stop if the kernel is now tainted
         check_not_tainted()

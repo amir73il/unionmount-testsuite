@@ -198,7 +198,7 @@ class dentry:
 #
 ###############################################################################
 class test_context:
-    def __init__(self, cfg, termslash=False, direct_mode=False, recycle=False, max_layers=0):
+    def __init__(self, cfg, termslash=False, direct_mode=False, recycle=False, max_layers=0, run_as=0):
         self.__cfg = cfg
         self.__root = dentry("/", inode("d"), root=True)
         self.__cwd = None
@@ -218,6 +218,7 @@ class test_context:
         self.__recycle = recycle
         if termslash:
             self.__termslash = "/"
+        self.__run_as = run_as
 
     def config(self):
         return self.__cfg
@@ -227,6 +228,11 @@ class test_context:
 
     def is_verbose(self):
         return self.__verbose
+
+    def as_bin(self):
+        if self.__run_as != 0:
+            return self.__run_as
+        return 1
 
     def verbose(self, *args):
         if self.__verbose:
@@ -396,6 +402,13 @@ class test_context:
     def indirect_dir_sym(self):
         return self.gen_filename("indirect_dir_sym")
     def rootfile(self):
+        # Hack for impermissible test that should be run as root
+        if self.__run_as != 0:
+            self.verbosef("os.seteuid(0)")
+            os.seteuid(0)
+            self.verbosef("os.setegid(0)")
+            os.setegid(0)
+            self.__run_as = 0
         return self.gen_filename("rootfile")
 
     # Get various symlink contents
@@ -780,6 +793,8 @@ class test_context:
                 elif dentry.did_create_fail():
                     args["err"] = errno.ENOENT
 
+        if self.__run_as != 0:
+            args["as_bin"] = self.__run_as
         if "as_bin" in args:
             line += " -B"
 
@@ -791,18 +806,18 @@ class test_context:
 
         # Open the file
         try:
-            if "as_bin" in args:
-                self.verbosef("os.setegid(1)")
-                os.setegid(1)
-                self.verbosef("os.seteuid(1)")
-                os.seteuid(1)
+            if "as_bin" in args and self.__run_as != args["as_bin"]:
+                self.verbosef("os.seteuid({:d})", args["as_bin"])
+                os.seteuid(args["as_bin"])
+                self.verbosef("os.setegid({:d})", args["as_bin"])
+                os.setegid(args["as_bin"])
             self.verbosef("os.open({:s},{:x},{:o})\n", filename, flags, mode)
             fd = os.open(filename, flags, mode)
-            if "as_bin" in args:
-                self.verbosef("os.seteuid(0)")
-                os.seteuid(0)
-                self.verbosef("os.setegid(0)")
-                os.setegid(0)
+            if "as_bin" in args and self.__run_as != args["as_bin"]:
+                self.verbosef("os.seteuid({:d})", self.__run_as)
+                os.seteuid(self.__run_as)
+                self.verbosef("os.setegid({:d})", self.__run_as)
+                os.setegid(self.__run_as)
             if want_error:
                 raise TestError(filename + ": Expected error (" +
                                 os.strerror(want_error) + ") was not produced")
@@ -815,11 +830,11 @@ class test_context:
                     if copy_up:
                         dentry.copied_up(layer, copy_up)
         except OSError as oe:
-            if "as_bin" in args:
-                self.verbosef("os.seteuid(0)")
-                os.seteuid(0)
-                self.verbosef("os.setegid(0)")
-                os.setegid(0)
+            if "as_bin" in args and self.__run_as != args["as_bin"]:
+                self.verbosef("os.seteuid({:d})", self.__run_as)
+                os.seteuid(self.__run_as)
+                self.verbosef("os.setegid({:d})", self.__run_as)
+                os.setegid(self.__run_as)
             actual = os.strerror(oe.errno)
             if not want_error:
                 raise TestError(filename + ": Unexpected error: " + actual)
@@ -976,6 +991,8 @@ class test_context:
             line += " -R " + args["content"]
         if "as_bin" in args:
             line += " -B"
+        else if self.__run_as != 0:
+            args["as_bin"] = self.__run_as
         if want_error:
             line += " -E " + errno.errorcode[want_error]
         self.output(" ./run --", line, "\n")
@@ -998,11 +1015,11 @@ class test_context:
     # Determine how to handle success
     def vfs_op_success(self, filename, dentry, args, filetype="f", create=False, copy_up=None,
                        hardlink_to=None):
-        if "as_bin" in args:
-            self.verbosef("os.seteuid(0)")
-            os.seteuid(0)
-            self.verbosef("os.setegid(0)")
-            os.setegid(0)
+        if "as_bin" in args and args["as_bin"] != self.__run_as:
+            self.verbosef("os.seteuid({:d})", self.__run_as)
+            os.seteuid(self.__run_as)
+            self.verbosef("os.setegid({:d})", self.__run_as)
+            os.setegid(self.__run_as)
         want_error = args["err"]
         if want_error:
             raise TestError(filename + ": Expected error (" +
@@ -1027,7 +1044,9 @@ class test_context:
 
     # Determine how to handle an error
     def vfs_op_error(self, oe, filename, dentry, args, create=False):
-        if "as_bin" in args:
+        if self.__run_as:
+            args["as_bin"] = self.__run_as
+        if "as_bin" in args and not self.__run_as:
             self.verbosef("os.seteuid(0)")
             os.seteuid(0)
             self.verbosef("os.setegid(0)")
