@@ -14,7 +14,7 @@ def show_format(why):
     if why:
         print(why)
     print("Format:")
-    print("\t", sys.argv[0], "<--no|--ov[=<maxlayers>]> [--fuse=<subtype>] [--samefs|--maxfs=<maxfs>|--squashfs] [--xdev] [--meta] [--verify] [--ts=<0|1>] [-v] [<test-name>+]")
+    print("\t", sys.argv[0], "<--no|--ov[=<maxlayers>]> [--fuse=<subtype>] [--samefs|--maxfs=<maxfs>|--squashfs] [--xdev] [--xino] [--meta] [--verify] [--ts=<0|1>] [-v] [<test-name>+]")
     print("\t", sys.argv[0], "<--no|--ov> [--fuse=<subtype>] [--samefs|--squashfs] [-s|--set-up]")
     print("\t", sys.argv[0], "--open-file <file> [-acdertvw] [-W <data>] [-R <data>] [-B] [-E <err>]")
     print("\t", sys.argv[0], "--<fsop> <file> [<args>*] [-aLlv] [-R <content>] [-B] [-E <err>]")
@@ -134,6 +134,10 @@ elif cfg.testing_overlayfs():
     if redirect_dir is False:
         cfg.add_mntopt("redirect_dir=on")
         redirect_dir = True
+    # xino can be enabled with kernel version >= v4.17
+    if xino_auto is True:
+        cfg.add_mntopt("xino=on")
+        cfg.set_xino()
     # metacopy can be enabled with kernel version >= v4.19
     metacopy = check_bool_modparam("metacopy")
     if metacopy is True:
@@ -179,6 +183,12 @@ while len(args) > 0 and args[0].startswith("-"):
         if redirect_dir is True:
             cfg.add_mntopt("redirect_dir=off")
             redirect_dir = False
+    elif args[0] == "--xino":
+        if xino_auto is None:
+            print("xino not supported - ignoring --xino")
+        else:
+            cfg.add_mntopt("xino=on")
+            cfg.set_xino()
     elif args[0] == "--meta":
         if metacopy is None:
             print("metacopy not supported - ignoring --meta")
@@ -187,9 +197,6 @@ while len(args) > 0 and args[0].startswith("-"):
             cfg.set_metacopy()
     elif args[0] == "--verify":
         cfg.set_verify()
-        if not xino_auto is None and not cfg.is_samefs():
-            cfg.set_xino()
-            cfg.add_mntopt("xino=on")
         if index is False:
             cfg.add_mntopt("index=on")
     else:
