@@ -215,6 +215,12 @@ class test_context:
         self.__direct_mode = direct_mode
         self.__skip_layer_test = cfg.testing_none()
         self.__same_dev = cfg.is_fusefs() or cfg.is_samefs() or cfg.is_xino()
+        if cfg.is_nested():
+            # The only nested overlay configuration where all files are on
+            # the same st_dev is when lower overlay is samefs (--samefs), so it
+            # does not use high ino bits for layer fsid AND the nested overlay
+            # has xino enabled (--xino)
+            self.__same_dev = cfg.is_samefs() and cfg.is_xino()
         self.__termslash = ""
         self.__recycle = recycle
         if termslash:
@@ -654,7 +660,14 @@ class test_context:
                 raise TestError(name + ": File not on union layer")
         else:
             # With non samefs setup, files are on pseudo st_dev.
-            if dev == self.upper_dir_fs():
+            if self.config().is_nested() and self.config().is_xino():
+                # Special case: we do not consider nested/non-samefs/xino
+                # as "samedev" because all files from the lower overlay layer
+                # have xino bits overflow and fallback to non-samefs behavior.
+                # But the files from layers on the same fs as upper layer,
+                # do not overflow xino bits and are using overlay st_dev.
+                pass
+            elif dev == self.upper_dir_fs():
                 raise TestError(name + ": File unexpectedly on union layer")
             else:
                 # Whether or not dentry.on_upper(), st_dev could be from

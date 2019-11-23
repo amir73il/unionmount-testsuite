@@ -10,7 +10,7 @@ def unmount_union(ctx):
             system("umount " + cfg.base_mntroot())
             check_not_tainted()
         # unmount individual layers with maxfs > 0
-        if cfg.maxfs() > 0:
+        if cfg.maxfs() > 0 or cfg.is_nested:
             try:
                 system("umount " + cfg.upper_mntroot() + "/* 2>/dev/null")
             except RuntimeError:

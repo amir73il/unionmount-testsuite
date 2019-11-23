@@ -27,11 +27,18 @@ def mount_union(ctx):
         layer_mntroot = upper_mntroot + "/" + ctx.curr_layer()
         upperdir = layer_mntroot + "/u"
         workdir = layer_mntroot + "/w"
+        nested_mntroot = upper_mntroot + "/l"
+        nested_upper = upper_mntroot + "/u"
+        nested_work = upper_mntroot + "/w"
         try:
             os.mkdir(layer_mntroot)
+            if cfg.is_nested():
+                os.mkdir(nested_mntroot)
         except OSError:
             system("rm -rf " + upper_mntroot + "/*")
             os.mkdir(layer_mntroot)
+            if cfg.is_nested():
+                os.mkdir(nested_mntroot)
         # Create unique fs for upper/0 if maxfs > 0
         if cfg.maxfs() > 0:
             system("mount -t tmpfs " + ctx.curr_layer() + "_layer " + layer_mntroot)
@@ -39,8 +46,18 @@ def mount_union(ctx):
         os.mkdir(workdir)
         # Create pure upper file
         write_file(upperdir + "/f", "pure");
+        if cfg.is_nested():
+            os.mkdir(nested_upper)
+            os.mkdir(nested_work)
 
         mntopt = " -orw" + cfg.mntopts()
+        if cfg.is_nested():
+            nested_mntopt = mntopt
+            if cfg.is_verify():
+                nested_mntopt = mntopt + ",nfs_export=on"
+            system("mount -t " + cfg.fstype() + " nested_layer " + nested_mntroot + nested_mntopt + ",lowerdir=" + lower_mntroot + ",upperdir=" + nested_upper + ",workdir=" + nested_work)
+            lower_mntroot = nested_mntroot
+            ctx.note_lower_fs(lower_mntroot)
         system("mount -t " + cfg.fstype() + " " + cfg.fsname() + " " + union_mntroot + mntopt + ",lowerdir=" + lower_mntroot + ",upperdir=" + upperdir + ",workdir=" + workdir)
         # Record st_dev of merge dir and pure upper file
         ctx.note_upper_fs(upper_mntroot, testdir, union_mntroot + "/f")

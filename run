@@ -14,8 +14,8 @@ def show_format(why):
     if why:
         print(why)
     print("Format:")
-    print("\t", sys.argv[0], "<--no|--ov[=<maxlayers>]> [--fuse=<subtype>] [--samefs|--maxfs=<maxfs>|--squashfs] [--xdev] [--xino] [--meta] [--verify] [--ts=<0|1>] [-v] [<test-name>+]")
-    print("\t", sys.argv[0], "<--no|--ov> [--fuse=<subtype>] [--samefs|--squashfs] [-s|--set-up]")
+    print("\t", sys.argv[0], "<--no|--ov|--ovov>[=<maxlayers>] [--fuse=<subtype>] [--samefs|--maxfs=<maxfs>|--squashfs] [--xdev] [--xino] [--meta] [--verify] [--ts=<0|1>] [-v] [<test-name>+]")
+    print("\t", sys.argv[0], "<--no|--ov|--ovov> [--fuse=<subtype>] [--samefs|--squashfs] [-s|--set-up]")
     print("\t", sys.argv[0], "--open-file <file> [-acdertvw] [-W <data>] [-R <data>] [-B] [-E <err>]")
     print("\t", sys.argv[0], "--<fsop> <file> [<args>*] [-aLlv] [-R <content>] [-B] [-E <err>]")
     sys.exit(2)
@@ -90,22 +90,24 @@ recycle_list = [ "" ]
 maxlayers = 0
 if args[0] == "--no":
     cfg.set_testing_none()
-elif args[0] == "--ov":
+elif args[0].startswith("--ov"):
     cfg.set_testing_overlayfs()
-elif args[0].startswith("--ov="):
-    cfg.set_testing_overlayfs()
+    if args[0].startswith("--ovov"):
+        cfg.set_nested()
     s = args[0]
-    n = s[s.rfind("=")+1:]
-    recycle_list = [ n, "" ]
-    maxlayers = int(n)
-    if maxlayers < 0:
-        show_format("Invalid value for maxlayers >= 0")
+    i = s.rfind("=")
+    if i >= 0:
+        n = s[i+1:]
+        recycle_list = [ n, "" ]
+        maxlayers = int(n)
+        if maxlayers < 0:
+            show_format("Invalid value for maxlayers >= 0")
 else:
     show_format("Invalid test type selector (--ov or --no)")
 args = args[1:]
 
 if len(args) > 0 and args[0].startswith("--fuse="):
-    if not cfg.testing_overlayfs():
+    if not cfg.testing_overlayfs() or cfg.is_nested:
         show_format("--fuse requires --ov")
     s = args[0]
     t = s[s.rfind("=")+1:]
@@ -285,7 +287,10 @@ if len(args) > 0:
     tests = args
 
 if cfg.testing_overlayfs():
-    test_what = "--ov"
+    if cfg.is_nested():
+        test_what = "--ovov"
+    else:
+        test_what = "--ov"
 else:
     test_what = "--no"
 

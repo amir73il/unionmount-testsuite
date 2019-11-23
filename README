@@ -4,6 +4,10 @@ To run these tests:
 
 	./run --ov
 
+     To run the tests with nested overlayfs, do:
+
+	./run --ovov
+
      To run the tests without any unioning, do:
 
 	./run --no

@@ -34,6 +34,7 @@ class config:
         self.__maxfs = 0
         self.__squashfs = False
         self.__metacopy = False
+        self.__nested = False
         self.__xino = False
         self.__mntopts = ""
         self.__fusefs = False
@@ -101,6 +102,10 @@ class config:
         self.__metacopy = to
     def is_metacopy(self):
         return self.__metacopy
+    def set_nested(self, to=True):
+        self.__nested = to
+    def is_nested(self):
+        return self.__nested
 
     def add_mntopt(self, opt):
         self.__mntopts += "," + opt
