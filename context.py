@@ -210,6 +210,7 @@ class test_context:
         self.__upper_layer = None
         self.__upper_fs = None
         self.__upper_dir_fs = None
+        self.__upper_file_fs = None
         self.__verbose = cfg.is_verbose()
         self.__direct_mode = direct_mode
         self.__skip_layer_test = cfg.testing_none()
@@ -289,12 +290,10 @@ class test_context:
         return self.__lower_fs
 
     # Save device IDs for upper fs
-    def note_upper_fs(self, filepath, dirpath):
-        self.__upper_fs = self.get_dev_id(filepath)
-        if dirpath == filepath:
-            self.__upper_dir_fs = self.__upper_fs
-        else:
-            self.__upper_dir_fs = self.get_dev_id(dirpath)
+    def note_upper_fs(self, path, dirpath, filepath):
+        self.__upper_fs = self.get_dev_id(path)
+        self.__upper_dir_fs = self.get_dev_id(dirpath)
+        self.__upper_file_fs = self.get_dev_id(filepath)
 
     def note_upper_layer(self, path):
         self.__upper_layer = path
@@ -335,6 +334,9 @@ class test_context:
 
     def upper_dir_fs(self):
         return self.__upper_dir_fs
+
+    def upper_file_fs(self):
+        return self.__upper_file_fs
 
     def skip_layer_test(self):
         return self.__skip_layer_test
@@ -559,7 +561,7 @@ class test_context:
         ino2 = self.get_file_ino(filename)
         dev2 = self.get_dev_id(filename)
         if ino != ino2 or (dev != dev2 and not recycle):
-            if dev2 != self.upper_dir_fs() and dev2 != self.upper_fs():
+            if dev2 != self.upper_dir_fs() and dev2 != self.upper_file_fs():
                 raise TestError(filename + ": inode number changed on copy up, but not on upper/union layer")
             if self.config().is_verify():
                 raise TestError(filename + ": inode number/layer changed on copy up (got " +
@@ -638,39 +640,29 @@ class test_context:
             # Directory inodes are always on overlay st_dev
             if dev != self.upper_dir_fs():
                 raise TestError(name + ": Directory not on union layer")
+        elif dev == self.lower_fs():
+            # For non-directory inodes, overlayfs returns pseudo st_dev,
+            # upper st_dev or overlay st_dev, but never the lower fs st_dev
+            raise TestError(name + ": File unexpectedly on lower fs")
+        elif dev == self.upper_fs() and dev != self.upper_file_fs():
+            # Overlayfs used to return upper fs st_dev for pure upper, but now
+            # returns pseduo st_dev for pure upper and never the upper fs st_dev
+            raise TestError(name + ": File unexpectedly on upper fs")
         elif self.same_dev():
-            # With samefs or xino setup, files are on overlay st_dev if st_ino is
-            # constant on copy up and on real st_dev if st_ino is not constant.
-            # --verify verifies constant st_ino, so it implies overlay st_dev check.
-            # Without --verify, we allow for both options.
-            if dev == self.upper_dir_fs():
-                pass
-            elif self.config().is_verify() or self.config().is_fusefs():
+            # With samefs or xino setup, all files are on overlay st_dev.
+            if dev != self.upper_dir_fs():
                 raise TestError(name + ": File not on union layer")
-            elif dev != self.upper_fs():
-                raise TestError(name + ": File not on lower/upper layer")
         else:
-            # With non samefs setup, files are on pseudo or upper st_dev if st_ino
-            # is constant on copy up and on lower or upper st_dev otherwise.
-            # --verify verifies constant st_ino, so it implies pseudo st_dev check.
-            # Without --verify we allow for both options.
+            # With non samefs setup, files are on pseudo st_dev.
             if dev == self.upper_dir_fs():
                 raise TestError(name + ": File unexpectedly on union layer")
-            elif dev == self.upper_fs():
-                # Only pure upper may have upper fs st_dev
-                if not dentry.data_on_upper(layer):
-                    raise TestError(name + ": File unexpectedly on upper layer")
-            elif self.config().is_verify():
-                if dev == self.lower_fs():
-                    # With non samefs constant inode, overlayfs returns pseudo st_dev
-                    # or upper layer st_dev, but never the lower layer st_dev
-                    raise TestError(name + ": File unexpectedly on lower layer")
             else:
                 # Whether or not dentry.on_upper(), st_dev could be from
-                # lower layer or pseudo st_dev, in case upper has origin,
+                # lower layer pseudo st_dev, in case upper has origin,
                 # so there is nothing left for us to check here.
                 # TODO: record lower_file_fs() after clean mount on a sample
                 # lower file and check here that dev == self.lower_file_fs()
+                # or dev == self.upper_file_fs()
                 pass
 
         if dentry.is_sym() and dentry not in symlinks:

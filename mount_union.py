@@ -8,7 +8,7 @@ def mount_union(ctx):
         lower_mntroot = cfg.lower_mntroot()
         system("mount -o remount,rw " + lower_mntroot)
         system("mount -o bind " + lower_mntroot + " " + union_mntroot)
-        ctx.note_upper_fs(lower_mntroot, testdir)
+        ctx.note_upper_fs(lower_mntroot, testdir, testdir)
 
     else:
         lower_mntroot = cfg.lower_mntroot()
@@ -37,9 +37,12 @@ def mount_union(ctx):
             system("mount -t tmpfs " + ctx.curr_layer() + "_layer " + layer_mntroot)
         os.mkdir(upperdir)
         os.mkdir(workdir)
+        # Create pure upper file
+        write_file(upperdir + "/f", "pure");
 
         mntopt = " -orw" + cfg.mntopts()
         system("mount -t " + cfg.fstype() + " " + cfg.fsname() + " " + union_mntroot + mntopt + ",lowerdir=" + lower_mntroot + ",upperdir=" + upperdir + ",workdir=" + workdir)
-        ctx.note_upper_fs(upper_mntroot, testdir)
+        # Record st_dev of merge dir and pure upper file
+        ctx.note_upper_fs(upper_mntroot, testdir, union_mntroot + "/f")
         ctx.note_lower_layers(lower_mntroot)
         ctx.note_upper_layer(upperdir)

@@ -21,6 +21,8 @@ def remount_union(ctx, rotate_upper=False):
                 system("mount -t tmpfs " + ctx.curr_layer() + "_layer " + layer_mntroot)
             os.mkdir(upperdir)
             os.mkdir(workdir)
+            # Create pure upper file
+            write_file(upperdir + "/f", "pure");
         else:
             lowerlayers = ctx.lower_layers()
             layer_mntroot = upper_mntroot + "/" + ctx.curr_layer()
@@ -33,6 +35,7 @@ def remount_union(ctx, rotate_upper=False):
         system(cmd)
         if cfg.is_verbose():
             write_kmsg(cmd);
-        ctx.note_upper_fs(upper_mntroot, cfg.testdir())
+        # Record st_dev of merge dir and pure upper file
+        ctx.note_upper_fs(upper_mntroot, cfg.testdir(), union_mntroot + "/f")
         ctx.note_lower_layers(lowerlayers)
         ctx.note_upper_layer(upperdir)
