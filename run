@@ -107,7 +107,7 @@ else:
 args = args[1:]
 
 if len(args) > 0 and args[0].startswith("--fuse="):
-    if not cfg.testing_overlayfs() or cfg.is_nested:
+    if not cfg.testing_overlayfs() or cfg.is_nested():
         show_format("--fuse requires --ov")
     s = args[0]
     t = s[s.rfind("=")+1:]
