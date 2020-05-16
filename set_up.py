@@ -13,9 +13,9 @@ def create_file(name, content):
 # test may have used a different setup (e.g. samefs vs. non-samefs).
 def clean_up(cfg):
     base_mntroot = cfg.base_mntroot()
-    lower_mntroot = cfg.lower_mntroot()
-    upper_mntroot = cfg.upper_mntroot()
-    union_mntroot = cfg.union_mntroot()
+    lower_mntroot = cfg.old_lower_mntroot()
+    upper_mntroot = cfg.old_upper_mntroot()
+    union_mntroot = cfg.old_union_mntroot()
 
     os.sync()
 
@@ -49,6 +49,14 @@ def clean_up(cfg):
         pass
 
     try:
+        # Cleanup overlay mount from [--ov|--ovov] --samefs setup
+        while system("grep -q ' " + base_mntroot + "/. ' /proc/mounts" +
+                     " && umount " + base_mntroot + "/* 2>/dev/null"):
+            pass
+    except RuntimeError:
+        pass
+
+    try:
         # Cleanup basefs mount from --ov --samefs setup
         while system("grep -q 'lower_layer " + base_mntroot + " ' /proc/mounts" +
                      " && umount " + base_mntroot):
@@ -58,29 +66,34 @@ def clean_up(cfg):
 
 def set_up(ctx):
     cfg = ctx.config()
+    base_mntroot = cfg.base_mntroot()
     lower_mntroot = cfg.lower_mntroot()
+    union_mntroot = cfg.union_mntroot()
     lowerdir = cfg.lowerdir()
     lowerimg = cfg.lowerimg()
     testdir = cfg.testdir()
 
-    if cfg.is_samefs() and cfg.testing_overlayfs():
-        # Create base fs for both lower and upper
-        base_mntroot = cfg.base_mntroot()
+    if cfg.should_mount_base():
+        # Create base fs for all layers and union mount point
         system("mount " + base_mntroot + " 2>/dev/null"
                 " || mount -t tmpfs lower_layer " + base_mntroot)
         system("mount --make-private " + base_mntroot)
+
         try:
-            os.mkdir(base_mntroot + lower_mntroot)
+            os.mkdir(lower_mntroot)
+            os.mkdir(union_mntroot)
         except OSError:
-            pass
-        system("mount -o bind " + base_mntroot + lower_mntroot + " " + lower_mntroot)
-    else:
+            # Cleanup leftover layers from previous run in case base fs is not tmpfs
+            if base_mntroot:
+                system("rm -rf " + base_mntroot + "/*")
+            os.mkdir(lower_mntroot)
+            os.mkdir(union_mntroot)
+
+    if cfg.should_mount_lower():
         # Create a lower layer to union over
         system("mount " + lower_mntroot + " 2>/dev/null"
                 " || mount -t tmpfs lower_layer " + lower_mntroot)
-
-    # Systemd has weird ideas about things
-    system("mount --make-private " + lower_mntroot)
+        system("mount --make-private " + lower_mntroot)
 
     #
     # Create a few test files we can use in the lower layer
@@ -167,7 +180,7 @@ def set_up(ctx):
         system("mksquashfs " + lowerdir + " " + lowerimg + " -keep-as-directory > /dev/null");
         system("mount -o loop,ro " + lowerimg + " " + lower_mntroot)
         system("mount --make-private " + lower_mntroot)
-    else:
-        # The mount has to be read-only for us to make use of it
+    elif cfg.should_mount_lower_ro():
+        # Make overlay lower layer read-only
         system("mount -o remount,ro " + lower_mntroot)
     ctx.note_lower_fs(lowerdir)

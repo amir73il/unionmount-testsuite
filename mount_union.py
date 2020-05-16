@@ -6,28 +6,19 @@ def mount_union(ctx):
     testdir = cfg.testdir()
     if cfg.testing_none():
         lower_mntroot = cfg.lower_mntroot()
-        system("mount -o remount,rw " + lower_mntroot)
         system("mount -o bind " + lower_mntroot + " " + union_mntroot)
         ctx.note_upper_fs(lower_mntroot, testdir, testdir)
 
     else:
         lower_mntroot = cfg.lower_mntroot()
         upper_mntroot = cfg.upper_mntroot()
-        if cfg.is_samefs():
-            base_mntroot = cfg.base_mntroot()
-            system("mount -o remount,rw " + base_mntroot)
-            try:
-                os.mkdir(base_mntroot + upper_mntroot)
-            except OSError:
-                pass
-            system("mount -o bind " + base_mntroot + upper_mntroot + " " + upper_mntroot)
-        else:
+        if cfg.should_mount_upper():
             system("mount " + upper_mntroot + " 2>/dev/null"
                     " || mount -t tmpfs upper_layer " + upper_mntroot)
         layer_mntroot = upper_mntroot + "/" + ctx.curr_layer()
         upperdir = layer_mntroot + "/u"
         workdir = layer_mntroot + "/w"
-        nested_mntroot = upper_mntroot + "/l"
+        nested_mntroot = upper_mntroot + "/n"
         nested_upper = upper_mntroot + "/u"
         nested_work = upper_mntroot + "/w"
         try:

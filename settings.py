@@ -25,10 +25,6 @@ class config:
         self.__progname = progname
         self.__testing_overlayfs = False
         self.__testing_none = False
-        self.__base_mntroot = "/base"
-        self.__lower_mntroot = "/lower"
-        self.__upper_mntroot = "/upper"
-        self.__union_mntroot = "/mnt"
         self.__verbose = False
         self.__verify = False
         self.__maxfs = 0
@@ -55,20 +51,53 @@ class config:
     def set_testing_overlayfs(self):
         self.__testing_overlayfs = True
 
+    # base dir is mounted only for --ov --samefs, in which case:
+    # /base/l is lowermost layer
+    # /base/0/u is the first layer above it, which starts as upper layer
+    # and may later be rotated to lower layers.
+    # /base/m is the union mount point
+    def should_mount_base(self):
+        return self.testing_overlayfs() and self.is_samefs()
     def base_mntroot(self):
-        return self.__base_mntroot
+        return "/base"
+    # lower dir is mounted ro for --ov (without --samefs) ...
+    def should_mount_lower_ro(self):
+        return self.testing_overlayfs() and not self.is_samefs()
+    # ... and mounted rw for --no
+    def should_mount_lower_rw(self):
+        return self.testing_none()
+    def should_mount_lower(self):
+        return self.should_mount_lower_ro() or self.should_mount_lower_rw()
+    # lowermost layer is either at /lower or at /base/l
     def lower_mntroot(self):
-        return self.__lower_mntroot
+        if self.should_mount_base():
+            return self.base_mntroot() + "/l"
+        return self.old_lower_mntroot()
+    def old_lower_mntroot(self):
+        return "/lower"
+    # upper dir is mounted for --ov (without --samefs)
+    def should_mount_upper(self):
+        return self.testing_overlayfs() and not self.is_samefs()
+    # layers (0..N) above lowermost are either at /upper/N or at /base/N
     def upper_mntroot(self):
-        return self.__upper_mntroot
+        if self.should_mount_base():
+            return self.base_mntroot()
+        return self.old_upper_mntroot()
+    def old_upper_mntroot(self):
+        return "/upper"
+    # union mount point is either at /mnt or at /base/m
     def union_mntroot(self):
-        return self.__union_mntroot
+        if self.should_mount_base():
+            return self.base_mntroot() + "/m"
+        return self.old_union_mntroot()
+    def old_union_mntroot(self):
+        return "/mnt"
     def lowerdir(self):
-        return self.__lower_mntroot + "/a"
+        return self.lower_mntroot() + "/a"
     def lowerimg(self):
-        return self.__lower_mntroot + "/a.img"
+        return self.lower_mntroot() + "/a.img"
     def testdir(self):
-        return self.__union_mntroot + "/a"
+        return self.union_mntroot() + "/a"
 
     def set_verbose(self, to=True):
         self.__verbose = to
