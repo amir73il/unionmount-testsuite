@@ -9,68 +9,59 @@ def create_file(name, content):
     fd.write(content)
     fd.close()
 
+# Cleanup old test mounts regardless of the current test setup, because old
+# test may have used a different setup (e.g. samefs vs. non-samefs).
+def clean_up(cfg):
+    base_mntroot = cfg.base_mntroot()
+    lower_mntroot = cfg.lower_mntroot()
+    upper_mntroot = cfg.upper_mntroot()
+    union_mntroot = cfg.union_mntroot()
+
+    os.sync()
+
+    try:
+        while system("grep -q ' " + union_mntroot + " ' /proc/mounts" +
+                     " && umount " + union_mntroot):
+            pass
+    except RuntimeError:
+        pass
+
+    try:
+        while system("grep -q 'lower_layer " + lower_mntroot + " ' /proc/mounts" +
+                     " && umount " + lower_mntroot):
+            pass
+    except RuntimeError:
+        pass
+
+    try:
+        # Cleanup middle/upper/nested layers from [--ov|--ovov] --maxfs=M setup
+        while system("grep -q '_layer " + upper_mntroot + "/.[0-9]* ' /proc/mounts" +
+                     " && umount " + upper_mntroot + "/* 2>/dev/null"):
+            pass
+    except RuntimeError:
+        pass
+
+    try:
+        while system("grep -q '_layer " + upper_mntroot + " ' /proc/mounts" +
+                     " && umount " + upper_mntroot):
+            pass
+    except RuntimeError:
+        pass
+
+    try:
+        # Cleanup basefs mount from --ov --samefs setup
+        while system("grep -q 'lower_layer " + base_mntroot + " ' /proc/mounts" +
+                     " && umount " + base_mntroot):
+            pass
+    except RuntimeError:
+        pass
+
 def set_up(ctx):
     cfg = ctx.config()
     lower_mntroot = cfg.lower_mntroot()
     lowerdir = cfg.lowerdir()
     lowerimg = cfg.lowerimg()
     testdir = cfg.testdir()
-
-    os.sync()
-
-    if cfg.testing_none():
-        try:
-            while system("grep -q 'lower_layer " + cfg.union_mntroot() + "' /proc/mounts" +
-                         " && umount " + cfg.union_mntroot()):
-                pass
-        except RuntimeError:
-            pass
-
-        try:
-            while system("grep -q 'lower_layer " + lower_mntroot + "' /proc/mounts" +
-                         " && umount " + lower_mntroot):
-                pass
-        except RuntimeError:
-            pass
-
-    if cfg.testing_overlayfs():
-        try:
-            while system("grep -q '" + cfg.fsname() + " " + cfg.union_mntroot() + "' /proc/mounts" +
-                         " && umount " + cfg.union_mntroot()):
-                pass
-        except RuntimeError:
-            pass
-
-        try:
-            while system("grep -q 'lower_layer " + cfg.base_mntroot() + "' /proc/mounts" +
-                         " && umount " + cfg.base_mntroot()):
-                pass
-        except RuntimeError:
-            pass
-
-        try:
-            while system("grep -q 'lower_layer " + lower_mntroot + "' /proc/mounts" +
-                         " && umount " + lower_mntroot):
-                pass
-        except RuntimeError:
-            pass
-
-        try:
-            # grep filter to catch <lower|upper|N>_layer, in case upper and lower are on same fs
-            # and in case different layers are on different fs
-            while system("grep -q '_layer " + cfg.upper_mntroot() + "/' /proc/mounts" +
-                         " && umount " + cfg.upper_mntroot() + "/* 2>/dev/null"):
-                pass
-        except RuntimeError:
-            pass
-
-        try:
-            # grep filter to catch <low|upp>er_layer, in case upper and lower are on same fs
-            while system("grep -q 'er_layer " + cfg.upper_mntroot() + "' /proc/mounts" +
-                         " && umount " + cfg.upper_mntroot()):
-                pass
-        except RuntimeError:
-            pass
 
     if cfg.is_samefs() and cfg.testing_overlayfs():
         # Create base fs for both lower and upper

@@ -25,10 +25,10 @@ class config:
         self.__progname = progname
         self.__testing_overlayfs = False
         self.__testing_none = False
-        self.__base_mntroot = None
-        self.__lower_mntroot = None
-        self.__upper_mntroot = None
-        self.__union_mntroot = None
+        self.__base_mntroot = "/base"
+        self.__lower_mntroot = "/lower"
+        self.__upper_mntroot = "/upper"
+        self.__union_mntroot = "/mnt"
         self.__verbose = False
         self.__verify = False
         self.__maxfs = 0
@@ -50,15 +50,9 @@ class config:
         return self.__testing_overlayfs
 
     def set_testing_none(self):
-        self.__lower_mntroot = "/lower"
-        self.__union_mntroot = "/mnt"
         self.__testing_none = True
 
     def set_testing_overlayfs(self):
-        self.__base_mntroot = "/base"
-        self.__lower_mntroot = "/lower"
-        self.__upper_mntroot = "/upper"
-        self.__union_mntroot = "/mnt"
         self.__testing_overlayfs = True
 
     def base_mntroot(self):

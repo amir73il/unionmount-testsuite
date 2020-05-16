@@ -4,7 +4,7 @@ import sys, os, types, inspect
 from settings import config
 from context import test_context
 from tool_box import *
-from set_up import set_up
+from set_up import *
 from mount_union import mount_union
 from unmount_union import unmount_union
 from remount_union import remount_union
@@ -16,6 +16,7 @@ def show_format(why):
     print("Format:")
     print("\t", sys.argv[0], "<--no|--ov|--ovov>[=<maxlayers>] [--fuse=<subtype>] [--samefs|--maxfs=<maxfs>|--squashfs] [--xdev] [--xino] [--meta] [--verify] [--ts=<0|1>] [-v] [<test-name>+]")
     print("\t", sys.argv[0], "<--no|--ov|--ovov> [--fuse=<subtype>] [--samefs|--squashfs] [-s|--set-up]")
+    print("\t", sys.argv[0], "[-c|--clean-up]")
     print("\t", sys.argv[0], "--open-file <file> [-acdertvw] [-W <data>] [-R <data>] [-B] [-E <err>]")
     print("\t", sys.argv[0], "--<fsop> <file> [<args>*] [-aLlv] [-R <content>] [-B] [-E <err>]")
     sys.exit(2)
@@ -63,23 +64,10 @@ if (args[0] == "--chmod" or
 # Unmount old attempts
 #
 ###############################################################################
-try:
-    while True:
-        system("umount " + lower_mntroot)
-except:
-    pass
+clean_up(cfg)
 
-try:
-    while True:
-        system("umount " + upper_mntroot)
-except:
-    pass
-
-try:
-    while True:
-        system("umount " + union_mntroot)
-except:
-    pass
+if (args[0] == "-c" or args[0] == "--clean-up"):
+    sys.exit(0)
 
 ###############################################################################
 #
