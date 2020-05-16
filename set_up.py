@@ -49,8 +49,8 @@ def clean_up(cfg):
         pass
 
     try:
-        # Cleanup overlay mount from [--ov|--ovov] --samefs setup
-        while system("grep -q ' " + base_mntroot + "/. ' /proc/mounts" +
+        # Cleanup middle/upper/nested layers and overlay mount from setup with basedir
+        while system("grep -q ' " + base_mntroot + "/.[0-9]* ' /proc/mounts" +
                      " && umount " + base_mntroot + "/* 2>/dev/null"):
             pass
     except RuntimeError:
@@ -79,15 +79,20 @@ def set_up(ctx):
                 " || mount -t tmpfs lower_layer " + base_mntroot)
         system("mount --make-private " + base_mntroot)
 
+    if cfg.should_use_base():
         try:
-            os.mkdir(lower_mntroot)
-            os.mkdir(union_mntroot)
+            if lower_mntroot.startswith(base_mntroot):
+                os.mkdir(lower_mntroot)
+            if union_mntroot.startswith(base_mntroot):
+                os.mkdir(union_mntroot)
         except OSError:
             # Cleanup leftover layers from previous run in case base fs is not tmpfs
             if base_mntroot:
                 system("rm -rf " + base_mntroot + "/*")
-            os.mkdir(lower_mntroot)
-            os.mkdir(union_mntroot)
+            if lower_mntroot.startswith(base_mntroot):
+                os.mkdir(lower_mntroot)
+            if union_mntroot.startswith(base_mntroot):
+                os.mkdir(union_mntroot)
 
     if cfg.should_mount_lower():
         # Create a lower layer to union over

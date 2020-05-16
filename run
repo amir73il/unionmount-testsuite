@@ -21,10 +21,11 @@ def show_format(why):
     print("\t", sys.argv[0], "--<fsop> <file> [<args>*] [-aLlv] [-R <content>] [-B] [-E <err>]")
     sys.exit(2)
 
+cfg = config(sys.argv[0])
+
 if len(sys.argv) < 2:
     show_format("Insufficient arguments")
 
-cfg = config(sys.argv[0])
 args = sys.argv[1:]
 
 ###############################################################################
@@ -133,13 +134,16 @@ elif cfg.testing_overlayfs():
     if metacopy is True:
         cfg.set_metacopy()
 
-# maxfs 0 means one upper fs and one lower fs
-maxfs = 0
+maxfs = cfg.maxfs()
 if len(args) > 0 and (args[0] == "--samefs" or args[0] == "--squashfs" or args[0].startswith("--maxfs=")):
     if args[0] == "--samefs":
         # maxfs < 0 means samefs
         maxfs = -1
+        if cfg.env_lower_mntroot():
+            show_format("--samefs is incompatible with UNIONMOUNT_LOWERDIR environment variable")
     elif args[0] == "--squashfs":
+        # maxfs 0 means one upper fs and one lower fs
+        maxfs = 0
         cfg.set_squashfs()
     elif args[0].startswith("--maxfs="):
         s = args[0]

@@ -47,5 +47,31 @@ To run these tests:
 	./run --ov --fuse=<subfs-type>
 
 
+The following environment variables are supported:
+
+     UNIONMOUNT_BASEDIR  - parent dir of all samefs layers (default: /base)
+     UNIONMOUNT_LOWERDIR - lower layer path for non samefs (default: /lower)
+     UNIONMOUNT_MNTPOINT - mount point for executing tests (default: /mnt)
+
+     When user provides UNIONMOUNT_LOWERDIR:
+
+     1) Path should be an existing directory whose content will be deleted.
+     2) Path is assumed to be on a different filesystem than base dir, so
+        --samefs setup is not supported.
+
+     When user provides UNIONMOUNT_BASEDIR:
+
+     1) Path should be an existing directory whose content will be deleted.
+     2) Upper layer and middle layers will be created under base dir.
+     3) If UNIONMOUNT_MNTPOINT is not provided, the overlay mount point will
+        be created under base dir.
+     4) If UNIONMOUNT_LOWERDIR is not provided, the lower layer dir will be
+        created under base dir.
+     5) If UNIONMOUNT_LOWERDIR is not provided, the test setup defaults to
+        --samefs (i.e. lower and upper layers are on the same base fs).
+        However, if --maxfs=<M> is specified, a tmpfs instance will be mounted
+        on the lower layer dir that was created under base dir.
+
+
 For more advanced overlayfs test options and more examples, see:
      https://github.com/amir73il/overlayfs/wiki/Overlayfs-testing
