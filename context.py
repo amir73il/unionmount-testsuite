@@ -205,8 +205,9 @@ class test_context:
         self.__filenr = 99
         self.__layers_nr = 0
         self.__max_layers = max_layers
-        self.__lower_layers = None
+        self.__lower_layer = None
         self.__lower_fs = None
+        self.__mid_layers = None
         self.__upper_layer = None
         self.__upper_fs = None
         self.__upper_dir_fs = None
@@ -304,11 +305,17 @@ class test_context:
     def note_upper_layer(self, path):
         self.__upper_layer = path
 
-    def note_lower_layers(self, lowerlayers):
-        self.__lower_layers = lowerlayers
+    def note_lower_layer(self, path):
+        self.__lower_layer = path
 
-    def lower_layers(self):
-        return self.__lower_layers
+    def note_mid_layers(self, mid_layers):
+        self.__mid_layers = mid_layers
+
+    def mid_layers(self):
+        return self.__mid_layers
+
+    def lower_layer(self):
+        return self.__lower_layer
 
     def upper_layer(self):
         return self.__upper_layer

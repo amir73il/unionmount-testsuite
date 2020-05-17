@@ -133,6 +133,8 @@ class config:
         return self.__union_mntroot
     def snapshot_mntroot(self):
         return self.base_mntroot() + "/s"
+    def backup_mntroot(self):
+        return self.base_mntroot() + "/b"
     def lowerdir(self):
         return self.lower_mntroot() + "/a"
     def lowerimg(self):

@@ -16,7 +16,7 @@ def show_format(why):
     print("Format:")
     print("\t", sys.argv[0], "<--no|--ov|--ovov>[=<maxlayers>] [--fuse=<subtype>] [--samefs|--maxfs=<maxfs>|--squashfs] [--xdev] [--xino] [--meta] [--verify] [--ts=<0|1>] [-v] [<test-name>+]")
     print("\t", sys.argv[0], "<--no|--ov|--ovov> [--fuse=<subtype>] [--samefs|--squashfs] [-s|--set-up]")
-    print("\t", sys.argv[0], "--sn[=0] [-s|--set-up|--verify]")
+    print("\t", sys.argv[0], "--sn[=<maxlayers>] [-s|--set-up|--verify]")
     print("\t", sys.argv[0], "[-c|--clean-up]")
     print("\t", sys.argv[0], "--open-file <file> [-acdertvw] [-W <data>] [-R <data>] [-B] [-E <err>]")
     print("\t", sys.argv[0], "--<fsop> <file> [<args>*] [-aLlv] [-R <content>] [-B] [-E <err>]")
@@ -97,10 +97,13 @@ elif args[0].startswith("--ov"):
             show_format("Invalid value for maxlayers >= 0")
 elif args[0] == "--sn":
     cfg.set_testing_snapshot()
-elif args[0] == "--sn=0":
-    test_what = "--sn"
+elif args[0].startswith("--sn="):
     cfg.set_testing_snapshot()
-    recycle_list = [ "0", "" ]
+    test_what = "--sn"
+    s = args[0]
+    n = s[s.rfind("=")+1:]
+    recycle_list = [ n, "" ]
+    maxlayers=int(n)
 else:
     show_format("Invalid test type selector (--ov, --sn or --no)")
 args = args[1:]
