@@ -206,3 +206,10 @@ def set_up(ctx):
         # Make overlay lower layer read-only
         system("mount -o remount,ro " + lower_mntroot)
     ctx.note_lower_fs(lowerdir)
+
+    if cfg.testing_snapshot():
+        # --sn=N --samefs means start with nosnapshot setup until first recycle
+        # so don't make a backup of fs post setup
+        if cfg.is_verify():
+            if not cfg.is_samefs() or not ctx.remount() or not ctx.recycle():
+                ctx.make_backup()

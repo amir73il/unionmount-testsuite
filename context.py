@@ -225,6 +225,7 @@ class test_context:
         self.__termslash = ""
         self.__recycle = recycle
         self.__remount = remount
+        self.__have_backup = False
         # --sn=N means start with nosnapshot setup until first recycle
         if cfg.testing_snapshot() and remount and recycle:
             self.__layers_nr = -1
@@ -450,6 +451,16 @@ class test_context:
     # Remount snapshot or umount/mount
     def remount(self):
         return self.__remount
+
+    # Make a backup of current layer to compare with snapshot with --verify
+    def make_backup(self):
+        os.mkdir(self.config().backup_mntroot() + "/" + self.curr_layer())
+        # Create a backup copy of lower layer for comparing with snapshotat the end of the test run
+        system("cp -a " + self.config().lowerdir() + " " + self.config().backup_mntroot() + "/" + self.curr_layer() + "/")
+        self.__have_backup = True
+
+    def have_backup(self):
+        return self.__have_backup
 
     ###########################################################################
     #

@@ -346,6 +346,23 @@ for test in tests:
         except TestError as te:
             exit_error(str(te))
 
+        if cfg.testing_snapshot() and cfg.is_verify() and ctx.have_backup():
+            differ = False
+            # verify snapshots integrity with warm and cold dcache
+            try:
+                system("diff -qr --no-dereference " + cfg.backup_mntroot() + " " + cfg.snapshot_mntroot() + " 1>&2")
+            except RuntimeError:
+                print("snapshot integrity (warm cache) failed: " + msg, file=sys.stderr)
+                differ = True
+            remount_union(ctx, cycle_mount=True)
+            try:
+                system("diff -qr --no-dereference " + cfg.backup_mntroot() + " " + cfg.snapshot_mntroot() + " 1>&2")
+            except RuntimeError:
+                print("snapshot integrity (cold cache) failed: " + msg, file=sys.stderr)
+                differ = True
+            if differ:
+                sys.exit(1)
+
         # Stop if the kernel is now tainted
         check_not_tainted()
 
