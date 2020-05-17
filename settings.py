@@ -26,6 +26,7 @@ class config:
     def __init__(self, progname):
         self.__progname = progname
         self.__testing_overlayfs = False
+        self.__testing_snapshot = False
         self.__testing_none = False
         self.__base_mntroot = os.getenv('UNIONMOUNT_BASEDIR')
         self.__lower_mntroot = os.getenv('UNIONMOUNT_LOWERDIR')
@@ -62,12 +63,18 @@ class config:
         return self.__testing_none
     def testing_overlayfs(self):
         return self.__testing_overlayfs
+    def testing_snapshot(self):
+        return self.__testing_snapshot
 
     def set_testing_none(self):
         self.__testing_none = True
 
     def set_testing_overlayfs(self):
         self.__testing_overlayfs = True
+
+    def set_testing_snapshot(self):
+        self.__testing_snapshot = True
+        self.__maxfs = -1
 
     # base dir is used only for --ov --samefs, in which case:
     # BASEDIR/l is lowermost layer
@@ -76,7 +83,7 @@ class config:
     # BASEDIR/m is the union mount point.
     # user provided UNIONMOUNT_BASEDIR should already be mounted.
     def should_use_base(self):
-        return self.__base_mntroot or (self.testing_overlayfs() and self.is_samefs())
+        return self.__base_mntroot or self.is_samefs() or self.testing_snapshot()
     def should_mount_base(self):
         return not self.__base_mntroot and self.should_use_base()
     def base_mntroot(self):
@@ -124,6 +131,8 @@ class config:
         return self.__union_mntroot or "/mnt"
     def env_union_mntroot(self):
         return self.__union_mntroot
+    def snapshot_mntroot(self):
+        return self.base_mntroot() + "/s"
     def lowerdir(self):
         return self.lower_mntroot() + "/a"
     def lowerimg(self):
