@@ -174,7 +174,7 @@ cfg.set_maxfs(maxfs)
 if len(args) > 0 and ( args[0] == "-s" or args[0] == "--set-up" ):
     if len(args) > 1:
         show_format("Too many arguments for --set-up")
-    ctx = test_context(cfg)
+    ctx = test_context(cfg, recycle=recycle_list[0], remount=remount)
     set_up(ctx)
     mount_union(ctx)
     sys.exit(0)
@@ -354,6 +354,6 @@ for test in tests:
         del ctx
 
 # Leave the union mounted for further playing
-ctx = test_context(cfg)
+ctx = test_context(cfg, recycle=recycle_list[0], remount=remount)
 set_up(ctx)
 mount_union(ctx)

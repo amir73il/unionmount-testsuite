@@ -58,7 +58,6 @@ def remount_union(ctx, rotate_upper=False, cycle_mount=False):
             curr_snapshot = snapshot_mntroot + "/" + ctx.curr_layer()
             if rotate_upper:
                 os.mkdir(curr_snapshot)
-
             if rotate_upper or cycle_mount:
                 mntopt = " -oindex=on,nfs_export=on,redirect_dir=origin"
                 # This is the latest snapshot of lower_mntroot:
