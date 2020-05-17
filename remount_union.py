@@ -1,32 +1,31 @@
 from tool_box import *
 
-def remount_union(ctx, rotate_upper=False):
+def remount_union(ctx, rotate_upper=False, cycle_mount=False):
     cfg = ctx.config()
     union_mntroot = cfg.union_mntroot()
     lower_mntroot = cfg.lower_mntroot()
+    upper_mntroot = cfg.upper_mntroot()
     snapshot_mntroot = cfg.snapshot_mntroot()
     testdir = cfg.testdir()
 
-    if cfg.testing_snapshot():
-        # Unmount old snapshots
-        try:
-            system("umount " + snapshot_mntroot + "/*/ 2>/dev/null")
-        except RuntimeError:
-            pass
-        check_not_tainted()
-        # --sn=N means start with nosnapshot setup until first recycle
-        # so don't add a new layer on first recycle
-        if ctx.mid_layers() is None:
-            rotate_upper = False
+    if not ctx.have_more_layers():
+        rotate_upper = False
+    # --sn=N means start with nosnapshot setup until first recycle
+    # so don't add a new layer on first recycle
+    elif cfg.testing_snapshot() and ctx.mid_layers() is None:
+        rotate_upper = False
+
+    if not cfg.testing_snapshot() or not ctx.remount():
+        cycle_mount = True
 
     if cfg.testing_overlayfs() or cfg.testing_snapshot():
-        system("umount " + cfg.union_mntroot())
-        system("echo 3 > /proc/sys/vm/drop_caches")
-        check_not_tainted()
+        if cycle_mount:
+            system("umount " + cfg.union_mntroot())
+            system("echo 3 > /proc/sys/vm/drop_caches")
+            check_not_tainted()
 
-        upper_mntroot = cfg.upper_mntroot()
         mid_layers = ctx.mid_layers() or ""
-        if rotate_upper and ctx.have_more_layers():
+        if rotate_upper:
             # Current upper is added to head of overlay mid layers
             mid_layers = ctx.upper_layer() + ":" + mid_layers
             layer_mntroot = upper_mntroot + "/" + ctx.next_layer()
@@ -47,35 +46,50 @@ def remount_union(ctx, rotate_upper=False):
             workdir = layer_mntroot + "/w"
 
         if cfg.testing_snapshot():
+            if rotate_upper or cycle_mount:
+                # Unmount old snapshots when mount cycling snapshot mount
+                # and when rotating latest snapshot into old snapshot stack
+                try:
+                    system("umount " + snapshot_mntroot + "/*/ 2>/dev/null")
+                except RuntimeError:
+                    pass
+                check_not_tainted()
+
             curr_snapshot = snapshot_mntroot + "/" + ctx.curr_layer()
-            try:
+            if rotate_upper:
                 os.mkdir(curr_snapshot)
-            except OSError:
-                pass
 
-            mntopt = " -oindex=on,nfs_export=on,redirect_dir=origin"
-            # This is the latest snapshot of lower_mntroot:
-            cmd = ("mount -t overlay overlay " + curr_snapshot + mntopt +
-                   ",lowerdir=" + lower_mntroot + ",upperdir=" + upperdir + ",workdir=" + workdir)
-            system(cmd)
-            if cfg.is_verbose():
-                write_kmsg(cmd);
-            # This is the snapshot mount where tests are run
-            system("mount -t snapshot " + lower_mntroot + " " + union_mntroot +
-                    " -onoatime,snapshot=" + curr_snapshot)
-            ctx.note_upper_fs(upper_mntroot, testdir, testdir)
-
-            # Remount latest snapshot readonly
-            system("mount " + curr_snapshot + " -oremount,ro")
-            mid_layers = ""
-            # Mount old snapshots
-            for i in range(ctx.layers_nr() - 1, -1, -1):
-                mid_layers = upper_mntroot + "/" + str(i) + ":" + mid_layers
-                cmd = ("mount -t overlay overlay " + snapshot_mntroot + "/" + str(i) + "/" +
-                       " -oro,lowerdir=" + mid_layers + curr_snapshot)
+            if rotate_upper or cycle_mount:
+                mntopt = " -oindex=on,nfs_export=on,redirect_dir=origin"
+                # This is the latest snapshot of lower_mntroot:
+                cmd = ("mount -t overlay overlay " + curr_snapshot + mntopt +
+                       ",lowerdir=" + lower_mntroot + ",upperdir=" + upperdir + ",workdir=" + workdir)
                 system(cmd)
                 if cfg.is_verbose():
                     write_kmsg(cmd);
+
+            # This is the snapshot mount where tests are run
+            if cycle_mount:
+                snapmntopt = " -onoatime,snapshot=" + curr_snapshot
+                system("mount -t snapshot " + lower_mntroot + " " + union_mntroot + snapmntopt)
+                ctx.note_upper_fs(upper_mntroot, testdir, testdir)
+            else:
+                # Remount snapshot mount ro/rw to use the new curr_snapshot
+                system("mount -t snapshot " + lower_mntroot + " " + union_mntroot + " -oremount,ro,snapshot=" + curr_snapshot)
+                system("mount -t snapshot " + lower_mntroot + " " + union_mntroot + " -oremount,rw")
+
+            if rotate_upper or cycle_mount:
+                # Remount latest snapshot readonly
+                system("mount " + curr_snapshot + " -oremount,ro")
+                mid_layers = ""
+                # Mount old snapshots, possibly pushing the rotated previous snapshot into stack
+                for i in range(ctx.layers_nr() - 1, -1, -1):
+                    mid_layers = upper_mntroot + "/" + str(i) + ":" + mid_layers
+                    cmd = ("mount -t overlay overlay " + snapshot_mntroot + "/" + str(i) + "/" +
+                           " -oro,lowerdir=" + mid_layers + curr_snapshot)
+                    system(cmd)
+                    if cfg.is_verbose():
+                        write_kmsg(cmd);
         else:
             mntopt = " -orw" + cfg.mntopts()
             cmd = ("mount -t " + cfg.fstype() + " " + cfg.fsname() + " " + union_mntroot + mntopt +

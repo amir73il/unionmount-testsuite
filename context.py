@@ -198,7 +198,7 @@ class dentry:
 #
 ###############################################################################
 class test_context:
-    def __init__(self, cfg, termslash=False, direct_mode=False, recycle=False, max_layers=0):
+    def __init__(self, cfg, termslash=False, direct_mode=False, recycle=False, remount=False, max_layers=0):
         self.__cfg = cfg
         self.__root = dentry("/", inode("d"), root=True)
         self.__cwd = None
@@ -224,6 +224,7 @@ class test_context:
             self.__same_dev = cfg.is_samefs() and cfg.is_xino()
         self.__termslash = ""
         self.__recycle = recycle
+        self.__remount = remount
         if termslash:
             self.__termslash = "/"
 
@@ -432,6 +433,13 @@ class test_context:
     # Determine whether there should be a terminal slash
     def termslash(self):
         return self.__termslash
+
+    # Recycle layers on mkdir/rename dir
+    def recycle(self):
+        return self.__recycle
+    # Remount snapshot or umount/mount
+    def remount(self):
+        return self.__remount
 
     ###########################################################################
     #
