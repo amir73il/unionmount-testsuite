@@ -69,6 +69,7 @@ def set_up(ctx):
     base_mntroot = cfg.base_mntroot()
     lower_mntroot = cfg.lower_mntroot()
     union_mntroot = cfg.union_mntroot()
+    snapshot_mntroot = cfg.snapshot_mntroot()
     lowerdir = cfg.lowerdir()
     lowerimg = cfg.lowerimg()
     testdir = cfg.testdir()
@@ -85,6 +86,8 @@ def set_up(ctx):
                 os.mkdir(lower_mntroot)
             if union_mntroot.startswith(base_mntroot):
                 os.mkdir(union_mntroot)
+            if cfg.testing_snapshot():
+                os.mkdir(snapshot_mntroot)
         except OSError:
             # Cleanup leftover layers from previous run in case base fs is not tmpfs
             if base_mntroot:
@@ -93,6 +96,8 @@ def set_up(ctx):
                 os.mkdir(lower_mntroot)
             if union_mntroot.startswith(base_mntroot):
                 os.mkdir(union_mntroot)
+            if cfg.testing_snapshot():
+                os.mkdir(snapshot_mntroot)
 
     if cfg.should_mount_lower():
         # Create a lower layer to union over
