@@ -60,7 +60,7 @@ def mount_union(ctx):
                 pass
 
             mntopt = " -oredirect_dir=origin"
-            if ctx.max_layers() > 0:
+            if ctx.max_layers() > 0 and not cfg.is_metacopy():
                 mntopt += ",index=on,nfs_export=on"
             # This is the latest snapshot of lower_mntroot:
             system("mount -t overlay overlay " + curr_snapshot + mntopt +
@@ -70,6 +70,9 @@ def mount_union(ctx):
             # --sn --remount implies start with nosnapshot setup until first recycle
             if ctx.layers_nr() >= 0:
                 snapmntopt += ",snapshot=" + curr_snapshot
+            if cfg.is_metacopy():
+                # don't copy files to snapshot only directories
+                snapmntopt = snapmntopt + ",metacopy=on"
             system("mount -t snapshot " + lower_mntroot + " " + union_mntroot + snapmntopt)
             # Remount latest snapshot readonly
             system("mount " + curr_snapshot + " -oremount,ro")
