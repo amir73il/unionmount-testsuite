@@ -907,9 +907,23 @@ class test_context:
 
         # Write the data to it, if any
         if fd != None and "write" in args:
+            if self.config().testing_snapshot():
+                # Possibly take a new snapshot between open and write
+                # depending on have_more_layers() and recycle=False argument.
+                # This cannot be done for "--sn --recycle" tests (__remount=False)
+                # because snapshot fs cannot be unmounted with the open file.
+                recycle = self.have_more_layers() and self.__recycle and self.__remount is not False
+                if recycle and "recycle" in args:
+                    recycle = args["recycle"]
+                if recycle:
+                    remount_union(self, rotate_upper=True)
+                    layer = self.layers_nr()
+
             data = args["write"].encode()
             self.verbose("os.write(", fd, ",", data, ")\n");
             res = os.write(fd, data)
+            # Mark copied up in new layer after possible rotate upper
+            dentry.copied_up(layer, upper.DATA)
             l = len(data)
             if res != l:
                 raise TestError(filename + ": File write length incorrect (" +

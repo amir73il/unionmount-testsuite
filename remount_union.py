@@ -84,9 +84,11 @@ def remount_union(ctx, rotate_upper=False, cycle_mount=False):
                 system("mount -t snapshot " + lower_mntroot + " " + union_mntroot + snapmntopt)
                 ctx.note_upper_fs(upper_mntroot, testdir, testdir)
             else:
-                # Remount snapshot mount ro/rw to use the new curr_snapshot
-                system("mount -t snapshot " + lower_mntroot + " " + union_mntroot + " -oremount,ro,snapshot=" + curr_snapshot)
-                system("mount -t snapshot " + lower_mntroot + " " + union_mntroot + " -oremount,rw")
+                # Remount snapshot mount to configure the new curr_snapshot
+                system("mount -t snapshot " + lower_mntroot + " " + union_mntroot + " -oremount,snapshot=" + curr_snapshot)
+                # freeze/thaw snapshot mount to activate the new curr_snapshot
+                system("fsfreeze -f " + union_mntroot)
+                system("fsfreeze -u " + union_mntroot)
 
             if rotate_upper or cycle_mount:
                 # Remount latest snapshot readonly
