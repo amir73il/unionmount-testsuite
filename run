@@ -354,16 +354,20 @@ for test in tests:
             diff = "diff -qr --no-dereference "
             backup = cfg.backup_mntroot() + " "
             snapshot = cfg.snapshot_mntroot()
-            output = " 1>&2"
+            # Allow only in backup but not only in snapshot
+            output = " 2>&1 | grep -v Only.in." + backup + "; test $? -ne 0"
             # Upper layer of metacopy snapshot must not contain non-empty regular files.
             # With metacopy snapshot we only compare the directory tree structure.
             if metacopy:
                 try:
                     diff = "(cd " + backup + "; find -type d) |sort >/tmp/backup && "
                     diff += "(cd " + snapshot + "; find -type d) |sort >/tmp/snapshot && "
+                    diff += "grep -f /tmp/backup /tmp/snapshot > /tmp/both && "
                     diff += "diff -u "
-                    backup = "/tmp/backup "
+                    # Allow only in backup but not only in snapshot
+                    backup = "/tmp/both "
                     snapshot = "/tmp/snapshot"
+                    output = " 1>&2"
                     system("find " + cfg.upper_mntroot() + "/*/u -type f -size +0| grep '' ; test $? -ne 0")
                 except RuntimeError:
                     exit_error("Non empty files unexpectedly found in metacopy snapshot")
@@ -371,6 +375,7 @@ for test in tests:
             # verify snapshots integrity with cold dcache
             remount_union(ctx, cycle_mount=True)
             try:
+                print(diff + backup + snapshot + output)
                 system(diff + backup + snapshot + output)
             except RuntimeError:
                 print("snapshot integrity (cold cache) failed: " + msg, file=sys.stderr)
