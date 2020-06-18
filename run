@@ -344,6 +344,24 @@ for test in tests:
         except TestError as te:
             exit_error(str(te))
 
+        if cfg.testing_snapshot() and cfg.is_verify() and ctx.have_backup():
+            differ = False
+            diff = "diff -qr --no-dereference "
+            backup = cfg.backup_mntroot() + " "
+            snapshot = cfg.snapshot_mntroot()
+            # Allow only in backup but not only in snapshot
+            output = " 2>&1 | grep -v Only.in." + backup + "; test $? -ne 0"
+            # Verify snapshots integrity with cold dcache
+            remount_union(ctx, cycle_mount=True)
+            try:
+                print(diff + backup + snapshot + output)
+                system(diff + backup + snapshot + output)
+            except RuntimeError:
+                print("snapshot integrity (cold cache) failed: " + msg, file=sys.stderr)
+                differ = True
+            if differ:
+                sys.exit(1)
+
         # Stop if the kernel is now tainted
         check_not_tainted()
 

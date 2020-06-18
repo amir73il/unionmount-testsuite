@@ -59,6 +59,12 @@ def remount_union(ctx, rotate_upper=False, cycle_mount=False):
             curr_snapshot = snapshot_mntroot + "/" + ctx.curr_layer()
             if rotate_upper:
                 os.mkdir(curr_snapshot)
+            # --sn --remount implies start with nosnapshot setup until first recycle
+            # make first backup on first cycle instead of after setup and after
+            # every rotate of upper
+            if cfg.is_verify() and (rotate_upper or not ctx.have_backup()):
+                ctx.make_backup()
+
             if rotate_upper or cycle_mount:
                 mntopt = " -oredirect_dir=origin"
                 if ctx.max_layers() > 0:
