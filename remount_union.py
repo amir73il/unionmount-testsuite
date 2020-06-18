@@ -8,15 +8,12 @@ def remount_union(ctx, rotate_upper=False):
     testdir = cfg.testdir()
 
     if cfg.testing_snapshot():
-        system("umount " + snapshot_mntroot)
+        # Unmount old snapshots
+        try:
+            system("umount " + snapshot_mntroot + "/*/ 2>/dev/null")
+        except RuntimeError:
+            pass
         check_not_tainted()
-        mnt = snapshot_mntroot
-        mntopt = " -oredirect_dir=origin"
-        if ctx.max_layers() > 0:
-            mntopt += ",index=on,nfs_export=on"
-    else:
-        mnt = union_mntroot
-        mntopt = " -orw" + cfg.mntopts()
 
     if cfg.testing_overlayfs() or cfg.testing_snapshot():
         system("umount " + cfg.union_mntroot())
@@ -24,8 +21,10 @@ def remount_union(ctx, rotate_upper=False):
         check_not_tainted()
 
         upper_mntroot = cfg.upper_mntroot()
+        mid_layers = ctx.mid_layers() or ""
         if rotate_upper and ctx.have_more_layers():
-            lowerlayers = ctx.upper_layer() + ":" + ctx.lower_layers()
+            # Current upper is added to head of overlay mid layers
+            mid_layers = ctx.upper_layer() + ":" + mid_layers
             layer_mntroot = upper_mntroot + "/" + ctx.next_layer()
             upperdir = layer_mntroot + "/u"
             workdir = layer_mntroot + "/w"
@@ -39,21 +38,50 @@ def remount_union(ctx, rotate_upper=False):
                 # Create pure upper file
                 write_file(upperdir + "/f", "pure");
         else:
-            lowerlayers = ctx.lower_layers()
             layer_mntroot = upper_mntroot + "/" + ctx.curr_layer()
             upperdir = layer_mntroot + "/u"
             workdir = layer_mntroot + "/w"
 
-        cmd = "mount -t " + cfg.fstype() + " " + cfg.fsname() + " " + mnt + mntopt + ",lowerdir=" + lowerlayers + ",upperdir=" + upperdir + ",workdir=" + workdir
-        system(cmd)
-        if cfg.is_verbose():
-            write_kmsg(cmd);
         if cfg.testing_snapshot():
+            curr_snapshot = snapshot_mntroot + "/" + ctx.curr_layer()
+            try:
+                os.mkdir(curr_snapshot)
+            except OSError:
+                pass
+
+            mntopt = " -oredirect_dir=origin"
+            if ctx.max_layers() > 0:
+                mntopt += ",index=on,nfs_export=on"
+            # This is the latest snapshot of lower_mntroot:
+            cmd = ("mount -t overlay overlay " + curr_snapshot + mntopt +
+                   ",lowerdir=" + lower_mntroot + ",upperdir=" + upperdir + ",workdir=" + workdir)
+            system(cmd)
+            if cfg.is_verbose():
+                write_kmsg(cmd);
+            # This is the snapshot mount where tests are run
             system("mount -t snapshot " + lower_mntroot + " " + union_mntroot +
-                    " -onoatime,snapshot=" + snapshot_mntroot)
+                    " -onoatime,snapshot=" + curr_snapshot)
             ctx.note_upper_fs(upper_mntroot, testdir, testdir)
+
+            # Remount latest snapshot readonly
+            system("mount " + curr_snapshot + " -oremount,ro")
+            mid_layers = ""
+            # Mount old snapshots
+            for i in range(ctx.layers_nr() - 1, -1, -1):
+                mid_layers = upper_mntroot + "/" + str(i) + "/u:" + mid_layers
+                cmd = ("mount -t overlay overlay " + snapshot_mntroot + "/" + str(i) + "/" +
+                       " -oro,lowerdir=" + mid_layers + curr_snapshot)
+                system(cmd)
+                if cfg.is_verbose():
+                    write_kmsg(cmd);
         else:
+            mntopt = " -orw" + cfg.mntopts()
+            cmd = ("mount -t " + cfg.fstype() + " " + cfg.fsname() + " " + union_mntroot + mntopt +
+                   ",lowerdir=" + mid_layers + ctx.lower_layer() + ",upperdir=" + upperdir + ",workdir=" + workdir)
+            system(cmd)
+            if cfg.is_verbose():
+                write_kmsg(cmd);
             # Record st_dev of merge dir and pure upper file
             ctx.note_upper_fs(upper_mntroot, testdir, union_mntroot + "/f")
-        ctx.note_lower_layers(lowerlayers)
+        ctx.note_mid_layers(mid_layers)
         ctx.note_upper_layer(upperdir)

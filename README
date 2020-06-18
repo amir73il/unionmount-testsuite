@@ -46,6 +46,12 @@ To run these tests:
 
 	./run --ov --fuse=<subfs-type>
 
+     If testing overlayfs snapshots, do:
+
+	./run --sn[=N] [--verify]
+
+     Where N is the max number of snapshots.
+
 
 The following environment variables are supported:
 
