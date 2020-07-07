@@ -145,7 +145,12 @@ elif cfg.testing_overlayfs():
 if cfg.testing_overlayfs() or cfg.testing_snapshot():
     # metacopy can be enabled with kernel version >= v4.19
     metacopy = check_bool_modparam("metacopy")
-    if metacopy is True:
+    # --meta is relevant for old snapshot fs testing
+    # With new overlay fsnotify snapshot, --meta is ignored
+    snapshotfs = check_filesystem("snapshot")
+    if cfg.testing_snapshot() and not snapshotfs:
+        metacopy = None
+    elif metacopy is True:
         cfg.set_metacopy()
 
 maxfs = cfg.maxfs()
@@ -218,6 +223,11 @@ while len(args) > 0 and args[0].startswith("-"):
     else:
         show_format("Invalid flag " + args[0])
     args = args[1:]
+
+if metacopy:
+        if remount:
+            print("--meta --remount not supported - ignoring --remount")
+        remount = False
 
 ###############################################################################
 #
@@ -348,37 +358,29 @@ for test in tests:
             exit_error(str(te))
 
         if cfg.testing_snapshot() and cfg.is_verify() and ctx.have_backup():
-            differ = False
-            diff = "diff -qr --no-dereference "
-            backup = cfg.backup_mntroot() + " "
+            backup = cfg.backup_mntroot()
             snapshot = cfg.snapshot_mntroot()
-            # Allow only in backup but not only in snapshot
-            output = " 2>&1 | grep -v Only.in." + backup + "; test $? -ne 0"
-            # Upper layer of metacopy snapshot must not contain non-empty regular files.
-            # With metacopy snapshot we only compare the directory tree structure.
-            if metacopy:
-                try:
-                    diff = "(cd " + backup + "; find -type d) |sort >/tmp/backup && "
-                    diff += "(cd " + snapshot + "; find -type d) |sort >/tmp/snapshot && "
-                    diff += "grep -f /tmp/backup /tmp/snapshot > /tmp/both && "
-                    diff += "diff -u "
-                    # Allow only in backup but not only in snapshot
-                    backup = "/tmp/both "
-                    snapshot = "/tmp/snapshot"
-                    output = " 1>&2"
-                    system("find " + cfg.upper_mntroot() + "/*/u -type f -size +0| grep '' ; test $? -ne 0")
-                except RuntimeError:
-                    exit_error("Non empty files unexpectedly found in metacopy snapshot")
+            # We only compare the directory tree structure
+            ftype = "-type d"
+            diff = "(cd " + backup + "; find " + ftype + ") |sort >/tmp/backup && "
+            diff += "(cd " + snapshot + "; find " + ftype + ") |sort >/tmp/snapshot && "
+            # Allow file only in backup but not only in snapshot
+            diff += "grep -x -f /tmp/backup /tmp/snapshot > /tmp/both && "
+            diff += "diff -u /tmp/both /tmp/snapshot 1>&2"
+
+            try:
+                # Upper layer of snapshot must not contain non-empty regular files
+                system("find " + cfg.upper_mntroot() + "/*/u -type f -size +0| grep '' ; test $? -ne 0")
+            except RuntimeError:
+                exit_error("Non empty files unexpectedly found in snapshot")
 
             # Verify snapshots integrity with cold dcache
             remount_union(ctx, cycle_mount=True)
             try:
-                print(diff + backup + snapshot + output)
-                system(diff + backup + snapshot + output)
+                print(diff)
+                system(diff)
             except RuntimeError:
-                print("snapshot integrity (cold cache) failed: " + msg, file=sys.stderr)
-                differ = True
-            if differ:
+                print("snapshot integrity failed: " + msg, file=sys.stderr)
                 sys.exit(1)
 
         # Stop if the kernel is now tainted

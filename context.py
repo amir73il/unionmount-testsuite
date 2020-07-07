@@ -637,10 +637,9 @@ class test_context:
                 # New file or new tree whiteout out in snapshot?
                 return
 
-            # For metacopy snapshot check that parent is copied to snapshot
-            if self.config().is_metacopy():
-                dentry = dentry.parent()
-                filename = dentry.filename()
+            # Check that parent is copied to snapshot
+            dentry = dentry.parent()
+            filename = dentry.filename()
 
         upper_path = self.upper_path(filename)
         try:
@@ -707,6 +706,9 @@ class test_context:
         layer = self.layers_nr()
         if self.config().is_verify():
             self.check_copy_up(name, dentry, layer, blocks)
+
+        if self.config().testing_snapshot():
+            return
 
         if dentry.is_dir():
             # Directory inodes are always on overlay st_dev

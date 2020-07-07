@@ -59,20 +59,29 @@ def mount_union(ctx):
             except OSError:
                 pass
 
-            mntopt = " -oredirect_dir=origin"
-            if ctx.max_layers() > 0 and not cfg.is_metacopy():
-                mntopt += ",index=on,nfs_export=on"
-            # This is the latest snapshot of lower_mntroot:
-            system("mount -t overlay overlay " + curr_snapshot + mntopt +
-                   ",lowerdir=" + lower_mntroot + ",upperdir=" + upperdir + ",workdir=" + workdir)
+            if cfg.is_metacopy():
+                # Old overlay snapshot for snapshot fs mount
+                mntopt = " -oredirect_dir=origin"
+            else:
+                # New overlay snapshot mount with fsnotify watch
+                mntopt = " -owatch"
+            # --sn --remount implies start with no overlay fsnotify snapshot
+            if cfg.is_metacopy() or ctx.layers_nr() >= 0:
+                # This is the latest snapshot of lower_mntroot:
+                system("mount -t overlay overlay " + curr_snapshot + mntopt +
+                       ",lowerdir=" + lower_mntroot + ",upperdir=" + upperdir + ",workdir=" + workdir)
+
+        if cfg.testing_snapshot() and not cfg.is_metacopy():
+            # There is no snapshot fs mount with overlay fsnotify snapshot
+            system("mount -o bind " + lower_mntroot + " " + union_mntroot)
+        elif cfg.testing_snapshot():
             # This is the snapshot mount where tests are run
             snapmntopt = " -onoatime"
             # --sn --remount implies start with nosnapshot setup until first recycle
             if ctx.layers_nr() >= 0:
                 snapmntopt += ",snapshot=" + curr_snapshot
-            if cfg.is_metacopy():
-                # don't copy files to snapshot only directories
-                snapmntopt = snapmntopt + ",metacopy=on"
+            # don't copy files to snapshot only directories
+            snapmntopt = snapmntopt + ",metacopy=on"
             system("mount -t snapshot " + lower_mntroot + " " + union_mntroot + snapmntopt)
             # Remount latest snapshot readonly
             system("mount " + curr_snapshot + " -oremount,ro")
