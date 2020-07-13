@@ -314,8 +314,8 @@ else:
     tests += [
         "rename-dir",
         "rename-empty-dir",
-        "rename-pop-dir",
         "rename-move-dir",
+        "rename-pop-dir",
         ]
 
 if len(args) > 0:
