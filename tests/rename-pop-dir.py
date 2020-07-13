@@ -143,3 +143,19 @@ def subtest_11(ctx):
     ctx.rename(d, d2, err=ENOTEMPTY)
     ctx.open_dir(d, ro=1)
     ctx.open_file(d + "/a", ro=1)
+
+# Rename a populated directory create grandchild and rename it back again
+def subtest_12(ctx):
+    """Rename dir and rename back"""
+    d = ctx.non_empty_dir() + ctx.termslash()
+    d2 = ctx.no_dir() + ctx.termslash()
+    da = d + "/pop/new"
+    d2a = d2 + "/pop/new"
+
+    ctx.rename(d, d2)
+    ctx.mkdir(d2a, 0o755, recycle=False)
+    ctx.rename(d2, d)
+    ctx.open_dir(d, ro=1)
+    ctx.open_dir(d2, ro=1, err=ENOENT)
+    ctx.open_file(d + "/a", ro=1)
+    ctx.open_dir(da, ro=1)
