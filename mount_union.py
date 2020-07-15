@@ -45,7 +45,7 @@ def mount_union(ctx):
         if cfg.is_nested():
             nested_mntopt = mntopt
             if cfg.is_verify():
-                nested_mntopt = mntopt + ",nfs_export=on"
+                nested_mntopt = mntopt + ",metacopy=off,nfs_export=on"
             system("mount -t " + cfg.fstype() + " nested_layer " + nested_mntroot + nested_mntopt + ",lowerdir=" + lower_mntroot + ",upperdir=" + nested_upper + ",workdir=" + nested_work)
             lower_mntroot = nested_mntroot
             ctx.note_lower_fs(lower_mntroot)
