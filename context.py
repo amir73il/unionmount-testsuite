@@ -649,7 +649,8 @@ class test_context:
         elif dev == self.lower_fs():
             # For non-directory inodes, overlayfs returns pseudo st_dev,
             # upper st_dev or overlay st_dev, but never the lower fs st_dev
-            raise TestError(name + ": File unexpectedly on lower fs")
+            if self.config().is_verify():
+                raise TestError(name + ": File unexpectedly on lower fs")
         elif dev == self.upper_fs() and dev != self.upper_file_fs():
             # Overlayfs used to return upper fs st_dev for pure upper, but now
             # returns pseduo st_dev for pure upper and never the upper fs st_dev
