@@ -1,6 +1,6 @@
 from tool_box import *
 
-def remount_union(ctx, rotate_upper=False, cycle_mount=False):
+def remount_union(ctx, rotate_upper=False, cold_cache=False):
     cfg = ctx.config()
     union_mntroot = cfg.union_mntroot()
     lower_mntroot = cfg.lower_mntroot()
@@ -18,12 +18,18 @@ def remount_union(ctx, rotate_upper=False, cycle_mount=False):
         first_snapshot = True
 
     # --sn default behavior is remount unless --recycle was requested
+    cycle_mount = False
     if not cfg.testing_snapshot() or ctx.remount() is False:
+        cycle_mount = True
+    # With snapshot fs mount we must cycle mount to clean cache
+    # With fsnotify snapshot it is enough to drop caches
+    if cfg.is_metacopy() and cold_cache:
         cycle_mount = True
 
     if cfg.testing_overlayfs() or cfg.testing_snapshot():
         if cycle_mount:
             system("umount " + cfg.union_mntroot())
+        if cycle_mount or cold_cache:
             system("echo 3 > /proc/sys/vm/drop_caches")
             check_not_tainted()
 
@@ -49,7 +55,12 @@ def remount_union(ctx, rotate_upper=False, cycle_mount=False):
             workdir = layer_mntroot + "/w"
 
         if cfg.testing_snapshot():
-            if rotate_upper or cycle_mount:
+            # Keep old snapshots mounted unless mount cycle was requested
+            # Old snapshot fs implementation does not support concurrent snapshots
+            # so in that case and in case of cycle_mount, we need to re-stack old
+            # snapshots as lower layers to get the desired outcome
+            restack_old_snapshots = (rotate_upper and cfg.is_metacopy()) or cycle_mount
+            if restack_old_snapshots:
                 # Unmount old snapshots when mount cycling snapshot mount
                 # and when rotating latest snapshot into old snapshot stack
                 try:
@@ -99,7 +110,7 @@ def remount_union(ctx, rotate_upper=False, cycle_mount=False):
                 system("fsfreeze -f " + union_mntroot)
                 system("fsfreeze -u " + union_mntroot)
 
-            if rotate_upper or cycle_mount:
+            if restack_old_snapshots:
                 # Remount latest snapshot readonly
                 system("mount " + curr_snapshot + " -oremount,ro")
                 mid_layers = ""

@@ -364,6 +364,7 @@ for test in tests:
             ftype = "-type d"
             diff = "(cd " + backup + "; find " + ftype + ") |sort >/tmp/backup && "
             diff += "(cd " + snapshot + "; find " + ftype + ") |sort >/tmp/snapshot && "
+            diff += "mount >/tmp/mounts && "
             # Allow file only in backup but not only in snapshot
             diff += "grep -x -f /tmp/backup /tmp/snapshot > /tmp/both && "
             diff += "diff -u /tmp/both /tmp/snapshot 1>&2"
@@ -375,7 +376,7 @@ for test in tests:
                 exit_error("Non empty files unexpectedly found in snapshot")
 
             # Verify snapshots integrity with cold dcache
-            remount_union(ctx, cycle_mount=True)
+            remount_union(ctx, cold_cache=True)
             try:
                 print(diff)
                 system(diff)
