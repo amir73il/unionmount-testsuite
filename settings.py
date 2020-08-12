@@ -30,13 +30,18 @@ class config:
         self.__base_mntroot = os.getenv('UNIONMOUNT_BASEDIR')
         self.__lower_mntroot = os.getenv('UNIONMOUNT_LOWERDIR')
         self.__union_mntroot = os.getenv('UNIONMOUNT_MNTPOINT')
+        self.__mntopts = os.getenv('UNIONMOUNT_MNTOPTIONS')
         print("Environment variables:")
         if self.__base_mntroot:
-            print("UNIONMOUNT_BASEDIR=" + self.__base_mntroot)
+            print("UNIONMOUNT_BASEDIR='" + self.__base_mntroot + "'")
         if self.__lower_mntroot:
-            print("UNIONMOUNT_LOWERDIR=" + self.__lower_mntroot)
+            print("UNIONMOUNT_LOWERDIR='" + self.__lower_mntroot + "'")
         if self.__union_mntroot:
-            print("UNIONMOUNT_MNTPOINT=" + self.__union_mntroot)
+            print("UNIONMOUNT_MNTPOINT='" + self.__union_mntroot + "'")
+        if self.__mntopts:
+            print("UNIONMOUNT_MNTOPTIONS='" + self.__mntopts + "'")
+        else: # Use arbitrary non empty string to simplify add_mntopt()
+            self.__mntopts = "rw"
         print()
         if self.__base_mntroot and not self.__lower_mntroot:
             # Empty UNIONMOUNT_LOWERDIR with non-empty UNIONMOUNT_BASEDIR imply --samefs
@@ -50,7 +55,6 @@ class config:
         self.__metacopy = False
         self.__nested = False
         self.__xino = False
-        self.__mntopts = ""
         self.__fusefs = False
         self.__fstype = "overlay"
         self.__fsname = "overlay"

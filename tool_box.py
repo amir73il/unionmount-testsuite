@@ -64,3 +64,21 @@ def check_bool_modparam(param):
     except FileNotFoundError:
         return None
     return value.startswith("Y")
+
+#
+# Check if overlay feature is enabled by mount option
+#
+# Return 'default' if mount option was not provided
+#
+def check_bool_mntopt(feature, mntopts, default, onopt2=None, offopt2=None):
+    onopt = feature + "=on"
+    offopt = feature + "=off"
+    on = onopt in mntopts or (onopt2 and onopt2 in mntopts)
+    off = offopt in mntopts or (offopt2 and offopt2 in mntopts)
+    if on and off:
+        raise RuntimeError("Conflicting mount options w.r.t feature '" + feature + "': " + mntopts)
+    if on:
+        return True
+    if off:
+        return False
+    return default;

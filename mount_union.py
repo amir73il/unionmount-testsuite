@@ -41,7 +41,7 @@ def mount_union(ctx):
             os.mkdir(nested_upper)
             os.mkdir(nested_work)
 
-        mntopt = " -orw" + cfg.mntopts()
+        mntopt = " -o" + cfg.mntopts()
         if cfg.is_nested():
             nested_mntopt = mntopt
             if cfg.is_verify():

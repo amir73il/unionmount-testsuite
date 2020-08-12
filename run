@@ -103,35 +103,47 @@ if len(args) > 0 and args[0].startswith("--fuse="):
     cfg.set_fusefs(t)
     args = args[1:]
 
-if cfg.testing_none():
-    index = None
-    xino_auto = None
-    redirect_dir = None
-    metacopy = None
-elif cfg.is_fusefs():
-    # Don't check kernel module params for FUSE test and assume the following
-    # defaults, because user can disable redirect_dir with --xdev and user can
-    # enable index and xino with --verify
-    index = False
-    xino_auto = False
+xino = None
+index_def = None
+index_opt = None
+metacopy = None
+redirect_dir = None
+if cfg.is_fusefs():
+    # fuse-overlayfs only supports redirect_dir=off
+    # user can disable redirect_dir with --xdev
     redirect_dir = True
-    metacopy = False
 elif cfg.testing_overlayfs():
-    index = check_bool_modparam("index")
-    xino_auto = check_bool_modparam("xino_auto")
-    redirect_dir = check_bool_modparam("redirect_dir")
-    # Overlayfs feature "redirect_dir" can be enabled with kernel version >= v4.10.
-    # Otherwise, overlayfs tests should skip rename tests that would result in EXDEV.
-    if redirect_dir is False:
-        cfg.add_mntopt("redirect_dir=on")
-        redirect_dir = True
-    # xino can be enabled with kernel version >= v4.17
-    if xino_auto is True:
-        cfg.add_mntopt("xino=on")
+    # Overlayfs feature "redirect_dir" is auto enabled with kernel version >= v4.10,
+    # unless explicitly disabled with --xdev or by mount option.  When redirect_dir
+    # is disabled, overlayfs tests skip rename tests that would result in EXDEV.
+    if "redirect_dir=on" in cfg.mntopts():
+        redirect_dir_off = False
+    else:
+        # Any redirect= except for redirect=on disables directory rename
+        redirect_dir_off = "redirect_dir=" in cfg.mntopts()
+    if not redirect_dir_off:
+        redirect_dir = check_bool_modparam("redirect_dir")
+    # Overlayfs feature "index" can be enabled with --verify or by mount option on kernel version >= v4.13.
+    # When index is disabled some verifications in multi layer tests may fail due to broken hardlinks.
+    # When index is enabled we set_verify(), because all verifications are expected to pass.
+    index_def = check_bool_modparam("index")
+    if not index_def is None:
+        index_opt = check_bool_mntopt("index", cfg.mntopts(), None, onopt2="nfs_export=on")
+    if index_def or index_opt:
+        cfg.set_verify()
+    # Overlayfs feature "xino" can be enabled with --xino or by mount option on kernel version >= v4.17.
+    # When xino is enabled we set_xino(), so st_ino/st_dev verifications will work correctly.
+    xino_def = check_bool_modparam("xino_auto")
+    if not xino_def is None:
+        xino = check_bool_mntopt("xino", cfg.mntopts(), xino_def, onopt2="xino=auto")
+    if xino:
         cfg.set_xino()
-    # metacopy can be enabled with kernel version >= v4.19
-    metacopy = check_bool_modparam("metacopy")
-    if metacopy is True:
+    # Overlayfs feature "metacopy" can be enabled with --meta and by mount option on kernel version >= v4.19.
+    # When metacopy is enabled we set_metacopy(), so copy up verifications will work correctly.
+    metacopy_def = check_bool_modparam("metacopy")
+    if not metacopy_def is None:
+        metacopy = check_bool_mntopt("metacopy", cfg.mntopts(), metacopy_def, offopt2="nfs_export=on")
+    if metacopy:
         cfg.set_metacopy()
 
 maxfs = cfg.maxfs()
@@ -173,12 +185,10 @@ while len(args) > 0 and args[0].startswith("-"):
     elif args[0] == "--ts=1":
         termslash = "1"
     elif args[0] == "--xdev":
-        # Disable "redirect_dir" and skip dir rename tests
-        if redirect_dir is True:
-            cfg.add_mntopt("redirect_dir=off")
-            redirect_dir = False
+        # Disable auto-enable of "redirect_dir" and skip dir rename tests
+        redirect_dir = None
     elif args[0] == "--xino":
-        if xino_auto is None:
+        if xino is None:
             print("xino not supported - ignoring --xino")
         else:
             cfg.add_mntopt("xino=on")
@@ -191,11 +201,17 @@ while len(args) > 0 and args[0].startswith("-"):
             cfg.set_metacopy()
     elif args[0] == "--verify":
         cfg.set_verify()
-        if index is False:
+        # auto enable index for --verify unless explicitly disabled
+        if index_def is False and not index_opt is False:
             cfg.add_mntopt("index=on")
     else:
         show_format("Invalid flag " + args[0])
     args = args[1:]
+
+# Auto-enable redired_dir unless explicitly disabled by --xdev or mount options
+if redirect_dir is False:
+    cfg.add_mntopt("redirect_dir=on")
+    redirect_dir = True
 
 ###############################################################################
 #
@@ -296,7 +312,15 @@ for test in tests:
                 test_how += " --maxfs=" + str(maxfs)
             elif maxfs < 0:
                 test_how += " --samefs"
-        msg = cfg.progname() + " " + test_how + " --ts=" + termslash + " " + test
+            if not redirect_dir:
+                test_how += " --xdev"
+            if cfg.is_xino():
+                test_how += " --xino"
+            if cfg.is_metacopy():
+                test_how += " --meta"
+            if cfg.is_verify():
+                test_how += " --verify"
+        msg = cfg.progname() + " " + test_how + " " + test
         print("***");
         print("***", msg);
         print("***");
