@@ -41,15 +41,15 @@ def mount_union(ctx):
             os.mkdir(nested_upper)
             os.mkdir(nested_work)
 
-        mntopt = " -o" + cfg.mntopts()
+        mntopt = cfg.mntopts()
         if cfg.is_nested():
             nested_mntopt = mntopt
             if cfg.is_verify():
                 nested_mntopt = mntopt + ",metacopy=off,nfs_export=on"
-            system("mount -t " + cfg.fstype() + " nested_layer " + nested_mntroot + nested_mntopt + ",lowerdir=" + lower_mntroot + ",upperdir=" + nested_upper + ",workdir=" + nested_work)
+            system("mount -t " + cfg.fstype() + " nested_layer " + nested_mntroot + " " + nested_mntopt + " -olowerdir=" + lower_mntroot + ",upperdir=" + nested_upper + ",workdir=" + nested_work)
             lower_mntroot = nested_mntroot
             ctx.note_lower_fs(lower_mntroot)
-        system("mount -t " + cfg.fstype() + " " + cfg.fsname() + " " + union_mntroot + mntopt + ",lowerdir=" + lower_mntroot + ",upperdir=" + upperdir + ",workdir=" + workdir)
+        system("mount -t " + cfg.fstype() + " " + cfg.fsname() + " " + union_mntroot + " " + mntopt + " -olowerdir=" + lower_mntroot + ",upperdir=" + upperdir + ",workdir=" + workdir)
         # Record st_dev of merge dir and pure upper file
         ctx.note_upper_fs(upper_mntroot, testdir, union_mntroot + "/f")
         ctx.note_lower_layers(lower_mntroot)

@@ -40,8 +40,11 @@ class config:
             print("UNIONMOUNT_MNTPOINT='" + self.__union_mntroot + "'")
         if self.__mntopts:
             print("UNIONMOUNT_MNTOPTIONS='" + self.__mntopts + "'")
-        else: # Use arbitrary non empty string to simplify add_mntopt()
-            self.__mntopts = "rw"
+            # Allow user provided options with or without -o
+            if not self.__mntopts.startswith("-o"):
+                self.__mntopts = "-o" + self.__mntopts
+        else: # Use arbitrary non empty options to simplify add_mntopt()
+            self.__mntopts = "-orw"
         print()
         if self.__base_mntroot and not self.__lower_mntroot:
             # Empty UNIONMOUNT_LOWERDIR with non-empty UNIONMOUNT_BASEDIR imply --samefs

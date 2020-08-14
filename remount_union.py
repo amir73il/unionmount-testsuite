@@ -30,8 +30,8 @@ def remount_union(ctx, rotate_upper=False):
             workdir = layer_mntroot + "/w"
 
         mnt = union_mntroot
-        mntopt = " -o" + cfg.mntopts()
-        cmd = "mount -t " + cfg.fstype() + " " + cfg.fsname() + " " + mnt + mntopt + ",lowerdir=" + lowerlayers + ",upperdir=" + upperdir + ",workdir=" + workdir
+        mntopt = cfg.mntopts()
+        cmd = "mount -t " + cfg.fstype() + " " + cfg.fsname() + " " + mnt + " " + mntopt + " -olowerdir=" + lowerlayers + ",upperdir=" + upperdir + ",workdir=" + workdir
         system(cmd)
         if cfg.is_verbose():
             write_kmsg(cmd);
