@@ -119,8 +119,8 @@ elif cfg.testing_overlayfs():
     if "redirect_dir=on" in cfg.mntopts():
         redirect_dir_off = False
     else:
-        # Any redirect= except for redirect=on disables directory rename
-        redirect_dir_off = "redirect_dir=" in cfg.mntopts()
+        # userxattr and any redirect= except for redirect=on disables directory rename
+        redirect_dir_off = any(x in cfg.mntopts() for x in ["redirect_dir", "userxattr"])
     if not redirect_dir_off:
         redirect_dir = check_bool_modparam("redirect_dir")
     # Overlayfs feature "index" can be enabled with --verify or by mount option on kernel version >= v4.13.
