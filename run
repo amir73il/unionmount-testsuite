@@ -191,7 +191,7 @@ while len(args) > 0 and args[0].startswith("-"):
         if xino is None:
             print("xino not supported - ignoring --xino")
         else:
-            cfg.add_mntopt("xino=on")
+            xino = True
             cfg.set_xino()
     elif args[0] == "--meta":
         if metacopy is None:
@@ -212,6 +212,10 @@ while len(args) > 0 and args[0].startswith("-"):
 if redirect_dir is False:
     cfg.add_mntopt("redirect_dir=on")
     redirect_dir = True
+
+# Auto-upgrade xino=auto to xino=on for kernel < v5.7
+if xino:
+    cfg.add_mntopt("xino=on")
 
 ###############################################################################
 #
