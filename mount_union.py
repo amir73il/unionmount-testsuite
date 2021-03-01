@@ -60,18 +60,29 @@ def mount_union(ctx):
             except OSError:
                 pass
 
-            mntopt += ",redirect_dir=origin"
-            # This is the latest snapshot of lower_mntroot:
-            system("mount -t overlay overlay " + curr_snapshot + " " + mntopt +
-                   " -olowerdir=" + lower_mntroot + ",upperdir=" + upperdir + ",workdir=" + workdir)
+            if cfg.is_metacopy():
+                # Old overlay snapshot for snapshot fs mount
+                mntopt += ",redirect_dir=origin"
+            else:
+                # New overlay snapshot watch
+                mntopt += ",watch"
+            # --sn --remount implies start with no overlay snapshot watch
+            if cfg.is_metacopy() or ctx.layers_nr() >= 0:
+                # This is the latest snapshot of lower_mntroot:
+                system("mount -t overlay overlay " + curr_snapshot + " " + mntopt +
+                       " -olowerdir=" + lower_mntroot + ",upperdir=" + upperdir + ",workdir=" + workdir)
+
+        if cfg.testing_snapshot() and not cfg.is_metacopy():
+            # There is no snapshot fs mount with overlay snapshot watch
+            system("mount -o bind " + lower_mntroot + " " + union_mntroot)
+        elif cfg.testing_snapshot():
             # This is the snapshot mount where tests are run
             snapmntopt = " -onoatime"
             # --sn --remount implies start with nosnapshot setup until first recycle
             if ctx.layers_nr() >= 0:
                 snapmntopt += ",snapshot=" + curr_snapshot
-            if cfg.is_metacopy():
-                # don't copy files to snapshot only directories
-                snapmntopt = snapmntopt + ",metacopy=on"
+            # don't copy files to snapshot only directories
+            snapmntopt = snapmntopt + ",metacopy=on"
             system("mount -t snapshot " + lower_mntroot + " " + union_mntroot + snapmntopt)
             # Remount latest snapshot readonly
             system("mount " + curr_snapshot + " -oremount,ro")

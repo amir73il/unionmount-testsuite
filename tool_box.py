@@ -82,3 +82,18 @@ def check_bool_mntopt(feature, mntopts, default, onopt2=None, offopt2=None):
     if off:
         return False
     return default;
+
+#
+# Check if filesystem is registered
+#
+def check_filesystem(fsname):
+    # If overlay is a module, make sure it is loaded before checking its params
+    try:
+        system("modprobe overlay 2>/dev/null")
+    except RuntimeError:
+        pass
+    try:
+        filesystems = read_file("/proc/filesystems")
+    except FileNotFoundError:
+        return None
+    return fsname in filesystems

@@ -623,7 +623,7 @@ class test_context:
     # Check that file/data was/not copied up as expected
     def check_copy_up(self, filename, dentry, layer, blocks):
         if self.config().testing_snapshot():
-            if layer < 0:
+            if layer < 0 or not self.config().is_metacopy():
                 # First snapshot wasn't created yet
                 return
 
@@ -638,9 +638,8 @@ class test_context:
                 return
 
             # For metacopy snapshot check that parent is copied to snapshot
-            if self.config().is_metacopy():
-                dentry = dentry.parent()
-                filename = dentry.filename()
+            dentry = dentry.parent()
+            filename = dentry.filename()
 
         upper_path = self.upper_path(filename)
         try:
@@ -707,6 +706,9 @@ class test_context:
         layer = self.layers_nr()
         if self.config().is_verify():
             self.check_copy_up(name, dentry, layer, blocks)
+
+        if self.config().testing_snapshot():
+            return
 
         if dentry.is_dir():
             # Directory inodes are always on overlay st_dev

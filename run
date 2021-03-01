@@ -158,7 +158,12 @@ if cfg.testing_overlayfs() or cfg.testing_snapshot():
     metacopy_def = check_bool_modparam("metacopy")
     if not metacopy_def is None:
         metacopy = check_bool_mntopt("metacopy", cfg.mntopts(), metacopy_def, offopt2="nfs_export=on")
-    if metacopy:
+    # --meta is relevant for old snapshot fs testing
+    # With new overlay fsnotify snapshot, --meta is ignored
+    snapshotfs = check_filesystem("snapshot")
+    if cfg.testing_snapshot() and not snapshotfs:
+        metacopy = None
+    elif metacopy:
         cfg.set_metacopy()
 
 maxfs = cfg.maxfs()
@@ -239,6 +244,11 @@ if redirect_dir is False:
 # Auto-upgrade xino=auto to xino=on for kernel < v5.7
 if xino:
     cfg.add_mntopt("xino=on")
+
+if metacopy:
+        if remount:
+            print("--meta --remount not supported - ignoring --remount")
+        remount = False
 
 ###############################################################################
 #

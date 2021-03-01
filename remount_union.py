@@ -9,12 +9,14 @@ def remount_union(ctx, rotate_upper=False, cycle_mount=False):
     testdir = cfg.testdir()
     mntopt = cfg.mntopts()
 
+    first_snapshot = False
     if not ctx.have_more_layers():
         rotate_upper = False
     # --sn --remount implies start with nosnapshot setup until first recycle
     # so don't add a new layer on first recycle
     elif cfg.testing_snapshot() and ctx.remount() and ctx.mid_layers() is None:
         rotate_upper = False
+        first_snapshot = True
 
     # --sn default behavior is remount unless --recycle was requested
     if not cfg.testing_snapshot() or ctx.remount() is False:
@@ -63,11 +65,16 @@ def remount_union(ctx, rotate_upper=False, cycle_mount=False):
             # --sn --remount implies start with nosnapshot setup until first recycle
             # make first backup on first cycle instead of after setup and after
             # every rotate of upper
-            if cfg.is_verify() and (rotate_upper or not ctx.have_backup()):
+            if cfg.is_verify() and (rotate_upper or first_snapshot):
                 ctx.make_backup()
 
             if rotate_upper or cycle_mount:
-                mntopt += ",redirect_dir=origin"
+                if cfg.is_metacopy():
+                    # Old overlay snapshot for snapshot fs mount
+                    mntopt += ",redirect_dir=origin"
+                else:
+                    # New overlay snapshot watch
+                    mntopt += ",watch"
                 # This is the latest snapshot of lower_mntroot:
                 cmd = ("mount -t overlay overlay " + curr_snapshot + " " + mntopt +
                        " -olowerdir=" + lower_mntroot + ",upperdir=" + upperdir + ",workdir=" + workdir)
@@ -76,11 +83,14 @@ def remount_union(ctx, rotate_upper=False, cycle_mount=False):
                     write_kmsg(cmd);
 
             # This is the snapshot mount where tests are run
-            if cycle_mount:
+            if not cfg.is_metacopy():
+                # There is no snapshot fs mount with overlay snapshot watch
+                if cycle_mount:
+                    system("mount -o bind " + lower_mntroot + " " + union_mntroot)
+            elif cycle_mount:
                 snapmntopt = " -onoatime,snapshot=" + curr_snapshot
-                if cfg.is_metacopy():
-                    # don't copy files to snapshot only directories
-                    snapmntopt = snapmntopt + ",metacopy=on"
+                # don't copy files to snapshot only directories
+                snapmntopt = snapmntopt + ",metacopy=on"
                 system("mount -t snapshot " + lower_mntroot + " " + union_mntroot + snapmntopt)
                 ctx.note_upper_fs(upper_mntroot, testdir, testdir)
             else:
