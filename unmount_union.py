@@ -5,6 +5,10 @@ def unmount_union(ctx):
     system("umount " + cfg.union_mntroot())
     check_not_tainted()
 
+    if cfg.testing_snapshot():
+        system("umount " + cfg.snapshot_mntroot())
+        check_not_tainted()
+
     if cfg.should_mount_lower():
         system("umount " + cfg.lower_mntroot())
         check_not_tainted()

@@ -16,6 +16,7 @@ def show_format(why):
     print("Format:")
     print("\t", sys.argv[0], "<--no|--ov|--ovov>[=<maxlayers>] [--fuse=<subtype>] [--samefs|--maxfs=<maxfs>|--squashfs] [--xdev] [--xino] [--meta] [--verify] [--ts=<0|1>] [-v] [<test-name>+]")
     print("\t", sys.argv[0], "<--no|--ov|--ovov> [--fuse=<subtype>] [--samefs|--squashfs] [-s|--set-up]")
+    print("\t", sys.argv[0], "--sn[=0] [-s|--set-up|--verify]")
     print("\t", sys.argv[0], "[-c|--clean-up]")
     print("\t", sys.argv[0], "--open-file <file> [-acdertvw] [-W <data>] [-R <data>] [-B] [-E <err>]")
     print("\t", sys.argv[0], "--<fsop> <file> [<args>*] [-aLlv] [-R <content>] [-B] [-E <err>]")
@@ -77,12 +78,15 @@ if (args[0] == "-c" or args[0] == "--clean-up"):
 ###############################################################################
 recycle_list = [ "" ]
 maxlayers = 0
+test_what = args[0]
 if args[0] == "--no":
     cfg.set_testing_none()
 elif args[0].startswith("--ov"):
-    cfg.set_testing_overlayfs()
+    test_what = "--ov"
     if args[0].startswith("--ovov"):
         cfg.set_nested()
+        test_what = "--ovov"
+    cfg.set_testing_overlayfs()
     s = args[0]
     i = s.rfind("=")
     if i >= 0:
@@ -91,8 +95,14 @@ elif args[0].startswith("--ov"):
         maxlayers = int(n)
         if maxlayers < 0:
             show_format("Invalid value for maxlayers >= 0")
+elif args[0] == "--sn":
+    cfg.set_testing_snapshot()
+elif args[0] == "--sn=0":
+    test_what = "--sn"
+    cfg.set_testing_snapshot()
+    recycle_list = [ "0", "" ]
 else:
-    show_format("Invalid test type selector (--ov or --no)")
+    show_format("Invalid test type selector (--ov, --sn or --no)")
 args = args[1:]
 
 if len(args) > 0 and args[0].startswith("--fuse="):
@@ -297,14 +307,6 @@ else:
 
 if len(args) > 0:
     tests = args
-
-if cfg.testing_overlayfs():
-    if cfg.is_nested():
-        test_what = "--ovov"
-    else:
-        test_what = "--ov"
-else:
-    test_what = "--no"
 
 for test in tests:
     for recycle in recycle_list:
