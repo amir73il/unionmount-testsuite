@@ -4,6 +4,8 @@ def mount_union(ctx):
     cfg = ctx.config()
     union_mntroot = cfg.union_mntroot()
     testdir = cfg.testdir()
+    mntopt = cfg.mntopts()
+
     if cfg.testing_none():
         lower_mntroot = cfg.lower_mntroot()
         system("mount -o bind " + lower_mntroot + " " + union_mntroot)
@@ -43,11 +45,6 @@ def mount_union(ctx):
             os.mkdir(nested_upper)
             os.mkdir(nested_work)
 
-        mnt = union_mntroot
-        mntopt = cfg.mntopts()
-        if cfg.testing_snapshot():
-            mnt = snapshot_mntroot
-            mntopt += ",redirect_dir=origin"
         if cfg.is_nested():
             nested_mntopt = mntopt
             if cfg.is_verify():
@@ -55,14 +52,28 @@ def mount_union(ctx):
             system("mount -t " + cfg.fstype() + " nested_layer " + nested_mntroot + " " + nested_mntopt + " -olowerdir=" + lower_mntroot + ",upperdir=" + nested_upper + ",workdir=" + nested_work)
             lower_mntroot = nested_mntroot
             ctx.note_lower_fs(lower_mntroot)
-        system("mount -t " + cfg.fstype() + " " + cfg.fsname() + " " + mnt + " " + mntopt +
-               " -olowerdir=" + lower_mntroot + ",upperdir=" + upperdir + ",workdir=" + workdir)
+
         if cfg.testing_snapshot():
-            snapmntopt = " -onoatime,snapshot=" + snapshot_mntroot
+            curr_snapshot = snapshot_mntroot + "/" + ctx.curr_layer()
+            try:
+                os.mkdir(curr_snapshot)
+            except OSError:
+                pass
+
+            mntopt += ",redirect_dir=origin"
+            # This is the latest snapshot of lower_mntroot:
+            system("mount -t overlay overlay " + curr_snapshot + " " + mntopt +
+                   " -olowerdir=" + lower_mntroot + ",upperdir=" + upperdir + ",workdir=" + workdir)
+            # This is the snapshot mount where tests are run
+            snapmntopt = " -onoatime,snapshot=" + curr_snapshot
             system("mount -t snapshot " + lower_mntroot + " " + union_mntroot + snapmntopt)
+            # Remount latest snapshot readonly
+            system("mount " + curr_snapshot + " -oremount,ro")
             ctx.note_upper_fs(lower_mntroot, testdir, testdir)
         else:
+            system("mount -t " + cfg.fstype() + " " + cfg.fsname() + " " + union_mntroot + " " + mntopt +
+                   " -olowerdir=" + lower_mntroot + ",upperdir=" + upperdir + ",workdir=" + workdir)
             # Record st_dev of merge dir and pure upper file
             ctx.note_upper_fs(upper_mntroot, testdir, union_mntroot + "/f")
-        ctx.note_lower_layers(lower_mntroot)
+        ctx.note_lower_layer(lower_mntroot)
         ctx.note_upper_layer(upperdir)

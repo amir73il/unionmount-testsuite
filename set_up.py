@@ -16,12 +16,21 @@ def clean_up(cfg):
     lower_mntroot = cfg.old_lower_mntroot()
     upper_mntroot = cfg.old_upper_mntroot()
     union_mntroot = cfg.old_union_mntroot()
+    snapshot_mntroot = cfg.snapshot_mntroot()
 
     os.sync()
 
     try:
         while system("grep -q ' " + union_mntroot + " ' /proc/mounts" +
                      " && umount " + union_mntroot):
+            pass
+    except RuntimeError:
+        pass
+
+    try:
+        # Cleanup old overlay snapshot mounts
+        while system("grep -q 'overlay " + snapshot_mntroot + "/[0-9]* ' /proc/mounts" +
+                     " && umount " + snapshot_mntroot + "/*/ 2>/dev/null"):
             pass
     except RuntimeError:
         pass
@@ -69,6 +78,7 @@ def set_up(ctx):
     base_mntroot = cfg.base_mntroot()
     lower_mntroot = cfg.lower_mntroot()
     union_mntroot = cfg.union_mntroot()
+    backup_mntroot = cfg.backup_mntroot()
     snapshot_mntroot = cfg.snapshot_mntroot()
     lowerdir = cfg.lowerdir()
     lowerimg = cfg.lowerimg()
@@ -88,6 +98,7 @@ def set_up(ctx):
                 os.mkdir(union_mntroot)
             if cfg.testing_snapshot():
                 os.mkdir(snapshot_mntroot)
+                os.mkdir(backup_mntroot)
         except OSError:
             # Cleanup leftover layers from previous run in case base fs is not tmpfs
             if base_mntroot:
@@ -98,6 +109,7 @@ def set_up(ctx):
                 os.mkdir(union_mntroot)
             if cfg.testing_snapshot():
                 os.mkdir(snapshot_mntroot)
+                os.mkdir(backup_mntroot)
 
     if cfg.should_mount_lower():
         # Create a lower layer to union over
