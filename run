@@ -410,7 +410,7 @@ for test in tests:
                     exit_error("Non empty files unexpectedly found in metacopy snapshot")
 
             # Verify snapshots integrity with cold dcache
-            remount_union(ctx, cycle_mount=True)
+            remount_union(ctx, cold_cache=True)
             try:
                 print(diff + backup + snapshot + output)
                 system(diff + backup + snapshot + output)
