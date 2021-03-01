@@ -69,6 +69,9 @@ def mount_union(ctx):
             # --sn --remount implies start with nosnapshot setup until first recycle
             if ctx.layers_nr() >= 0:
                 snapmntopt += ",snapshot=" + curr_snapshot
+            if cfg.is_metacopy():
+                # don't copy files to snapshot only directories
+                snapmntopt = snapmntopt + ",metacopy=on"
             system("mount -t snapshot " + lower_mntroot + " " + union_mntroot + snapmntopt)
             # Remount latest snapshot readonly
             system("mount " + curr_snapshot + " -oremount,ro")

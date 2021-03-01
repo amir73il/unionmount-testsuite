@@ -78,6 +78,9 @@ def remount_union(ctx, rotate_upper=False, cycle_mount=False):
             # This is the snapshot mount where tests are run
             if cycle_mount:
                 snapmntopt = " -onoatime,snapshot=" + curr_snapshot
+                if cfg.is_metacopy():
+                    # don't copy files to snapshot only directories
+                    snapmntopt = snapmntopt + ",metacopy=on"
                 system("mount -t snapshot " + lower_mntroot + " " + union_mntroot + snapmntopt)
                 ctx.note_upper_fs(upper_mntroot, testdir, testdir)
             else:

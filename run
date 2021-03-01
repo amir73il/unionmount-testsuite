@@ -16,7 +16,7 @@ def show_format(why):
     print("Format:")
     print("\t", sys.argv[0], "<--no|--ov|--ovov>[=<maxlayers>] [--fuse=<subtype>] [--samefs|--maxfs=<maxfs>|--squashfs] [--xdev] [--xino] [--meta] [--verify] [--ts=<0|1>] [-v] [<test-name>+]")
     print("\t", sys.argv[0], "<--no|--ov|--ovov> [--fuse=<subtype>] [--samefs|--squashfs] [-s|--set-up]")
-    print("\t", sys.argv[0], "--sn[=<maxlayers>] [-s|--set-up|--verify] [<--recycle|--remount>]")
+    print("\t", sys.argv[0], "--sn[=<maxlayers>] [-s|--set-up|--verify] [<--recycle|--remount>] [--meta]")
     print("\t", sys.argv[0], "[-c|--clean-up]")
     print("\t", sys.argv[0], "--open-file <file> [-acdertvw] [-W <data>] [-R <data>] [-B] [-E <err>]")
     print("\t", sys.argv[0], "--<fsop> <file> [<args>*] [-aLlv] [-R <content>] [-B] [-E <err>]")
@@ -151,6 +151,8 @@ elif cfg.testing_overlayfs():
         xino = check_bool_mntopt("xino", cfg.mntopts(), xino_def, onopt2="xino=auto")
     if xino:
         cfg.set_xino()
+
+if cfg.testing_overlayfs() or cfg.testing_snapshot():
     # Overlayfs feature "metacopy" can be enabled with --meta and by mount option on kernel version >= v4.19.
     # When metacopy is enabled we set_metacopy(), so copy up verifications will work correctly.
     metacopy_def = check_bool_modparam("metacopy")
@@ -211,6 +213,7 @@ while len(args) > 0 and args[0].startswith("-"):
         if metacopy is None:
             print("metacopy not supported - ignoring --meta")
         else:
+            metacopy = True
             cfg.add_mntopt("metacopy=on")
             cfg.set_metacopy()
     elif args[0] == "--verify":
@@ -380,6 +383,22 @@ for test in tests:
             snapshot = cfg.snapshot_mntroot()
             # Allow only in backup but not only in snapshot
             output = " 2>&1 | grep -v Only.in." + backup + "; test $? -ne 0"
+            # Upper layer of metacopy snapshot must not contain non-empty regular files.
+            # With metacopy snapshot we only compare the directory tree structure.
+            if metacopy:
+                try:
+                    diff = "(cd " + backup + "; find -type d) |sort >/tmp/backup && "
+                    diff += "(cd " + snapshot + "; find -type d) |sort >/tmp/snapshot && "
+                    diff += "grep -f /tmp/backup /tmp/snapshot > /tmp/both && "
+                    diff += "diff -u "
+                    # Allow only in backup but not only in snapshot
+                    backup = "/tmp/both "
+                    snapshot = "/tmp/snapshot"
+                    output = " 1>&2"
+                    system("find " + cfg.upper_mntroot() + "/*/u -type f -size +0| grep '' ; test $? -ne 0")
+                except RuntimeError:
+                    exit_error("Non empty files unexpectedly found in metacopy snapshot")
+
             # Verify snapshots integrity with cold dcache
             remount_union(ctx, cycle_mount=True)
             try:
