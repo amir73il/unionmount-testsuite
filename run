@@ -388,32 +388,41 @@ for test in tests:
 
         if cfg.testing_snapshot() and cfg.is_verify() and ctx.have_backup():
             differ = False
-            diff = "diff -qr --no-dereference "
-            backup = cfg.backup_mntroot() + " "
+            lower = cfg.lower_mntroot()
+            backup = cfg.backup_mntroot()
             snapshot = cfg.snapshot_mntroot()
-            # Allow only in backup but not only in snapshot
-            output = " 2>&1 | grep -v Only.in." + backup + "; test $? -ne 0"
-            # Upper layer of metacopy snapshot must not contain non-empty regular files.
             # With metacopy snapshot we only compare the directory tree structure.
             if metacopy:
+                diff =  "(cd " + backup + "/{}; find -type d) | sort >/tmp/backup && " \
+                        "(cd " + snapshot + "/{}; find -type d) | sort >/tmp/snapshot && " \
+                        "grep -f /tmp/backup /tmp/snapshot >/tmp/both && "
+                # Allow only in backup but not only in snapshot
+                diff += "diff -u /tmp/both /tmp/snapshot 1>&2"
                 try:
-                    diff = "(cd " + backup + "; find -type d) |sort >/tmp/backup && "
-                    diff += "(cd " + snapshot + "; find -type d) |sort >/tmp/snapshot && "
-                    diff += "grep -f /tmp/backup /tmp/snapshot > /tmp/both && "
-                    diff += "diff -u "
-                    # Allow only in backup but not only in snapshot
-                    backup = "/tmp/both "
-                    snapshot = "/tmp/snapshot"
-                    output = " 1>&2"
+                    # Upper layer of metacopy snapshot must not contain non-empty regular files.
                     system("find " + cfg.upper_mntroot() + "/*/u -type f -size +0| grep '' ; test $? -ne 0")
                 except RuntimeError:
                     exit_error("Non empty files unexpectedly found in metacopy snapshot")
+            else:
+                # Allow only in backup but not only in snapshot
+                diff =  "(cd " + lower + "; diff -qr --no-dereference a " + backup + "/{}/a" \
+                        " 2>&1 | grep -v Only.in." + backup + ") >/tmp/diff && " \
+                        "grep '^Only in ' /tmp/diff | sed 's/^Only in \(\S*\):.*$/\\1/p' >/tmp/only && " \
+                        "grep '^Files ' /tmp/diff | sed 's/^Files \(\S*\)\/\S* and.*$/\\1/p' >/tmp/differ && " \
+                        "cat /tmp/differ /tmp/only | sort -u >/tmp/changed && "
+                # du -x lists the dirs recorded in snapshot (renamed directories return ESTALE)
+                # Verify that every changed path was listed (exact match) by du or a prefix listed as stale
+                diff += "(cd " + snapshot + "/{}; du -x a 2>/tmp/duerr) | cut -f2 > /tmp/du && " \
+                        "sed \"s/^du: cannot access .\(\S*\).: Stale file handle$/\^\\1/p\" /tmp/duerr >/tmp/stale && " \
+                        "grep -v -x -f /tmp/du /tmp/changed | grep -v -f /tmp/stale; test $? -ne 0"
 
             # Verify snapshots integrity with cold dcache
             remount_union(ctx, cold_cache=True)
             try:
-                print(diff + backup + snapshot + output)
-                system(diff + backup + snapshot + output)
+                for i in range(ctx.layers_nr() + 1):
+                    cmd = diff.format(i, i)
+                    print(cmd)
+                    system(cmd)
             except RuntimeError:
                 print("snapshot integrity (cold cache) failed: " + msg, file=sys.stderr)
                 differ = True
