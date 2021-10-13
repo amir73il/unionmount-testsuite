@@ -74,7 +74,14 @@ def mount_union(ctx):
 
         if cfg.testing_snapshot() and not cfg.is_metacopy():
             # There is no snapshot fs mount with overlay snapshot watch
-            system("mount -o bind " + lower_mntroot + " " + union_mntroot)
+            # In addition to the overlay snapshot watch, there is either a bind mount
+            # or a notifyfs fuse passthrough mount from lower to union mount.
+            # notifyfs uses the unused overlayfs work dir as its own index dir.
+            if cfg.is_fusefs():
+                system(cfg.fsname() + " " + lower_mntroot + " " + union_mntroot +
+                       " --index_path=" + workdir + "/work")
+            else:
+                system("mount -o bind " + lower_mntroot + " " + union_mntroot)
         elif cfg.testing_snapshot():
             # This is the snapshot mount where tests are run
             snapmntopt = " -onoatime"

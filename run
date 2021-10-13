@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import sys, os, types, inspect
+import subprocess, re
 from settings import config
 from context import test_context
 from tool_box import *
@@ -109,8 +110,8 @@ else:
 args = args[1:]
 
 if len(args) > 0 and args[0].startswith("--fuse="):
-    if not cfg.testing_overlayfs() or cfg.is_nested():
-        show_format("--fuse requires --ov")
+    if cfg.testing_none() or cfg.is_nested():
+        show_format("--fuse requires --ov or --sn")
     s = args[0]
     t = s[s.rfind("=")+1:]
     cfg.set_fusefs(t)
@@ -389,6 +390,7 @@ for test in tests:
         if cfg.testing_snapshot() and cfg.is_verify() and ctx.have_backup():
             differ = False
             lower = cfg.lower_mntroot()
+            upper = cfg.upper_mntroot()
             backup = cfg.backup_mntroot()
             snapshot = cfg.snapshot_mntroot()
             # With metacopy snapshot we only compare the directory tree structure.
@@ -424,6 +426,30 @@ for test in tests:
                     cmd = diff.format(i, i)
                     print(cmd)
                     system(cmd)
+
+                if cfg.is_fusefs():
+                    # Parse root index name from trusted.overlay.origin
+                    # xattr on ovl upper dir
+                    output = subprocess.check_output("getfattr -d -e hex -m '' " + upper + "/0/u", shell=True, stderr=subprocess.DEVNULL)
+                    m = re.search(r'^trusted.overlay.origin=0x(.+)', output.decode('ascii'), re.MULTILINE)
+                    root_index = ""
+                    if m:
+                        root_index = m.group(1)
+                    # Compile list of ovl indexed and moved dirs from ovl index (excluding root index)
+                    # and a list of notifyfs indexed and moved dirs from notifyfs index and compare them.
+                    # Ovl index entries have a constant prefix of 42 chars that we need to trim.
+                    # Ovl moved index entries are non-dirs while notifyfs moved index entries are dirs
+                    # with trusted.overlay.opaque xattr.
+                    cmd = "(cd " + upper + "/0/w/index && " \
+                          " find . -name '" + root_index + "' -o -name '#*' -o -print > /tmp/indexed && " \
+                          " grep -v '^\.$' /tmp/indexed | sed 's/^\.\/.\{42\}//p' | sort -u > /tmp/indexed.ovl && " \
+                          " find . -type d -o -name '#*' -o -print | sed 's/^\.\/.\{42\}//p' | sort -u > /tmp/moved.ovl ) && " \
+                          "(cd " + upper + "/0/w/work; ls | sort -u > /tmp/indexed.fuse && " \
+                          " getfattr -n trusted.overlay.opaque * 2>/dev/null | grep 'file:' | cut -d ' ' -f3 | sort -u > /tmp/moved.fuse ) && " \
+                          "diff -u /tmp/indexed.ovl /tmp/indexed.fuse && diff -u /tmp/moved.ovl /tmp/moved.fuse"
+                    print(cmd)
+                    system(cmd)
+
             except RuntimeError:
                 print("snapshot integrity (cold cache) failed: " + msg, file=sys.stderr)
                 differ = True
