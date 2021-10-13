@@ -410,10 +410,11 @@ for test in tests:
                         "grep '^Only in ' /tmp/diff | sed 's/^Only in \(\S*\):.*$/\\1/p' >/tmp/only && " \
                         "grep '^Files ' /tmp/diff | sed 's/^Files \(\S*\)\/\S* and.*$/\\1/p' >/tmp/differ && " \
                         "cat /tmp/differ /tmp/only | sort -u >/tmp/changed && "
-                # du -x lists the dirs recorded in snapshot (renamed directories return ESTALE)
-                # Verify that every changed path was listed (exact match) by du or a prefix listed as stale
-                diff += "(cd " + snapshot + "/{}; du -x a 2>/tmp/duerr) | cut -f2 > /tmp/du && " \
-                        "sed \"s/^du: cannot access .\(\S*\).: Stale file handle$/\^\\1/p\" /tmp/duerr >/tmp/stale && " \
+                # du -x lists the dirs recorded in snapshot (renamed directories return ESTALE).
+                # Start du -x at snapshot mount root (".") and trim the "./" prefix and the last "." line.
+                # Verify that every changed path was listed (exact match) by du or a prefix listed as stale.
+                diff += "(cd " + snapshot + "/{}; du -x . 2>/tmp/duerr) | cut -f2 | grep -v \"^\.$\" | sed \"s/^\.\///p\" > /tmp/du && " \
+                        "sed \"s/^du: cannot access .\.\/\(\S*\).: Stale file handle$/\^\\1/p\" /tmp/duerr >/tmp/stale && " \
                         "grep -v -x -f /tmp/du /tmp/changed | grep -v -f /tmp/stale; test $? -ne 0"
 
             # Verify snapshots integrity with cold dcache
