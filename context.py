@@ -593,6 +593,10 @@ class test_context:
         if not dentry.is_reg():
             return
 
+        # Skip non-reliable tests until they are fixed
+        # TODO: maybe check for data blocks using SEEK_DATA
+        return
+
         # Metacopy should have st_blocks coming from lowerdata, so upper blocks
         # should be zero. This check may give false positives with metacopy=on
         # and upper file whose st_blocks > 0 when xattrs are not stored in inode
