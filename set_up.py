@@ -185,6 +185,13 @@ def set_up(ctx):
         system("mksquashfs " + lowerdir + " " + lowerimg + " -keep-as-directory > /dev/null");
         system("mount -o loop,ro " + lowerimg + " " + lower_mntroot)
         system("mount --make-private " + lower_mntroot)
+    if cfg.is_erofs():
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            system("cp -fR " + lowerdir + " " + tmpdirname)
+            system("mkfs.erofs " + lowerimg + " " + tmpdirname + " > /dev/null");
+        system("mount -t erofs -o loop,ro " + lowerimg + " " + lower_mntroot)
+        system("mount --make-private " + lower_mntroot)
     elif cfg.should_mount_lower_ro():
         # Make overlay lower layer read-only
         system("mount -o remount,ro " + lower_mntroot)

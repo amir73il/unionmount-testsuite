@@ -55,6 +55,7 @@ class config:
         self.__verbose = False
         self.__verify = False
         self.__squashfs = False
+        self.__erofs = False
         self.__metacopy = False
         self.__nested = False
         self.__xino = False
@@ -156,6 +157,10 @@ class config:
         self.__squashfs = to
     def is_squashfs(self):
         return self.__squashfs
+    def set_erofs(self, to=True):
+        self.__erofs = to
+    def is_erofs(self):
+        return self.__erofs
     def set_xino(self, to=True):
         self.__xino = to
     def is_xino(self):
