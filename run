@@ -14,8 +14,8 @@ def show_format(why):
     if why:
         print(why)
     print("Format:")
-    print("\t", sys.argv[0], "<--no|--ov|--ovov>[=<maxlayers>] [--fuse=<subtype>] [--samefs|--maxfs=<maxfs>|--squashfs] [--xdev] [--xino] [--meta] [--verify] [--ts=<0|1>] [-v] [<test-name>+]")
-    print("\t", sys.argv[0], "<--no|--ov|--ovov> [--fuse=<subtype>] [--samefs|--squashfs] [-s|--set-up]")
+    print("\t", sys.argv[0], "<--no|--ov|--ovov>[=<maxlayers>] [--fuse=<subtype>] [--samefs|--maxfs=<maxfs>|--squashfs|--erofs] [--xdev] [--xino] [--meta] [--verify] [--ts=<0|1>] [-v] [<test-name>+]")
+    print("\t", sys.argv[0], "<--no|--ov|--ovov> [--fuse=<subtype>] [--samefs|--squashfs|--erofs] [-s|--set-up]")
     print("\t", sys.argv[0], "[-c|--clean-up]")
     print("\t", sys.argv[0], "--open-file <file> [-acdertvw] [-W <data>] [-R <data>] [-B] [-E <err>]")
     print("\t", sys.argv[0], "--<fsop> <file> [<args>*] [-aLlv] [-R <content>] [-B] [-E <err>]")
@@ -147,7 +147,7 @@ elif cfg.testing_overlayfs():
         cfg.set_metacopy()
 
 maxfs = cfg.maxfs()
-if len(args) > 0 and (args[0] == "--samefs" or args[0] == "--squashfs" or args[0].startswith("--maxfs=")):
+if len(args) > 0 and (args[0] == "--samefs" or args[0] == "--squashfs" or args[0] == "--erofs" or args[0].startswith("--maxfs=")):
     if args[0] == "--samefs":
         # maxfs < 0 means samefs
         maxfs = -1
@@ -157,6 +157,10 @@ if len(args) > 0 and (args[0] == "--samefs" or args[0] == "--squashfs" or args[0
         # maxfs 0 means one upper fs and one lower fs
         maxfs = 0
         cfg.set_squashfs()
+    elif args[0] == "--erofs":
+        # maxfs 0 means one upper fs and one lower fs
+        maxfs = 0
+        cfg.set_erofs()
     elif args[0].startswith("--maxfs="):
         s = args[0]
         n = s[s.rfind("=")+1:]
