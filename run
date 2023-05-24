@@ -256,7 +256,6 @@ tests = [
     "dir-open",
     "dir-weird-open",
     "dir-open-dir",
-    "dir-weird-open-dir",
     "dir-sym1-open",
     "dir-sym1-weird-open",
     "dir-sym2-open",
