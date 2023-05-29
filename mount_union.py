@@ -54,3 +54,13 @@ def mount_union(ctx):
         ctx.note_upper_fs(upper_mntroot, testdir, union_mntroot + "/f")
         ctx.note_lower_layers(lower_mntroot)
         ctx.note_upper_layer(upperdir)
+        if cfg.is_xino():
+            # Copy up everything, set all dirs opaque and then detach lower fs.
+            # Instead of iterating in DFS order we iterate 4 times as the depth
+            # of the dataset tree - on every iteration, level 4-i becomes opaque.
+            system("chown -R 0.0 " + union_mntroot)
+            system("find " + union_mntroot + " -inum 0")
+            system("find " + union_mntroot + " -inum 0")
+            system("find " + union_mntroot + " -inum 0")
+            system("find " + union_mntroot + " -inum 0")
+            system("xfs_io -x -c shutdown " + lower_mntroot)

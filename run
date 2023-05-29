@@ -219,7 +219,7 @@ if redirect_dir is False:
 
 # Auto-upgrade xino=auto to xino=on for kernel < v5.7
 if xino:
-    cfg.add_mntopt("xino=on")
+    cfg.add_mntopt("xino=nofollow")
 
 ###############################################################################
 #
