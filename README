@@ -75,3 +75,20 @@ The following environment variables are supported:
 
 For more advanced overlayfs test options and more examples, see:
      https://github.com/amir73il/overlayfs/wiki/Overlayfs-testing
+
+## Purpose and Overview
+
+This repository contains a set of tests for verifying the behavior of union file systems, particularly focusing on overlay file systems. Here is a general overview of the repository:
+
+* 🗂️ The main script to run the tests is `run`. It handles different test configurations and executes the specified tests.
+* 📁 The `tests` directory contains various test scripts, each focusing on different aspects of file system operations. For example, `tests/dir-open.py` tests opening directories, and `tests/hard-link-dir.py` tests hard linking directories.
+* 🛠️ The `context.py` file defines the `test_context` class, which manages the state and operations of the tests, including file operations, error handling, and layer checks.
+* 🧰 The `tool_box.py` file provides utility functions and classes used throughout the tests, such as `ArgumentError`, `TestError`, and various file system operations.
+* 🗃️ The `settings.py` file contains the `config` class, which manages the configuration settings for the tests, such as the type of file system being tested, mount options, and verbosity.
+* 🗄️ The `set_up.py` file sets up the test environment, including creating and mounting the lower layer and preparing test files and directories.
+* 📜 The `README` file provides instructions on how to run the tests and configure the environment.
+* 🧩 The `direct.py` file contains functions for directly executing file system operations, such as opening files and performing various file system operations.
+* 🗂️ The `mount_union.py` and `remount_union.py` files handle mounting and remounting the union file system during the tests.
+* 🧹 The `unmount_union.py` file handles unmounting the union file system after the tests are completed.
+* 📄 The `LICENCE.GPL` file contains the licensing information for the repository.
+* 🗑️ The `Makefile` provides basic clean-up commands for the repository.
