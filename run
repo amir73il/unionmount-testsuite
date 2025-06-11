@@ -428,25 +428,20 @@ for test in tests:
                     system(cmd)
 
                 if cfg.is_fusefs():
-                    # Parse root index name from trusted.overlay.origin
-                    # xattr on ovl upper dir
-                    output = subprocess.check_output("getfattr -d -e hex -m '' " + upper + "/0/u", shell=True, stderr=subprocess.DEVNULL)
-                    m = re.search(r'^trusted.overlay.origin=0x(.+)', output.decode('ascii'), re.MULTILINE)
-                    root_index = ""
-                    if m:
-                        root_index = m.group(1)
-                    # Compile list of ovl indexed and moved dirs from ovl index (excluding root index)
-                    # and a list of notifyfs indexed and moved dirs from notifyfs index and compare them.
+                    # Compile a list of ovl indexed and moved dirs from ovl index and
+                    # compile a list of notifyfs indexed and moved dirs from notifyfs index and compare them.
                     # Ovl index entries have a constant prefix of 42 chars that we need to trim.
                     # Ovl moved index entries are non-dirs while notifyfs moved index entries are dirs
                     # with trusted.overlay.opaque xattr.
+                    # Ovl deletes index entries for deleted directories, so fuse index can have more entries
+                    # than the ovl index, but not the other way around.
                     cmd = "(cd " + upper + "/0/w/index && " \
-                          " find . -name '" + root_index + "' -o -name '#*' -o -print > /tmp/indexed && " \
+                          " find . -name '#*' -o -print > /tmp/indexed && " \
                           " grep -v '^\.$' /tmp/indexed | sed 's/^\.\/.\{42\}//p' | sort -u > /tmp/indexed.ovl && " \
                           " find . -type d -o -name '#*' -o -print | sed 's/^\.\/.\{42\}//p' | sort -u > /tmp/moved.ovl ) && " \
                           "(cd " + upper + "/0/w/work; ls | sort -u > /tmp/indexed.fuse && " \
                           " getfattr -n trusted.overlay.opaque * 2>/dev/null | grep 'file:' | cut -d ' ' -f3 | sort -u > /tmp/moved.fuse ) && " \
-                          "diff -u /tmp/indexed.ovl /tmp/indexed.fuse && diff -u /tmp/moved.ovl /tmp/moved.fuse"
+                          "! grep -v -x -f /tmp/indexed.fuse /tmp/indexed.ovl && ! grep -v -x -f /tmp/moved.fuse /tmp/moved.ovl"
                     print(cmd)
                     system(cmd)
 
