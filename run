@@ -225,7 +225,9 @@ while len(args) > 0 and args[0].startswith("-"):
     elif args[0] == "--verify":
         cfg.set_verify()
         # auto enable index for --verify unless explicitly disabled
-        if index_def is False and not index_opt is False:
+        if cfg.testing_snapshot() and cfg.is_fusefs():
+            cfg.add_mntopt("index=all")
+        elif index_def is False and not index_opt is False:
             cfg.add_mntopt("index=on")
     elif args[0] == "--remount":
         recycle_list = [ True ]

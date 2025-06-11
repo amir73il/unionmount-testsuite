@@ -78,8 +78,13 @@ def mount_union(ctx):
             # or a notifyfs fuse passthrough mount from lower to union mount.
             # notifyfs uses the unused overlayfs work dir as its own index dir.
             if cfg.is_fusefs():
-                system(cfg.fsname() + " " + lower_mntroot + " " + union_mntroot +
-                       " --index_path=" + workdir + "/work")
+                fuse_opts = "--index_path=" + workdir + "/work"
+                if cfg.is_verify():
+                    fuse_opts += " --index_all"
+                cmd = cfg.fsname() + " " + lower_mntroot + " " + union_mntroot + " " + fuse_opts
+                system(cmd)
+                if cfg.is_verbose():
+                    write_kmsg(cmd);
             else:
                 system("mount -o bind " + lower_mntroot + " " + union_mntroot)
         elif cfg.testing_snapshot():
