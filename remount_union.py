@@ -1,5 +1,7 @@
 from tool_box import *
 
+import os
+
 def remount_union(ctx, rotate_upper=False, cold_cache=False):
     cfg = ctx.config()
     union_mntroot = cfg.union_mntroot()
@@ -98,6 +100,13 @@ def remount_union(ctx, rotate_upper=False, cold_cache=False):
                 # There is no snapshot fs mount with overlay snapshot watch
                 if cycle_mount:
                     system("mount -o bind " + lower_mntroot + " " + union_mntroot)
+                elif cfg.is_fusefs():
+                    # change index path for notifyfs
+                    # notifyfs uses the unused overlayfs work dir as its own index dir.
+                    indexdir = workdir + "/work"
+                    os.setxattr(union_mntroot, b'user.notifyfs.index_path', indexdir.encode('utf-8'))
+                    if cfg.is_verbose():
+                        write_kmsg("setxattr user.notifyfs.index_path " + indexdir)
             elif cycle_mount:
                 snapmntopt = " -onoatime,snapshot=" + curr_snapshot
                 # don't copy files to snapshot only directories
